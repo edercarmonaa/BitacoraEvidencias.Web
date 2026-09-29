@@ -1,0 +1,9 @@
+.box-shadow {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+}
+
+.footer {
+  width: 100%;
+  white-space: normal;
+  line-height: 1.4;
+}

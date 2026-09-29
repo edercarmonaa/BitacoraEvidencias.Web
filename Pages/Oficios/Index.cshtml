@@ -1,0 +1,195 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Oficios.IndexModel
+@{
+    ViewData["Title"] = "Oficios";
+}
+
+@functions {
+    private static string GetAuditoriaIconClass(string estado)
+    {
+        return estado switch
+        {
+            "ok" => "oficio-audit-icon oficio-audit-icon--ok",
+            "incorrecto" => "oficio-audit-icon oficio-audit-icon--error",
+            _ => "oficio-audit-icon oficio-audit-icon--pending"
+        };
+    }
+
+    private static string GetAuditoriaIconSymbol(string estado)
+    {
+        return estado switch
+        {
+            "ok" => "\u2713",
+            "incorrecto" => "\u2715",
+            _ => "!"
+        };
+    }
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Oficios</h1>
+    <a class="btn btn-primary"
+       asp-page="./Create"
+       hx-get="@Url.Page("./Create")"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Nuevo oficio</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+{
+    <div class="alert app-alert-success">@Model.FlashSuccess</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashError))
+{
+    <div class="alert app-alert-error">@Model.FlashError</div>
+}
+
+<form method="get"
+      class="row g-2 mb-3"
+      data-busy
+      hx-get="@Url.Page("./Index")"
+      hx-indicator="#oficios-loading"
+      hx-target="#oficios-results"
+      hx-select="#oficios-results"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="true">
+    <input type="hidden" name="PageNumber" value="1" />
+
+    <div class="col-sm-8 col-md-9">
+        <input asp-for="Q" class="form-control" placeholder="Buscar por número o asunto" />
+    </div>
+
+    <div class="col-sm-4 col-md-3">
+        <select asp-for="PageSize" class="form-select">
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+
+    <div class="col-12 d-flex justify-content-end gap-2">
+        <button type="submit" class="btn btn-outline-secondary">Buscar</button>
+        <a class="btn btn-outline-secondary"
+           asp-page="./Index"
+           hx-get="@Url.Page("./Index")"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true">Limpiar</a>
+    </div>
+</form>
+
+<section id="oficios-results">
+    <div id="oficios-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
+        <div class="app-skeleton-row w-90"></div>
+        <div class="app-skeleton-row w-75"></div>
+        <div class="app-skeleton-row w-60"></div>
+        <div class="app-skeleton-row w-90"></div>
+    </div>
+    <div class="app-results-body">
+        @{
+            var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(Model.Q))
+            {
+                routeValues[nameof(Model.Q)] = Model.Q.Trim();
+            }
+
+            var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+            {
+                PageNumber = Model.PageNumber,
+                TotalPages = Model.TotalPages,
+                PageSize = Model.PageSize,
+                TotalRows = Model.TotalRows,
+                CurrentCount = Model.Oficios.Count,
+                PageName = "/Oficios/Index",
+                RowsLabel = "oficio(s)",
+                MaxPageSizeText = $"Máximo {Model.MaxAllowedPageSize} por página.",
+                RouteValues = routeValues,
+                UseHtmx = true,
+                HxTarget = "#oficios-results",
+                HxSelect = "#oficios-results",
+                HxSwap = "outerHTML transition:true",
+                HxPushUrl = true
+            };
+        }
+
+        <partial name="_Pager" model="pager" />
+
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Fecha</th>
+                        <th>Asunto</th>
+                        <th class="text-center">Auditoría</th>
+                        <th>Casos</th>
+                        <th>Evidencias</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Oficios.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No hay oficios registrados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var oficio in Model.Oficios)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@oficio.NumeroOficio</td>
+                                <td>@oficio.FechaOficio.ToString("dd/MM/yyyy")</td>
+                                <td>@oficio.Asunto</td>
+                                <td class="text-center">
+                                    <span class="@GetAuditoriaIconClass(oficio.AuditoriaEstado)"
+                                          title="@oficio.AuditoriaDescripcion"
+                                          aria-label="@oficio.AuditoriaDescripcion">
+                                        @GetAuditoriaIconSymbol(oficio.AuditoriaEstado)
+                                    </span>
+                                </td>
+                                <td>@oficio.TotalCasos</td>
+                                <td>@oficio.TotalEvidencias</td>
+                                <td class="text-end">
+                                    <a asp-page="./Details"
+                                       asp-route-id="@oficio.Id"
+                                       class="btn btn-sm btn-outline-primary"
+                                       hx-get="@Url.Page("./Details", new { id = oficio.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Ver detalle</a>
+                                    <a asp-page="./Edit"
+                                       asp-route-id="@oficio.Id"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       hx-get="@Url.Page("./Edit", new { id = oficio.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Editar</a>
+                                    <a asp-page="./Delete"
+                                       asp-route-id="@oficio.Id"
+                                       class="btn btn-sm btn-outline-danger"
+                                       hx-get="@Url.Page("./Delete", new { id = oficio.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Eliminar</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="pager" />
+    </div>
+</section>

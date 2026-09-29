@@ -1,0 +1,154 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Casos.CreateModel
+@{
+    ViewData["Title"] = "Nuevo Caso";
+    var regresoOficioId = Model.Input.ReturnOficioId ?? Model.Oficio?.Id;
+}
+
+@if (Model.Oficio is not null)
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0">Nuevo caso</h1>
+            <small class="text-muted">Oficio: @Model.Oficio.NumeroOficio | Siguiente consecutivo: @Model.SiguienteConsecutivo.ToString("000")</small>
+        </div>
+        @if (regresoOficioId.HasValue)
+        {
+            <a class="btn btn-outline-secondary"
+               asp-page="/Oficios/Details"
+               asp-route-id="@regresoOficioId.Value"
+               hx-get="@Url.Page("/Oficios/Details", new { id = regresoOficioId.Value })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Regresar al oficio</a>
+        }
+    </div>
+}
+
+<form method="post"
+      data-busy
+      data-ui-loading
+      hx-post="@Url.Page("/Casos/Create", new { oficioId = Model.Input.OficioId, returnOficioId = Model.Input.ReturnOficioId })"
+      hx-target="#app-main"
+      hx-select="#app-main"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="false">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <input asp-for="Input.OficioId" type="hidden" />
+    <input asp-for="Input.ReturnOficioId" type="hidden" />
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="Input.Curp" class="form-label"></label>
+            <input asp-for="Input.Curp" class="form-control" />
+            <span asp-validation-for="Input.Curp" class="text-danger"></span>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="Input.NombreCompleto" class="form-label"></label>
+            <input asp-for="Input.NombreCompleto" class="form-control" />
+            <span asp-validation-for="Input.NombreCompleto" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.Cct" class="form-label"></label>
+            <input asp-for="Input.Cct" class="form-control" />
+            <span asp-validation-for="Input.Cct" class="text-danger"></span>
+        </div>
+        <div class="col-md-5">
+            <label asp-for="Input.Validador" class="form-label"></label>
+            <input asp-for="Input.Validador" class="form-control" />
+            <span asp-validation-for="Input.Validador" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Input.AuditorUsuarioId" class="form-label"></label>
+            <select asp-for="Input.AuditorUsuarioId" class="form-select">
+                <option value="">Sin asignar</option>
+                @foreach (var auditor in Model.AuditoresDisponibles)
+                {
+                    <option value="@auditor.Id">@auditor.Usuario</option>
+                }
+            </select>
+            <span asp-validation-for="Input.AuditorUsuarioId" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.NivelEducativo" class="form-label"></label>
+            <select asp-for="Input.NivelEducativo" class="form-select">
+                @foreach (var item in Model.NivelesEducativosDisponibles)
+                {
+                    <option value="@item">@item</option>
+                }
+            </select>
+            <span asp-validation-for="Input.NivelEducativo" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.TipoCorreccion" class="form-label"></label>
+            <input asp-for="Input.TipoCorreccion" class="form-control" />
+            <span asp-validation-for="Input.TipoCorreccion" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.Folio" class="form-label"></label>
+            <input asp-for="Input.Folio" class="form-control" />
+            <span asp-validation-for="Input.Folio" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.PeriodoInicio" class="form-label"></label>
+            <input asp-for="Input.PeriodoInicio" class="form-control" />
+            <span asp-validation-for="Input.PeriodoInicio" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.PeriodoFin" class="form-label"></label>
+            <input asp-for="Input.PeriodoFin" class="form-control" />
+            <span asp-validation-for="Input.PeriodoFin" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.FechaVerificacion" class="form-label"></label>
+            <input asp-for="Input.FechaVerificacion" class="form-control" />
+            <span asp-validation-for="Input.FechaVerificacion" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Input.EvidenciaUrl" class="form-label"></label>
+            <input asp-for="Input.EvidenciaUrl" class="form-control" />
+            <span asp-validation-for="Input.EvidenciaUrl" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label asp-for="Input.Estatus" class="form-label"></label>
+            <select asp-for="Input.Estatus" class="form-select">
+                @foreach (var item in Model.EstatusDisponibles)
+                {
+                    <option value="@item">@item</option>
+                }
+            </select>
+            <span asp-validation-for="Input.Estatus" class="text-danger"></span>
+        </div>
+        <div class="col-md-12">
+            <label asp-for="Input.Observaciones" class="form-label"></label>
+            <textarea asp-for="Input.Observaciones" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Input.Observaciones" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+            <span class="btn-label">Crear caso</span>
+            <span class="btn-loading" aria-hidden="true">
+                <span class="btn-loading-dot"></span>
+                Guardando...
+            </span>
+        </button>
+        @if (regresoOficioId.HasValue)
+        {
+            <a class="btn btn-outline-secondary"
+               asp-page="/Oficios/Details"
+               asp-route-id="@regresoOficioId.Value"
+               hx-get="@Url.Page("/Oficios/Details", new { id = regresoOficioId.Value })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Cancelar</a>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

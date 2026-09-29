@@ -1,0 +1,74 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Reportes.OficiosPorTipoCorreccionModel
+@{
+    ViewData["Title"] = "Oficios por tipo de correccion";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Oficios por tipo de correccion</h1>
+        <small class="text-muted">Listado completo de tipos con oficios completados.</small>
+    </div>
+    <a class="btn btn-outline-secondary"
+       asp-page="/Reportes"
+       hx-get="@Url.Page("/Reportes")"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Volver a reportes</a>
+</div>
+
+@{
+    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+    {
+        PageNumber = Model.PageNumber,
+        TotalPages = Model.TotalPages,
+        PageSize = Model.PageSize,
+        TotalRows = Model.TotalRows,
+        CurrentCount = Model.Items.Count,
+        PageName = "/Reportes/OficiosPorTipoCorreccion",
+        RowsLabel = "tipo(s)",
+        MaxPageSizeText = $"Maximo {Model.MaxAllowedPageSize} por pagina.",
+        RouteValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+        UseHtmx = true,
+        HxTarget = "#app-main",
+        HxSelect = "#app-main",
+        HxSwap = "outerHTML transition:true",
+        HxPushUrl = true
+    };
+}
+
+<partial name="_Pager" model="pager" />
+
+<div class="table-responsive">
+    <table class="table table-zebra-white table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Total de oficios</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="2" class="text-center text-muted py-3">
+                        Sin datos para agrupar.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.TipoCorreccion</td>
+                        <td>@item.Total</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<partial name="_Pager" model="pager" />

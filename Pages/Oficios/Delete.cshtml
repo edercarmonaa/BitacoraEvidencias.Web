@@ -1,0 +1,49 @@
+@page "{id:int}"
+@model BitacoraEvidencias.Web.Pages.Oficios.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Oficio";
+}
+
+@if (Model.Oficio is not null)
+{
+    <h1 class="h3 mb-3">Confirmar eliminación de oficio</h1>
+
+    <div class="alert alert-warning">
+        Esta acción elimina el oficio, todos sus casos y todas las evidencias (BD + disco).
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="mb-1"><span class="text-muted">Número:</span> @Model.Oficio.NumeroOficio</p>
+            <p class="mb-1"><span class="text-muted">Fecha:</span> @Model.Oficio.FechaOficio.ToString("dd/MM/yyyy")</p>
+            <p class="mb-1"><span class="text-muted">Asunto:</span> @Model.Oficio.Asunto</p>
+            <p class="mb-0"><span class="text-muted">Impacto:</span> @Model.Oficio.TotalCasos caso(s), @Model.Oficio.TotalEvidencias evidencia(s)</p>
+        </div>
+    </div>
+
+    <form method="post"
+          class="d-flex gap-2"
+          data-busy
+          data-ui-loading
+          hx-post="@Url.Page("./Delete", new { id = Model.Oficio.Id })"
+          hx-target="#app-main"
+          hx-select="#app-main"
+          hx-swap="outerHTML transition:true"
+          hx-push-url="true">
+        <button type="submit" class="btn btn-danger">
+            <span class="btn-label">Sí, eliminar oficio</span>
+            <span class="btn-loading" aria-hidden="true">
+                <span class="btn-loading-dot"></span>
+                Eliminando...
+            </span>
+        </button>
+        <a class="btn btn-outline-secondary"
+           asp-page="./Details"
+           asp-route-id="@Model.Oficio.Id"
+           hx-get="@Url.Page("./Details", new { id = Model.Oficio.Id })"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true">Cancelar</a>
+    </form>
+}

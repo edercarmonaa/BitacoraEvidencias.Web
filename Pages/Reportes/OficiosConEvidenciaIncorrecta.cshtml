@@ -1,0 +1,89 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Reportes.OficiosConEvidenciaIncorrectaModel
+@{
+    ViewData["Title"] = "Oficios con evidencia incorrecta";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Oficios con evidencia incorrecta</h1>
+        <small class="text-muted">Listado completo de casos auditados con evidencia no coincidente.</small>
+    </div>
+    <a class="btn btn-outline-secondary"
+       asp-page="/Reportes"
+       hx-get="@Url.Page("/Reportes")"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Volver a reportes</a>
+</div>
+
+@{
+    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+    {
+        PageNumber = Model.PageNumber,
+        TotalPages = Model.TotalPages,
+        PageSize = Model.PageSize,
+        TotalRows = Model.TotalRows,
+        CurrentCount = Model.Items.Count,
+        PageName = "/Reportes/OficiosConEvidenciaIncorrecta",
+        RowsLabel = "caso(s)",
+        MaxPageSizeText = $"Maximo {Model.MaxAllowedPageSize} por pagina.",
+        RouteValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+        UseHtmx = true,
+        HxTarget = "#app-main",
+        HxSelect = "#app-main",
+        HxSwap = "outerHTML transition:true",
+        HxPushUrl = true
+    };
+}
+
+<partial name="_Pager" model="pager" />
+
+<div class="table-responsive">
+    <table class="table table-zebra-white table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Oficio</th>
+                <th>Nivel</th>
+                <th>Tipo</th>
+                <th>CURP</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                        No hay casos auditados con evidencia incorrecta.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.NumeroOficio</td>
+                        <td>@item.NivelEducativo</td>
+                        <td>@item.TipoCorreccion</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary"
+                               asp-page="/Oficios/Details"
+                               asp-route-id="@item.OficioId"
+                               hx-get="@Url.Page("/Oficios/Details", new { id = item.OficioId })"
+                               hx-target="#app-main"
+                               hx-select="#app-main"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">Ver oficio</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<partial name="_Pager" model="pager" />

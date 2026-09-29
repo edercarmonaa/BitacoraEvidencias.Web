@@ -1,0 +1,164 @@
+@{
+    var path = (Context?.Request?.Path.Value ?? string.Empty).Trim();
+    var normalized = path.ToLowerInvariant();
+    var items = new List<(string Label, string? Url)>();
+
+    items.Add(("Inicio", Url.Page("/Index")));
+
+    void Add(string label, string? url = null)
+    {
+        items.Add((label, url));
+    }
+
+    if (normalized.StartsWith("/oficios"))
+    {
+        Add("Oficios", Url.Page("/Oficios/Index"));
+
+        if (normalized.StartsWith("/oficios/create"))
+        {
+            Add("Nuevo oficio");
+        }
+        else if (normalized.StartsWith("/oficios/edit"))
+        {
+            Add("Editar oficio");
+        }
+        else if (normalized.StartsWith("/oficios/details"))
+        {
+            Add("Detalle de oficio");
+        }
+        else if (normalized.StartsWith("/oficios/delete"))
+        {
+            Add("Eliminar oficio");
+        }
+    }
+    else if (normalized.StartsWith("/busqueda"))
+    {
+        Add("Búsqueda");
+    }
+    else if (normalized.StartsWith("/auditoria"))
+    {
+        Add("Auditoría");
+    }
+    else if (normalized.StartsWith("/reportes"))
+    {
+        Add("Reportes");
+    }
+    else if (normalized.StartsWith("/admin/users"))
+    {
+        Add("Administración");
+        Add("Usuarios");
+    }
+    else if (normalized.StartsWith("/admin/importoficios"))
+    {
+        Add("Administración");
+        Add("Importaciones", Url.Page("/Admin/Imports"));
+        Add("Importar oficios");
+    }
+    else if (normalized.StartsWith("/admin/importcasos"))
+    {
+        Add("Administración");
+        Add("Importaciones", Url.Page("/Admin/Imports"));
+        Add("Importar casos");
+    }
+    else if (normalized.StartsWith("/admin/importevidencias"))
+    {
+        Add("Administración");
+        Add("Importaciones", Url.Page("/Admin/Imports"));
+        Add("Importar evidencias");
+    }
+    else if (normalized.StartsWith("/admin/imports"))
+    {
+        Add("Administración");
+        Add("Importaciones");
+    }
+    else if (normalized.StartsWith("/admin/auditlog"))
+    {
+        Add("Administración");
+        Add("Bitácora");
+    }
+    else if (normalized.StartsWith("/admin/sql"))
+    {
+        Add("Administración");
+        Add("SQL");
+    }
+    else if (normalized.StartsWith("/casos/create"))
+    {
+        Add("Casos");
+        Add("Nuevo caso");
+    }
+    else if (normalized.StartsWith("/casos/details"))
+    {
+        Add("Casos");
+        Add("Detalle de caso");
+    }
+    else if (normalized.StartsWith("/casos/edit"))
+    {
+        Add("Casos");
+        Add("Editar caso");
+    }
+    else if (normalized.StartsWith("/casos/delete"))
+    {
+        Add("Casos");
+        Add("Eliminar caso");
+    }
+    else if (normalized.StartsWith("/evidencias/view"))
+    {
+        Add("Evidencias");
+        Add("Visualización");
+    }
+    else if (normalized.StartsWith("/evidencias/edit"))
+    {
+        Add("Evidencias");
+        Add("Editar evidencia");
+    }
+    else if (normalized.StartsWith("/evidencias/delete"))
+    {
+        Add("Evidencias");
+        Add("Eliminar evidencia");
+    }
+    else if (normalized.StartsWith("/account/changepassword"))
+    {
+        Add("Cuenta");
+        Add("Cambiar contraseña");
+    }
+
+    var title = ViewData["Title"]?.ToString()?.Trim();
+    if (!string.IsNullOrWhiteSpace(title))
+    {
+        if (!string.Equals(items[^1].Label, title, StringComparison.OrdinalIgnoreCase))
+        {
+            Add(title);
+        }
+        else
+        {
+            items[^1] = (title, items[^1].Url);
+        }
+    }
+}
+
+<nav class="app-breadcrumb-wrap" aria-label="Breadcrumb">
+    <ol class="breadcrumb app-breadcrumb mb-4">
+        @for (var i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            var isCurrent = i == items.Count - 1;
+
+            <li class="breadcrumb-item @(isCurrent ? "active" : null)" @(isCurrent ? "aria-current=page" : null)>
+                @if (!isCurrent && !string.IsNullOrWhiteSpace(item.Url))
+                {
+                    <a href="@item.Url"
+                       hx-get="@item.Url"
+                       hx-target="#app-main"
+                       hx-select="#app-main"
+                       hx-swap="outerHTML transition:true"
+                       hx-push-url="true">@item.Label</a>
+                }
+                else
+                {
+                    <span>@item.Label</span>
+                }
+            </li>
+        }
+    </ol>
+</nav>
+

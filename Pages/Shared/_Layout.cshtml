@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bitácora Evidencias</title>
+    <script type="importmap"></script>
+
+    <style id="critical-css">
+        :root { color-scheme: light; }
+        body { margin: 0; background: #f6f2ea; color: #1d1d1b; }
+        .app-shell-grid { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; }
+        .critical-shell { max-width: 1200px; margin-inline: auto; padding-inline: 1rem; }
+        .identity-strip { min-height: 74px; background: #fff; border-bottom: 1px solid #e6dbc8; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .identity-strip img { max-height: 54px; width: auto; object-fit: contain; }
+        .app-main { min-height: 40vh; }
+    </style>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="app-shell-grid">
+    <a class="skip-link" href="#app-main">Saltar al contenido principal</a>
+
+    @{
+        var currentPath = Context?.Request?.Path.Value ?? string.Empty;
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var showMainMenu = isAuthenticated;
+    }
+
+    <header class="app-topbar" role="banner">
+        <div class="identity-strip">
+            <div class="critical-shell d-flex align-items-center justify-content-between gap-3 w-100">
+                <img src="/img/veracruz-institucional.png"
+                     asp-append-version="true"
+                     alt="Gobierno del Estado de Veracruz y dependencias"
+                     loading="lazy"
+                     decoding="async" />
+                <img src="/img/veracruz-marca.png"
+                     asp-append-version="true"
+                     alt="Por Amor a Veracruz"
+                     loading="eager"
+                     decoding="async" />
+            </div>
+        </div>
+
+        <div class="identity-bar">
+            <div class="critical-shell identity-bar__inner">
+                <span class="identity-badge">Veracruz 2024-2030</span>
+                <span class="identity-caption">Sistema local en red LAN</span>
+            </div>
+        </div>
+
+        @if (showMainMenu)
+        {
+            <nav class="navbar navbar-expand-md app-navbar border-bottom box-shadow" aria-label="Navegación principal">
+                <div class="critical-shell d-flex align-items-center w-100">
+                    <a class="navbar-brand" asp-page="/Index">Bitácora Evidencias</a>
+                    <button class="navbar-toggler"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#appMainNav"
+                            aria-controls="appMainNav"
+                            aria-expanded="false"
+                            aria-label="Mostrar navegación">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div id="appMainNav" class="navbar-collapse collapse justify-content-between">
+                        <ul class="navbar-nav flex-grow-1"
+                            hx-boost="true"
+                            hx-target="#app-main"
+                            hx-select="#app-main"
+                            hx-swap="outerHTML transition:true"
+                            hx-push-url="true">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Index">Inicio</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Oficios/Index">Oficios</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Auditoria">Auditoría</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Busqueda">Búsqueda</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-page="/Reportes">Reportes</a>
+                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <button class="btn btn-link nav-link dropdown-toggle app-admin-toggle"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        Administración
+                                    </button>
+                                    <ul class="dropdown-menu app-admin-menu" hx-boost="false">
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/ImportOficios">Importación de Oficios</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/ImportCasos">Importación de Casos</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/ImportEvidencias">Importación de Evidencias</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/Users">Usuarios</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/Sql">SQL</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-page="/Admin/AuditLog">Bitácora</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                        <div class="auth-nav">
+                            <span class="auth-user">
+                                @(User.Identity?.Name)
+                                <span class="auth-role">(@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value))</span>
+                            </span>
+                            <form method="post" asp-page="/Logout" class="auth-logout-form" hx-boost="false">
+                                <button type="submit" class="btn btn-sm btn-outline-primary auth-logout-btn">
+                                    Cerrar sesión
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        }
+    </header>
+
+    @{
+        var isInternalPage =
+            showMainMenu &&
+            !string.IsNullOrWhiteSpace(currentPath) &&
+            !string.Equals(currentPath, "/", StringComparison.OrdinalIgnoreCase) &&
+            !currentPath.StartsWith("/Login", StringComparison.OrdinalIgnoreCase) &&
+            !currentPath.StartsWith("/Error", StringComparison.OrdinalIgnoreCase) &&
+            !currentPath.StartsWith("/Fragments", StringComparison.OrdinalIgnoreCase);
+    }
+
+    <main id="app-main" class="app-main app-frame critical-shell" role="main" tabindex="-1">
+        @if (isInternalPage)
+        {
+            <partial name="_Breadcrumbs" />
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="app-footer border-top footer text-muted">
+        <div class="critical-shell py-3">
+            &copy; 2026 - Bitácora Evidencias
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/lib/htmx/htmx.min.js" asp-append-version="true" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+

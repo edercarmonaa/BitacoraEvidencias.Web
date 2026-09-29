@@ -1,0 +1,157 @@
+@page "{id:int}"
+@model BitacoraEvidencias.Web.Pages.Oficios.DetailsModel
+@{
+    ViewData["Title"] = "Detalle de Oficio";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+{
+    <div class="alert alert-success">@Model.FlashSuccess</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashError))
+{
+    <div class="alert alert-danger">@Model.FlashError</div>
+}
+
+@if (Model.Oficio is not null)
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0">Oficio @Model.Oficio.NumeroOficio</h1>
+            <small class="text-muted">Fecha: @Model.Oficio.FechaOficio.ToString("dd/MM/yyyy")</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary"
+               asp-page="./Index"
+               hx-get="@Url.Page("./Index")"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Regresar</a>
+            <a class="btn btn-outline-primary"
+               asp-page="./Edit"
+               asp-route-id="@Model.Oficio.Id"
+               hx-get="@Url.Page("./Edit", new { id = Model.Oficio.Id })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Editar oficio</a>
+            <a class="btn btn-outline-danger"
+               asp-page="./Delete"
+               asp-route-id="@Model.Oficio.Id"
+               hx-get="@Url.Page("./Delete", new { id = Model.Oficio.Id })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Eliminar oficio</a>
+            <a class="btn btn-primary"
+               asp-page="/Casos/Create"
+               asp-route-oficioId="@Model.Oficio.Id"
+               asp-route-returnOficioId="@Model.Oficio.Id"
+               hx-get="@Url.Page("/Casos/Create", new { oficioId = Model.Oficio.Id, returnOficioId = Model.Oficio.Id })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Nuevo caso</a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted">Asunto</h2>
+            <p class="mb-3">@Model.Oficio.Asunto</p>
+
+            <h2 class="h6 text-uppercase text-muted">Notas</h2>
+            <p class="mb-0">@(!string.IsNullOrWhiteSpace(Model.Oficio.Notas) ? Model.Oficio.Notas : "Sin notas")</p>
+        </div>
+    </div>
+
+    <section id="oficio-cases-section">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h2 class="h5 mb-0">Casos registrados</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted">@Model.Casos.Count caso(s)</span>
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        hx-get="@Url.Page("./Details", new { id = Model.Oficio.Id })"
+                        hx-target="#oficio-cases-section"
+                        hx-select="#oficio-cases-section"
+                        hx-swap="outerHTML transition:true"
+                        hx-push-url="false">
+                    Actualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Consecutivo</th>
+                        <th>CURP</th>
+                        <th>Nombre</th>
+                        <th>Nivel</th>
+                        <th>Tipo</th>
+                        <th>Estatus</th>
+                        <th>Evidencias</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Casos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Este oficio todavia no tiene casos.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var caso in Model.Casos)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@caso.ConsecutivoTexto</td>
+                                <td>@(string.IsNullOrWhiteSpace(caso.Curp) ? "-" : caso.Curp)</td>
+                                <td>@(string.IsNullOrWhiteSpace(caso.NombreCompleto) ? "-" : caso.NombreCompleto)</td>
+                                <td>@caso.NivelEducativo</td>
+                                <td>@caso.TipoCorreccion</td>
+                                <td>@caso.Estatus</td>
+                                <td>@caso.TotalEvidencias</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       asp-page="/Casos/Details"
+                                       asp-route-id="@caso.Id"
+                                       hx-get="@Url.Page("/Casos/Details", new { id = caso.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Abrir</a>
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       asp-page="/Casos/Edit"
+                                       asp-route-id="@caso.Id"
+                                       asp-route-returnOficioId="@Model.Oficio.Id"
+                                       hx-get="@Url.Page("/Casos/Edit", new { id = caso.Id, returnOficioId = Model.Oficio.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Editar</a>
+                                    <a class="btn btn-sm btn-outline-danger"
+                                       asp-page="/Casos/Delete"
+                                       asp-route-id="@caso.Id"
+                                       asp-route-returnOficioId="@Model.Oficio.Id"
+                                       hx-get="@Url.Page("/Casos/Delete", new { id = caso.Id, returnOficioId = Model.Oficio.Id })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">Eliminar</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

@@ -1,0 +1,195 @@
+@model BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+
+@{
+    var routeValues = new Dictionary<string, string>(Model.RouteValues, StringComparer.OrdinalIgnoreCase)
+    {
+        ["PageSize"] = Model.PageSize.ToString()
+    };
+
+    Dictionary<string, string> BuildRoute(int pageNumber)
+    {
+        var result = new Dictionary<string, string>(routeValues, StringComparer.OrdinalIgnoreCase)
+        {
+            ["PageNumber"] = pageNumber.ToString()
+        };
+        return result;
+    }
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 my-2">
+    <small class="text-muted">
+        Mostrando @Model.FirstRow-@Model.LastRow de @Model.TotalRows @Model.RowsLabel
+        @if (!string.IsNullOrWhiteSpace(Model.MaxPageSizeText))
+        {
+            @: @Model.MaxPageSizeText
+        }
+    </small>
+
+    <div class="btn-group">
+        @if (Model.HasPreviousPage)
+        {
+            if (Model.UseHtmx)
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(1)"
+                   hx-get="@Url.Page(Model.PageName, BuildRoute(1))"
+                   hx-target="@Model.HxTarget"
+                   hx-select="@Model.HxSelect"
+                   hx-swap="@Model.HxSwap"
+                   hx-push-url="@(Model.HxPushUrl ? "true" : "false")"
+                   title="Primera pagina"
+                   aria-label="Ir a la primera pagina">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                    <span class="visually-hidden">Primera pagina</span>
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(1)"
+                   title="Primera pagina"
+                   aria-label="Ir a la primera pagina">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                    <span class="visually-hidden">Primera pagina</span>
+                </a>
+            }
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-secondary disabled"
+                  title="Primera pagina"
+                  aria-label="Primera pagina"
+                  aria-disabled="true">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+                <span class="visually-hidden">Primera pagina</span>
+            </span>
+        }
+
+        @if (Model.HasPreviousPage)
+        {
+            if (Model.UseHtmx)
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.PageNumber - 1)"
+                   hx-get="@Url.Page(Model.PageName, BuildRoute(Model.PageNumber - 1))"
+                   hx-target="@Model.HxTarget"
+                   hx-select="@Model.HxSelect"
+                   hx-swap="@Model.HxSwap"
+                   hx-push-url="@(Model.HxPushUrl ? "true" : "false")"
+                   title="Pagina anterior"
+                   aria-label="Ir a la pagina anterior">
+                    <span aria-hidden="true">&lsaquo;</span>
+                    <span class="visually-hidden">Pagina anterior</span>
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.PageNumber - 1)"
+                   title="Pagina anterior"
+                   aria-label="Ir a la pagina anterior">
+                    <span aria-hidden="true">&lsaquo;</span>
+                    <span class="visually-hidden">Pagina anterior</span>
+                </a>
+            }
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-secondary disabled"
+                  title="Pagina anterior"
+                  aria-label="Pagina anterior"
+                  aria-disabled="true">
+                <span aria-hidden="true">&lsaquo;</span>
+                <span class="visually-hidden">Pagina anterior</span>
+            </span>
+        }
+
+        <span class="btn btn-sm btn-outline-secondary disabled"> @Model.PageNumber de @Model.TotalPages</span>
+
+        @if (Model.HasNextPage)
+        {
+            if (Model.UseHtmx)
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.PageNumber + 1)"
+                   hx-get="@Url.Page(Model.PageName, BuildRoute(Model.PageNumber + 1))"
+                   hx-target="@Model.HxTarget"
+                   hx-select="@Model.HxSelect"
+                   hx-swap="@Model.HxSwap"
+                   hx-push-url="@(Model.HxPushUrl ? "true" : "false")"
+                   title="Pagina siguiente"
+                   aria-label="Ir a la pagina siguiente">
+                    <span aria-hidden="true">&rsaquo;</span>
+                    <span class="visually-hidden">Pagina siguiente</span>
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.PageNumber + 1)"
+                   title="Pagina siguiente"
+                   aria-label="Ir a la pagina siguiente">
+                    <span aria-hidden="true">&rsaquo;</span>
+                    <span class="visually-hidden">Pagina siguiente</span>
+                </a>
+            }
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-secondary disabled"
+                  title="Pagina siguiente"
+                  aria-label="Pagina siguiente"
+                  aria-disabled="true">
+                <span aria-hidden="true">&rsaquo;</span>
+                <span class="visually-hidden">Pagina siguiente</span>
+            </span>
+        }
+
+        @if (Model.HasNextPage)
+        {
+            if (Model.UseHtmx)
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.TotalPages)"
+                   hx-get="@Url.Page(Model.PageName, BuildRoute(Model.TotalPages))"
+                   hx-target="@Model.HxTarget"
+                   hx-select="@Model.HxSelect"
+                   hx-swap="@Model.HxSwap"
+                   hx-push-url="@(Model.HxPushUrl ? "true" : "false")"
+                   title="Ultima pagina"
+                   aria-label="Ir a la ultima pagina">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                    <span class="visually-hidden">Ultima pagina</span>
+                </a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-outline-secondary"
+                   asp-page="@Model.PageName"
+                   asp-all-route-data="@BuildRoute(Model.TotalPages)"
+                   title="Ultima pagina"
+                   aria-label="Ir a la ultima pagina">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                    <span class="visually-hidden">Ultima pagina</span>
+                </a>
+            }
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-secondary disabled"
+                  title="Ultima pagina"
+                  aria-label="Ultima pagina"
+                  aria-disabled="true">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+                <span class="visually-hidden">Ultima pagina</span>
+            </span>
+        }
+    </div>
+</div>

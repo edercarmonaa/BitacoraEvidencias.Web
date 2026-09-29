@@ -1,0 +1,42 @@
+@page
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@{
+    ViewData["Title"] = "Importaciones";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Importaciones masivas</h1>
+        <small class="text-muted">Carga archivos .csv o .xlsx, revisa el resumen y confirma la importacion.</small>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Importar oficios</h2>
+                <p class="text-muted mb-3">Campos: NumeroOficio, FechaOficio, Asunto y Notas opcional.</p>
+                <a asp-page="/Admin/ImportOficios" class="btn btn-primary">Abrir modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Importar casos</h2>
+                <p class="text-muted mb-3">Campos por oficio existente, con validacion previa y asignacion automatica de consecutivos.</p>
+                <a asp-page="/Admin/ImportCasos" class="btn btn-primary">Abrir modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5">Importar evidencias</h2>
+                <p class="text-muted mb-3">Campos: OFICIO, ARCHIVO, TIPO, NIVEL, FECHA y NOTAS. Valida archivos fisicos antes de importar.</p>
+                <a asp-page="/Admin/ImportEvidencias" class="btn btn-primary">Abrir modulo</a>
+            </div>
+        </div>
+    </div>
+</div>

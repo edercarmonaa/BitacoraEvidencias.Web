@@ -1,0 +1,126 @@
+@model BitacoraEvidencias.Web.ViewComponents.DashboardOverviewViewModel
+@{
+    var oficiosHeader = new BitacoraEvidencias.Web.ViewComponents.DashboardPanelHeaderModel
+    {
+        Title = "Oficios recientes",
+        ActionText = "Ver todos",
+        ActionHref = Url.Page("/Oficios/Index") ?? "/Oficios/Index"
+    };
+
+    var pendientesHeader = new BitacoraEvidencias.Web.ViewComponents.DashboardPanelHeaderModel
+    {
+        Title = "Pendientes de evidencia",
+        ActionText = "Ver reporte",
+        ActionHref = Url.Page("/Reportes") ?? "/Reportes"
+    };
+}
+
+<section id="dashboard-overview"
+         class="dash-organism"
+         data-busy
+         aria-label="Resumen operativo"
+         hx-get="@Url.Page("/Fragments/DashboardOverview")"
+         hx-trigger="every 120s"
+         hx-target="this"
+         hx-swap="outerHTML transition:true"
+         hx-push-url="false">
+    <header class="dash-header mb-4">
+        <div>
+            <h1 class="dash-title">Bitacora de Evidencias</h1>
+            <p class="dash-subtitle">Resumen dinamico de oficios, casos y evidencias.</p>
+            <p class="dash-meta mb-0">
+                Actualizado: <time datetime="@Model.LastUpdatedLocal.ToString("O")">@Model.LastUpdatedLocal.ToString("dd/MM/yyyy HH:mm:ss")</time>
+            </p>
+        </div>
+        <div class="dash-actions" role="group" aria-label="Acciones del dashboard">
+            <a class="tw-btn-brand"
+               href="@Url.Page("/Oficios/Create")"
+               hx-get="@Url.Page("/Oficios/Create")"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Registrar oficio</a>
+            <button type="button"
+                    class="tw-btn-subtle"
+                    hx-get="@Url.Page("/Fragments/DashboardOverview")"
+                    hx-target="#dashboard-overview"
+                    hx-swap="outerHTML transition:true"
+                    hx-push-url="false">
+                Actualizar
+            </button>
+        </div>
+    </header>
+
+    <section class="dash-metrics mb-4" aria-label="Indicadores principales">
+        @foreach (var item in Model.StatCards)
+        {
+            <partial name="~/Pages/Shared/Atoms/_StatCard.cshtml" model="item" />
+        }
+    </section>
+
+    <section class="dash-panels" aria-label="Listados operativos">
+        <article class="dash-panel">
+            <partial name="~/Pages/Shared/Molecules/_PanelHeader.cshtml"
+                     model="oficiosHeader" />
+            <div class="dash-panel__body p-0">
+                @if (Model.OficiosRecientes.Count == 0)
+                {
+                    <p class="dash-meta p-3 mb-0">No hay oficios registrados.</p>
+                }
+                else
+                {
+                    <ul class="dash-list">
+                        @foreach (var item in Model.OficiosRecientes)
+                        {
+                            <li>
+                                <a class="dash-list__link"
+                                   href="@Url.Page("/Oficios/Details", new { id = item.Id })"
+                                   hx-get="@Url.Page("/Oficios/Details", new { id = item.Id })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">
+                                    <span class="fw-semibold">@item.NumeroOficio</span>
+                                    <span>@item.Asunto</span>
+                                    <span class="dash-meta">@item.FechaOficio.ToString("dd/MM/yyyy") | @item.TotalCasos caso(s)</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </article>
+
+        <article class="dash-panel">
+            <partial name="~/Pages/Shared/Molecules/_PanelHeader.cshtml"
+                     model="pendientesHeader" />
+            <div class="dash-panel__body p-0">
+                @if (Model.CasosPendientes.Count == 0)
+                {
+                    <p class="dash-meta p-3 mb-0">No hay pendientes de evidencia.</p>
+                }
+                else
+                {
+                    <ul class="dash-list">
+                        @foreach (var item in Model.CasosPendientes)
+                        {
+                            <li>
+                                <a class="dash-list__link"
+                                   href="@Url.Page("/Casos/Details", new { id = item.Id })"
+                                   hx-get="@Url.Page("/Casos/Details", new { id = item.Id })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">
+                                    <span class="fw-semibold">@item.NumeroOficio - @item.ConsecutivoTexto</span>
+                                    <span>@item.TipoCorreccion | @item.NivelEducativo</span>
+                                    <span class="dash-meta">Estatus: @item.Estatus</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </article>
+    </section>
+</section>

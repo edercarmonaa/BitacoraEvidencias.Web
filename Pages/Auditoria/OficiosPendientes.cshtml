@@ -1,0 +1,127 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Auditoria.OficiosPendientesModel
+@{
+    ViewData["Title"] = "Oficios pendientes de auditoria";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Oficios pendientes de auditoria</h1>
+        <small class="text-muted">Listado completo de oficios listos para auditar.</small>
+    </div>
+    <a class="btn btn-outline-secondary"
+       asp-page="/Auditoria"
+       asp-route-numeroOficio="@Model.NumeroOficioFiltro"
+       hx-get="@Url.Page("/Auditoria", new { numeroOficio = Model.NumeroOficioFiltro })"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Volver a auditoria</a>
+</div>
+
+@{
+    var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    if (Model.HasNumeroOficioFiltro)
+    {
+        routeValues["numeroOficio"] = Model.NumeroOficioFiltro;
+    }
+
+    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+    {
+        PageNumber = Model.PageNumber,
+        TotalPages = Model.TotalPages,
+        PageSize = Model.PageSize,
+        TotalRows = Model.TotalRows,
+        CurrentCount = Model.Items.Count,
+        PageName = "/Auditoria/OficiosPendientes",
+        RowsLabel = "oficio(s)",
+        MaxPageSizeText = $"Maximo {Model.MaxAllowedPageSize} por pagina.",
+        RouteValues = routeValues,
+        UseHtmx = true,
+        HxTarget = "#app-main",
+        HxSelect = "#app-main",
+        HxSwap = "outerHTML transition:true",
+        HxPushUrl = true
+    };
+}
+
+<form class="mb-3" method="get" asp-page="/Auditoria/OficiosPendientes">
+    <input type="hidden" name="PageSize" value="@Model.PageSize" />
+    <label class="form-label mb-1" for="pending-office-search">Buscar por numero de oficio</label>
+    <input id="pending-office-search"
+           type="search"
+           name="numeroOficio"
+           value="@Model.NumeroOficioFiltro"
+           class="form-control"
+           placeholder="Ej. DG/123/2026"
+           autocomplete="off"
+           hx-get="@Url.Page("/Auditoria/OficiosPendientes")"
+           hx-include="closest form"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true"
+           hx-trigger="input changed delay:250ms, search" />
+</form>
+
+<partial name="_Pager" model="pager" />
+
+<div class="table-responsive">
+    <table class="table table-zebra-white table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Numero</th>
+                <th>Fecha</th>
+                <th>Asunto</th>
+                <th>Casos</th>
+                <th>Evidencias</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        @(Model.TotalOficiosAuditables == 0
+                            ? "No hay oficios pendientes de auditoria."
+                            : "No se encontraron oficios con ese numero.")
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.NumeroOficio</td>
+                        <td>@item.FechaOficio.ToString("dd/MM/yyyy")</td>
+                        <td>@item.Asunto</td>
+                        <td>@item.TotalCasos</td>
+                        <td>@item.TotalFuentesEvidencia</td>
+                        <td class="text-end">
+                            @if (item.FirstPendingCaseId > 0)
+                            {
+                                <a class="btn btn-sm btn-outline-primary"
+                                    asp-page="/Auditoria"
+                                    asp-route-casoId="@item.FirstPendingCaseId"
+                                   asp-route-numeroOficio="@Model.NumeroOficioFiltro"
+                                   hx-get="@Url.Page("/Auditoria", new { casoId = item.FirstPendingCaseId, numeroOficio = Model.NumeroOficioFiltro })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Auditar</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Sin caso pendiente</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<partial name="_Pager" model="pager" />

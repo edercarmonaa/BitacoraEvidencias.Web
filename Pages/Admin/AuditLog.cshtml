@@ -1,0 +1,157 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Admin.AuditLogModel
+@{
+    ViewData["Title"] = "Bitácora de Auditoría";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Bitácora de Auditoría</h1>
+        <small class="text-muted">Eventos recientes del sistema (horario local del servidor).</small>
+    </div>
+</div>
+
+<form method="get"
+      class="card mb-3"
+      data-busy
+      hx-get="@Url.Page("/Admin/AuditLog")"
+      hx-indicator="#auditlog-loading"
+      hx-target="#auditlog-results"
+      hx-select="#auditlog-results"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="true">
+    <div class="card-body">
+        <input type="hidden" name="PageNumber" value="1" />
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label asp-for="Days" class="form-label">Días</label>
+                <input asp-for="Days" class="form-control" min="1" max="90" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="EventType" class="form-label">Evento</label>
+                <input asp-for="EventType" class="form-control" placeholder="LOGIN, CREATE, DELETE..." />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Username" class="form-label">Usuario</label>
+                <input asp-for="Username" class="form-control" placeholder="admin" />
+            </div>
+            <div class="col-md-2">
+                <label asp-for="PageSize" class="form-label">Tamaño de página</label>
+                <select asp-for="PageSize" class="form-select">
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a asp-page="/Admin/AuditLog"
+                   class="btn btn-outline-secondary"
+                   hx-get="@Url.Page("/Admin/AuditLog")"
+                   hx-target="#app-main"
+                   hx-select="#app-main"
+                   hx-swap="outerHTML transition:true"
+                   hx-push-url="true">Limpiar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<section id="auditlog-results">
+    <div id="auditlog-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
+        <div class="app-skeleton-row w-90"></div>
+        <div class="app-skeleton-row w-75"></div>
+        <div class="app-skeleton-row w-60"></div>
+        <div class="app-skeleton-row w-90"></div>
+    </div>
+
+    <div class="app-results-body">
+        @{
+            var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [nameof(Model.Days)] = Model.Days.ToString()
+            };
+
+            if (!string.IsNullOrWhiteSpace(Model.EventType))
+            {
+                routeValues[nameof(Model.EventType)] = Model.EventType.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(Model.Username))
+            {
+                routeValues[nameof(Model.Username)] = Model.Username.Trim();
+            }
+
+            var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+            {
+                PageNumber = Model.PageNumber,
+                TotalPages = Model.TotalPages,
+                PageSize = Model.PageSize,
+                TotalRows = Model.TotalRows,
+                CurrentCount = Model.Items.Count,
+                PageName = "/Admin/AuditLog",
+                RowsLabel = "evento(s)",
+                MaxPageSizeText = $"Máximo {Model.MaxAllowedPageSize} por página.",
+                RouteValues = routeValues,
+                UseHtmx = true,
+                HxTarget = "#auditlog-results",
+                HxSelect = "#auditlog-results",
+                HxSwap = "outerHTML transition:true",
+                HxPushUrl = true
+            };
+        }
+
+        <partial name="_Pager" model="pager" />
+
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-sm table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Fecha local</th>
+                        <th>Evento</th>
+                        <th>Usuario</th>
+                        <th>IP</th>
+                        <th>Entidad</th>
+                        <th>Claves</th>
+                        <th>Detalle</th>
+                        <th>OK</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-muted">Sin eventos para los filtros seleccionados.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@item.OccurredAtLocal.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>@item.EventType</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Username) ? "-" : $"{item.Username} ({item.Role ?? "-"})")</td>
+                                <td>@(item.IpAddress ?? "-")</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.EntityType) ? "-" : $"{item.EntityType} #{item.EntityId?.ToString() ?? "-"}")</td>
+                                <td>
+                                    Oficio: @(item.NumeroOficio ?? "-")<br />
+                                    Cons: @(item.Consecutivo?.ToString() ?? "-")<br />
+                                    CURP: @(item.Curp ?? "-")<br />
+                                    CCT: @(item.Cct ?? "-")<br />
+                                    Folio: @(item.FolioCertificado ?? "-")<br />
+                                    #Img: @(item.EvidenciasCount?.ToString() ?? "-")
+                                </td>
+                                <td>@(item.Details ?? "-")</td>
+                                <td>@(item.Success ? "Sí" : "No")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="pager" />
+    </div>
+</section>

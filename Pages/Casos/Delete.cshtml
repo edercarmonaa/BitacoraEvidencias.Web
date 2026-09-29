@@ -1,0 +1,66 @@
+@page "{id:int}"
+@model BitacoraEvidencias.Web.Pages.Casos.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Caso";
+    var returnUrl = Model.ReturnUrl;
+}
+
+@if (Model.Caso is not null)
+{
+    <div class="card">
+        <div class="card-body">
+            <h1 class="h4 mb-3">Eliminar caso @Model.Caso.ConsecutivoTexto</h1>
+            <p class="mb-1"><span class="text-muted">Oficio:</span> @Model.Caso.NumeroOficio</p>
+            <p class="mb-1"><span class="text-muted">Caso:</span> @Model.Caso.ConsecutivoTexto</p>
+            <p class="mb-1"><span class="text-muted">CURP:</span> @(string.IsNullOrWhiteSpace(Model.Caso.Curp) ? "-" : Model.Caso.Curp)</p>
+            <p class="mb-1"><span class="text-muted">Nombre:</span> @(string.IsNullOrWhiteSpace(Model.Caso.NombreCompleto) ? "-" : Model.Caso.NombreCompleto)</p>
+            <p class="mb-1"><span class="text-muted">Nivel educativo:</span> @Model.Caso.NivelEducativo</p>
+            <p class="mb-1"><span class="text-muted">Tipo:</span> @Model.Caso.TipoCorreccion</p>
+            <p class="mb-3"><span class="text-muted">Impacto:</span> @Model.Caso.TotalEvidencias evidencia(s)</p>
+
+            <div class="alert alert-warning">
+                Se eliminaran el caso, sus evidencias y el reordenado de consecutivos del oficio.
+            </div>
+
+            <form method="post"
+                  data-busy
+                  data-ui-loading
+                  hx-post="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id, returnOficioId = Model.ReturnOficioId, returnUrl = Model.ReturnUrl })"
+                  hx-target="#app-main"
+                  hx-select="#app-main"
+                  hx-swap="outerHTML transition:true"
+                  hx-push-url="false">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">
+                        <span class="btn-label">Eliminar caso</span>
+                        <span class="btn-loading" aria-hidden="true">
+                            <span class="btn-loading-dot"></span>
+                            Eliminando...
+                        </span>
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(returnUrl))
+                    {
+                        <a class="btn btn-outline-secondary"
+                           href="@returnUrl"
+                           hx-get="@returnUrl"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Cancelar</a>
+                    }
+                    else if (Model.ReturnOficioId.HasValue)
+                    {
+                        <a class="btn btn-outline-secondary"
+                           asp-page="/Oficios/Details"
+                           asp-route-id="@Model.ReturnOficioId.Value"
+                           hx-get="@Url.Page("/Oficios/Details", new { id = Model.ReturnOficioId.Value })"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Cancelar</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+}

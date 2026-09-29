@@ -1,0 +1,301 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Reportes.EjecutivoModel
+@{
+    ViewData["Title"] = "Reporte ejecutivo";
+    var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["FechaInicio"] = Model.FechaInicio?.ToString("yyyy-MM-dd") ?? string.Empty,
+        ["FechaFin"] = Model.FechaFin?.ToString("yyyy-MM-dd") ?? string.Empty
+    };
+
+    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+    {
+        PageNumber = Model.PageNumber,
+        TotalPages = Model.TotalPages,
+        PageSize = Model.PageSize,
+        TotalRows = Model.TotalCasosPendientes,
+        CurrentCount = Model.CasosPendientes.Count,
+        PageName = "/Reportes/Ejecutivo",
+        RowsLabel = "caso(s) pendiente(s)",
+        MaxPageSizeText = $"Maximo {Model.MaxAllowedPageSize} por pagina.",
+        RouteValues = routeValues,
+        UseHtmx = true,
+        HxTarget = "#app-main",
+        HxSelect = "#app-main",
+        HxSwap = "outerHTML transition:true",
+        HxPushUrl = true
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Reporte ejecutivo</h1>
+        <small class="text-muted">Resumen por fecha de verificacion.</small>
+    </div>
+    <a class="btn btn-outline-secondary"
+       asp-page="/Reportes"
+       hx-get="@Url.Page("/Reportes")"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Volver a reportes</a>
+</div>
+
+<form method="get"
+      class="dash-panel mb-4"
+      hx-get="@Url.Page("/Reportes/Ejecutivo")"
+      hx-target="#app-main"
+      hx-select="#app-main"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="true">
+    <div class="dash-panel__body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label asp-for="FechaInicio" class="form-label">Fecha inicial</label>
+                <input asp-for="FechaInicio" class="form-control" type="date" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="FechaFin" class="form-label">Fecha final</label>
+                <input asp-for="FechaFin" class="form-control" type="date" />
+            </div>
+            <div class="col-12 col-md-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">Aplicar</button>
+                <a class="btn btn-outline-secondary"
+                   asp-page="/Reportes/Ejecutivo"
+                   hx-get="@Url.Page("/Reportes/Ejecutivo")"
+                   hx-target="#app-main"
+                   hx-select="#app-main"
+                   hx-swap="outerHTML transition:true"
+                   hx-push-url="true">Limpiar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<section class="dash-metrics report-metrics mb-4" aria-label="Indicadores ejecutivos">
+    @foreach (var item in Model.StatCards)
+    {
+        <partial name="~/Pages/Shared/Atoms/_StatCard.cshtml" model="item" />
+    }
+</section>
+
+<section class="dash-panel mb-4">
+    <div class="dash-panel__body border-bottom">
+        <h2 class="h5 mb-0">Verificaciones por mes</h2>
+    </div>
+    <div class="dash-panel__body p-0">
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th>Oficios verificados</th>
+                        <th>Casos verificados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ResumenMensual.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">Sin meses para mostrar.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.ResumenMensual)
+                        {
+                            <tr>
+                                <td>@item.Periodo</td>
+                                <td>@item.TotalOficios</td>
+                                <td>@item.TotalCasos</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="dash-panel mb-4">
+    <div class="dash-panel__body border-bottom">
+        <h2 class="h5 mb-0">Oficios por año del oficio</h2>
+    </div>
+    <div class="dash-panel__body p-0">
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Año del oficio</th>
+                        <th>Total de oficios</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.OficiosPorAnioFechaOficio.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-3">Sin oficios verificados en el periodo.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.OficiosPorAnioFechaOficio)
+                        {
+                            <tr>
+                                <td>@item.Anio</td>
+                                <td>@item.TotalOficios</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="dash-panels report-panels mb-4">
+    <article class="dash-panel">
+        <div class="dash-panel__body border-bottom">
+            <h2 class="h5 mb-0">Casos por nivel</h2>
+        </div>
+        <div class="dash-panel__body p-0">
+            <div class="table-responsive">
+                <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nivel</th>
+                            <th>Total de casos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.CasosPorNivel.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-3">Sin casos verificados en el periodo.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model.CasosPorNivel)
+                            {
+                                <tr>
+                                    <td>@item.NivelEducativo</td>
+                                    <td>@item.Total</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </article>
+
+    <article class="dash-panel">
+        <div class="dash-panel__body border-bottom">
+            <h2 class="h5 mb-0">Oficios por tipo de correccion</h2>
+        </div>
+        <div class="dash-panel__body p-0">
+            <div class="table-responsive">
+                <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Total de oficios</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.OficiosPorTipoCorreccion.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-3">Sin datos para agrupar.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model.OficiosPorTipoCorreccion)
+                            {
+                                <tr>
+                                    <td>@item.TipoCorreccion</td>
+                                    <td>@item.TotalOficios</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="dash-panel">
+    <div class="dash-panel__body border-bottom">
+        <h2 class="h5 mb-0">Detalle de casos pendientes</h2>
+    </div>
+    <div class="dash-panel__body">
+        <partial name="_Pager" model="pager" />
+    </div>
+    <div class="dash-panel__body p-0">
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha verificacion</th>
+                        <th>Oficio</th>
+                        <th>Caso</th>
+                        <th>Nivel</th>
+                        <th>Tipo</th>
+                        <th>Estatus</th>
+                        <th>CURP</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.CasosPendientes.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">No hay casos pendientes en el periodo.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.CasosPendientes)
+                        {
+                            <tr>
+                                <td>@item.FechaVerificacion?.ToString("dd/MM/yyyy")</td>
+                                <td class="fw-semibold">@item.NumeroOficio</td>
+                                <td>@item.ConsecutivoTexto</td>
+                                <td>@item.NivelEducativo</td>
+                                <td>@item.TipoCorreccion</td>
+                                <td>@item.Estatus</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           asp-page="/Casos/Details"
+                                           asp-route-id="@item.CasoId"
+                                           hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">Abrir</a>
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-page="/Casos/Edit"
+                                           asp-route-id="@item.CasoId"
+                                           hx-get="@Url.Page("/Casos/Edit", new { id = item.CasoId })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">Editar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="dash-panel__body">
+        <partial name="_Pager" model="pager" />
+    </div>
+</section>

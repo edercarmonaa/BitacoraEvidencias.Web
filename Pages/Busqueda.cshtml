@@ -1,0 +1,371 @@
+@page
+@model BitacoraEvidencias.Web.Pages.BusquedaModel
+@{
+    ViewData["Title"] = "Busqueda";
+    var returnUrl = $"{Request.Path}{Request.QueryString}";
+}
+
+<h1 class="h3 mb-3">Busqueda rapida</h1>
+
+<form method="get"
+      class="card card-body mb-3 search-filters-card"
+      data-busy
+      hx-get="@Url.Page("./Busqueda")"
+      hx-indicator="#search-loading"
+      hx-target="#search-results"
+      hx-select="#search-results"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="true">
+    <input type="hidden" name="PageNumber" value="1" />
+    <input type="hidden" asp-for="SortBy" />
+    <input type="hidden" asp-for="SortDirection" />
+
+    <div class="row g-2 align-items-end search-filters-row">
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="NumeroOficio" class="form-label search-filters-label">Numero de oficio</label>
+            <input asp-for="NumeroOficio" class="form-control" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="Curp" class="form-label search-filters-label">CURP</label>
+            <input asp-for="Curp" class="form-control" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="Cct" class="form-label search-filters-label">CCT</label>
+            <input asp-for="Cct" class="form-control" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="Folio" class="form-label search-filters-label">Folio certificado</label>
+            <input asp-for="Folio" class="form-control" />
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="NivelEducativo" class="form-label search-filters-label">Nivel educativo</label>
+            <select asp-for="NivelEducativo" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var nivel in Model.NivelesEducativosDisponibles)
+                {
+                    <option value="@nivel">@nivel</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="Estatus" class="form-label search-filters-label">Estatus</label>
+            <select asp-for="Estatus" class="form-select">
+                <option value="">Todos</option>
+                @foreach (var status in Model.EstatusDisponibles)
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <label asp-for="PageSize" class="form-label search-filters-label">Tamano de pagina</label>
+            <select asp-for="PageSize" class="form-select">
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mt-2 d-flex flex-wrap align-items-center gap-3">
+        <div class="form-check m-0">
+            <input asp-for="UseContains" class="form-check-input" />
+            <label asp-for="UseContains" class="form-check-label">Busqueda amplia (contiene)</label>
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <a class="btn btn-outline-secondary"
+           asp-page="./Busqueda"
+           hx-get="@Url.Page("./Busqueda")"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true">Limpiar</a>
+    </div>
+</form>
+
+<section id="search-results">
+    <div id="search-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
+        <div class="app-skeleton-row w-90"></div>
+        <div class="app-skeleton-row w-75"></div>
+        <div class="app-skeleton-row w-60"></div>
+        <div class="app-skeleton-row w-90"></div>
+    </div>
+    <div class="app-results-body">
+        @{
+            var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            void AddIfNotEmpty(string key, string? value)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    routeValues[key] = value.Trim();
+                }
+            }
+
+            AddIfNotEmpty(nameof(Model.NumeroOficio), Model.NumeroOficio);
+            AddIfNotEmpty(nameof(Model.Curp), Model.Curp);
+            AddIfNotEmpty(nameof(Model.Cct), Model.Cct);
+            AddIfNotEmpty(nameof(Model.Folio), Model.Folio);
+            AddIfNotEmpty(nameof(Model.NivelEducativo), Model.NivelEducativo);
+            AddIfNotEmpty(nameof(Model.Estatus), Model.Estatus);
+            routeValues[nameof(Model.UseContains)] = Model.UseContains ? bool.TrueString : bool.FalseString;
+            routeValues[nameof(Model.PageSize)] = Model.PageSize.ToString();
+            AddIfNotEmpty(nameof(Model.SortBy), Model.SortBy);
+            AddIfNotEmpty(nameof(Model.SortDirection), Model.SortDirection);
+
+            Dictionary<string, string> BuildSortRouteValues(string sortBy)
+            {
+                var values = new Dictionary<string, string>(routeValues, StringComparer.OrdinalIgnoreCase)
+                {
+                    [nameof(Model.PageNumber)] = "1",
+                    [nameof(Model.PageSize)] = Model.PageSize.ToString(),
+                    [nameof(Model.SortBy)] = sortBy,
+                    [nameof(Model.SortDirection)] = Model.GetNextSortDirection(sortBy)
+                };
+
+                return values;
+            }
+
+            string BuildSortUrl(string sortBy) => Url.Page("./Busqueda", BuildSortRouteValues(sortBy)) ?? Url.Page("./Busqueda")!;
+
+            string SortHeaderClass(string sortBy) => Model.IsSortedBy(sortBy) ? "link-body-emphasis fw-semibold text-decoration-none" : "link-secondary text-decoration-none";
+
+            var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+            {
+                PageNumber = Model.PageNumber,
+                TotalPages = Model.TotalPages,
+                PageSize = Model.PageSize,
+                TotalRows = Model.TotalRows,
+                CurrentCount = Model.Resultados.Count,
+                PageName = "/Busqueda",
+                RowsLabel = "registro(s)",
+                RouteValues = routeValues,
+                UseHtmx = true,
+                HxTarget = "#search-results",
+                HxSelect = "#search-results",
+                HxSwap = "outerHTML transition:true",
+                HxPushUrl = true
+            };
+        }
+
+        <partial name="_Pager" model="pager" />
+
+        <div class="table-responsive">
+            <table class="table table-sm table-zebra-white table-striped table-hover align-middle small mb-0 search-results-table">
+                <thead>
+                    <tr>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("oficio") @(Model.IsSortedBy("oficio") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("oficio")"
+                               hx-get="@BuildSortUrl("oficio")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Oficio</span>
+                                @if (Model.IsSortedBy("oficio"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("oficio")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("fecha") @(Model.IsSortedBy("fecha") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("fecha")"
+                               hx-get="@BuildSortUrl("fecha")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Fecha</span>
+                                @if (Model.IsSortedBy("fecha"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("fecha")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("fechaVerificacion") @(Model.IsSortedBy("fechaVerificacion") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("fechaVerificacion")"
+                               hx-get="@BuildSortUrl("fechaVerificacion")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Fecha de verificacion</span>
+                                @if (Model.IsSortedBy("fechaVerificacion"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("fechaVerificacion")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("nivel") @(Model.IsSortedBy("nivel") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("nivel")"
+                               hx-get="@BuildSortUrl("nivel")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Nivel</span>
+                                @if (Model.IsSortedBy("nivel"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("nivel")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("tipo") @(Model.IsSortedBy("tipo") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("tipo")"
+                               hx-get="@BuildSortUrl("tipo")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Tipo</span>
+                                @if (Model.IsSortedBy("tipo"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("tipo")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("estatus") @(Model.IsSortedBy("estatus") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("estatus")"
+                               hx-get="@BuildSortUrl("estatus")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Estatus</span>
+                                @if (Model.IsSortedBy("estatus"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("estatus")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-nowrap">
+                            <a class="search-sort-link @SortHeaderClass("curp") @(Model.IsSortedBy("curp") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("curp")"
+                               hx-get="@BuildSortUrl("curp")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>CURP</span>
+                                @if (Model.IsSortedBy("curp"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("curp")</span>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a class="search-sort-link @SortHeaderClass("nombre") @(Model.IsSortedBy("nombre") ? "is-active" : string.Empty)"
+                               href="@BuildSortUrl("nombre")"
+                               hx-get="@BuildSortUrl("nombre")"
+                               hx-target="#search-results"
+                               hx-select="#search-results"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true">
+                                <span>Nombre</span>
+                                @if (Model.IsSortedBy("nombre"))
+                                {
+                                    <span class="search-sort-indicator">@Model.GetSortIndicator("nombre")</span>
+                                }
+                            </a>
+                        </th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Resultados.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                No hay registros que coincidan con los filtros.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Resultados)
+                        {
+                            <tr>
+                                <td class="fw-semibold text-nowrap">
+                                    <a asp-page="/Casos/Details"
+                                       asp-route-id="@item.CasoId"
+                                       hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                       hx-target="#app-main"
+                                       hx-select="#app-main"
+                                       hx-swap="outerHTML transition:true"
+                                       hx-push-url="true">@item.NumeroOficio</a>
+                                </td>
+                                <td class="text-nowrap">@item.FechaOficio.ToString("dd/MM/yyyy")</td>
+                                <td class="text-nowrap">@(item.FechaVerificacion.HasValue ? item.FechaVerificacion.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                <td class="text-nowrap">
+                                    <span class="@BusquedaModel.GetNivelBadgeClass(item.NivelEducativo)">@item.NivelEducativo</span>
+                                </td>
+                                <td class="text-nowrap">@item.TipoCorreccion</td>
+                                <td class="text-nowrap">
+                                    <span class="badge rounded-pill @BusquedaModel.GetEstatusBadgeClass(item.Estatus)">@item.Estatus</span>
+                                </td>
+                                <td class="text-nowrap">@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(item.NombreCompleto))
+                                    {
+                                        <span>-</span>
+                                    }
+                                    else
+                                    {
+                                        <a asp-page="/Casos/Details"
+                                           asp-route-id="@item.CasoId"
+                                           hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">@item.NombreCompleto</a>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Acciones del caso">
+                                        <a class="btn btn-outline-primary"
+                                           asp-page="/Casos/Details"
+                                           asp-route-id="@item.CasoId"
+                                           hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">Abrir</a>
+                                        <a class="btn btn-outline-secondary"
+                                           asp-page="/Casos/Edit"
+                                           asp-route-id="@item.CasoId"
+                                           asp-route-returnUrl="@returnUrl"
+                                           hx-get="@Url.Page("/Casos/Edit", new { id = item.CasoId, returnUrl })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">Editar</a>
+                                        <a class="btn btn-outline-danger"
+                                           asp-page="/Casos/Delete"
+                                           asp-route-id="@item.CasoId"
+                                           asp-route-returnUrl="@returnUrl"
+                                           hx-get="@Url.Page("/Casos/Delete", new { id = item.CasoId, returnUrl })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">Eliminar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="pager" />
+    </div>
+</section>

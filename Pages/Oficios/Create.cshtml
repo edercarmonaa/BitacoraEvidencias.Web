@@ -1,0 +1,65 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Oficios.CreateModel
+@{
+    ViewData["Title"] = "Nuevo Oficio";
+}
+
+<h1 class="h3 mb-3">Nuevo oficio</h1>
+
+<form method="post"
+      data-busy
+      data-ui-loading
+      hx-post="@Url.Page("./Create")"
+      hx-target="#app-main"
+      hx-select="#app-main"
+      hx-swap="outerHTML transition:true"
+      hx-push-url="true">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="Input.NumeroOficio" class="form-label"></label>
+            <input asp-for="Input.NumeroOficio" class="form-control" />
+            <span asp-validation-for="Input.NumeroOficio" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-3">
+            <label asp-for="Input.FechaOficio" class="form-label"></label>
+            <input asp-for="Input.FechaOficio" class="form-control" />
+            <span asp-validation-for="Input.FechaOficio" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-12">
+            <label asp-for="Input.Asunto" class="form-label"></label>
+            <input asp-for="Input.Asunto" class="form-control" />
+            <span asp-validation-for="Input.Asunto" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-12">
+            <label asp-for="Input.Notas" class="form-label"></label>
+            <textarea asp-for="Input.Notas" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Input.Notas" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+            <span class="btn-label">Guardar oficio</span>
+            <span class="btn-loading" aria-hidden="true">
+                <span class="btn-loading-dot"></span>
+                Guardando...
+            </span>
+        </button>
+        <a class="btn btn-outline-secondary"
+           asp-page="./Index"
+           hx-get="@Url.Page("./Index")"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

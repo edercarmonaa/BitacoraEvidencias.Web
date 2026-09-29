@@ -1,0 +1,92 @@
+# Build outputs
+bin/
+obj/
+**/bin/
+**/obj/
+tmp/
+artifacts/
+
+# Local runtime data
+.env
+.env.*
+!.env.example
+Data/*.db
+Data/*.db-*
+Data/*.sqlite
+Data/*.sqlite3
+Storage/
+Evidencias/
+BackupsBitacora/
+AuditArchive/
+Monitoreo/
+deploy/
+releases/
+
+# Logs and generated diagnostics
+*.log
+*.binlog
+*.diag
+build-output.txt
+tests-output.log
+artifacts-build.log
+msbuild-*.log
+TestResults/
+coverage/
+*.trx
+
+# Secrets, certificates and local credentials
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.jks
+*.kdbx
+credentials.json
+service-account.json
+firebase-adminsdk*.json
+google-services.json
+auth.json
+secrets.json
+*.secrets.json
+appsettings.Local.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.local.json
+
+# User/editor files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Package/tool caches
+node_modules/
+Microsoft/Windows/PowerShell/ModuleAnalysisCache
+.dotnet/
+.dotnet-home/
+.nuget/
+.appdata/
+.localappdata/
+
+# Operational/private reports
+docs/SMOKE-RESULTS-*.md
+docs/evidencias-ntfs/
+docs/INFORME-*.md
+docs/RESUMEN-*.md
+docs/SGSI-*.md
+
+# Imported/exported operational data
+*.bak
+*.zip
+*.7z
+*.rar
+*.csv
+*.xlsx
+*.xls
+*.pdf
+tools/tailwindcss-windows-x64.exe

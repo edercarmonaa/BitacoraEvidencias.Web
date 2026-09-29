@@ -1,0 +1,135 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Admin.SqlModel
+@{
+    ViewData["Title"] = "SQL";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">SQL</h1>
+        <small class="text-muted">Ejecucion controlada de una sola sentencia SQL sobre la base principal.</small>
+    </div>
+</div>
+
+<section id="sql-results">
+    <div class="app-results-body">
+        @if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+        {
+            <div class="alert app-alert-success">@Model.FlashSuccess</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.FlashError))
+        {
+            <div class="alert app-alert-error">@Model.FlashError</div>
+        }
+
+        <div class="alert alert-warning" role="alert">
+            <strong>Uso excepcional.</strong> Esta herramienta es solo para administracion, depuracion y mantenimiento de datos.
+            Las sentencias <code>INSERT</code>, <code>UPDATE</code> y <code>DELETE</code> requieren respaldo reciente previo
+            y documentacion de motivo, fecha y responsable en el control operativo correspondiente.
+        </div>
+
+        <form method="post" asp-page-handler="Execute" class="card mb-3">
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Sql" class="form-label"></label>
+                    <textarea asp-for="Input.Sql" class="form-control" rows="8" spellcheck="false" placeholder="SELECT Id, Usuario, Rol, Activo FROM UsuariosSistema ORDER BY Id;"></textarea>
+                    <span asp-validation-for="Input.Sql" class="text-danger"></span>
+                    <small class="text-muted d-block mt-2">Permitido: SELECT, INSERT, UPDATE, DELETE. Bloqueado: DROP, ALTER, TRUNCATE, ATTACH, PRAGMA. Una sola sentencia por ejecucion. SELECT puede usarse sin respaldo previo; las escrituras requieren respaldo reciente y documentacion operativa.</small>
+                </div>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label asp-for="Input.RowLimit" class="form-label"></label>
+                        <select asp-for="Input.RowLimit" class="form-select">
+                            @foreach (var limit in Model.AllowedRowLimits)
+                            {
+                                <option value="@limit">@limit</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.RowLimit" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="form-check mt-2">
+                            <input asp-for="Input.ConfirmWrite" class="form-check-input" />
+                            <label asp-for="Input.ConfirmWrite" class="form-check-label"></label>
+                        </div>
+                        <span asp-validation-for="Input.ConfirmWrite" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">Ejecutar</button>
+                    <a asp-page="/Admin/Sql" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+            </div>
+        </form>
+
+        @if (Model.Result is not null && string.IsNullOrWhiteSpace(Model.Result.ErrorMessage) && !Model.Result.HasValidationErrors)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h2 class="h5 mb-0">Resultado</h2>
+                        <small class="text-muted">Tipo: @Model.Result.StatementType</small>
+                    </div>
+
+                    @if (string.Equals(Model.Result.StatementType, "SELECT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        @if (Model.Result.Columns.Count == 0)
+                        {
+                            <div class="text-muted">La consulta no devolvio columnas.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-zebra-white table-sm table-striped table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            @foreach (var column in Model.Result.Columns)
+                                            {
+                                                <th>@column</th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.Result.Rows.Count == 0)
+                                        {
+                                            <tr>
+                                                <td colspan="@Model.Result.Columns.Count" class="text-muted">Sin filas.</td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var row in Model.Result.Rows)
+                                            {
+                                                <tr>
+                                                    @foreach (var value in row)
+                                                    {
+                                                        <td>@(value ?? "NULL")</td>
+                                                    }
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            Filas afectadas: <strong>@(Model.Result.AffectedRows ?? 0)</strong>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,203 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Admin.ImportCasosModel
+@{
+    ViewData["Title"] = "Importar casos";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Importar casos</h1>
+        <small class="text-muted">Carga un archivo .csv o .xlsx con encabezados exactos. El oficio debe existir previamente y solo puede tener un caso por NIVEL.</small>
+    </div>
+    <a asp-page="/Admin/Imports" class="btn btn-outline-secondary">Volver a importaciones</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+{
+    <div class="alert app-alert-success">@Model.FlashSuccess</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashError))
+{
+    <div class="alert app-alert-error">@Model.FlashError</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" asp-page-handler="Preview" enctype="multipart/form-data" data-ui-loading>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-7">
+                    <label asp-for="Input.File" class="form-label"></label>
+                    <input asp-for="Input.File" class="form-control" type="file" accept=".csv,.xlsx" />
+                    <span asp-validation-for="Input.File" class="text-danger"></span>
+                    <small class="text-muted d-block mt-2">Campos opcionales: Folio, Observaciones, EvidenciaUrl y Validador. AuditorId es obligatorio y debe corresponder a un usuario activo. Maximo 1000 filas de datos por archivo. Los encabezados deben venir en el orden definido y no se permite mas de un caso por NIVEL para el mismo oficio.</small>
+                </div>
+                <div class="col-lg-3">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-label">Generar vista previa</span>
+                        <span class="btn-loading" aria-hidden="true">
+                            <span class="btn-loading-dot"></span>
+                            Generando...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Preview is not null)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Resumen</h2>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="small text-muted">Archivo</div>
+                        <div class="fw-semibold">@Model.Preview.FileName</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="small text-muted">Filas leidas</div>
+                        <div class="fw-semibold">@Model.Preview.TotalRows</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="small text-muted">Registros a importar</div>
+                        <div class="fw-semibold">@Model.Preview.ValidRows</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light">
+                        <div class="small text-muted">Filas con error</div>
+                        <div class="fw-semibold">@Model.Preview.InvalidRows</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                @if (Model.Preview.CanImport)
+                {
+                    <form method="post" asp-page-handler="Import" class="m-0">
+                        <button type="submit" class="btn btn-success">Confirmar e importar</button>
+                    </form>
+                }
+
+                <form method="post" asp-page-handler="Cancel" class="m-0">
+                    <button type="submit" class="btn btn-outline-secondary">Cancelar importacion</button>
+                </form>
+            </div>
+
+            @if (!Model.Preview.CanImport)
+            {
+                <div class="alert alert-warning mt-3 mb-0">
+                    No hay registros validos para importar. Corrige el archivo y vuelve a generar la vista previa.
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Model.Preview.Errors.Count > 0)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Errores detectados</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var error in Model.Preview.Errors.OrderBy(item => item.RowNumber).ThenBy(item => item.Message))
+                            {
+                                <tr>
+                                    <td>@(error.RowNumber > 0 ? error.RowNumber : "-")</td>
+                                    <td>@error.Message</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.Preview.Rows.Count > 0)
+    {
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Registros validos</h2>
+                @{
+                    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+                    {
+                        PageNumber = Model.PageNumber,
+                        TotalPages = Model.PreviewRowsTotalPages,
+                        PageSize = Model.PageSize,
+                        TotalRows = Model.Preview.ValidRows,
+                        CurrentCount = Model.PreviewRowsPage.Count,
+                        PageName = "/Admin/ImportCasos",
+                        RowsLabel = "registro(s) valido(s)",
+                        MaxPageSizeText = $"Máximo {Model.MaxAllowedPageSize} por página.",
+                    };
+                }
+
+                <partial name="_Pager" model="pager" />
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Oficio</th>
+                                <th>Folio</th>
+                                <th>Cct</th>
+                                <th>Periodo</th>
+                                <th>Curp</th>
+                                <th>NombreCompleto</th>
+                                <th>FechaVerificacion</th>
+                                <th>Nivel</th>
+                                <th>TipoCorreccion</th>
+                                <th>Validador</th>
+                                <th>Auditor</th>
+                                <th>Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.PreviewRowsPage)
+                            {
+                                <tr>
+                                    <td>@row.SourceRowNumber</td>
+                                    <td>@row.OficioNumero</td>
+                                    <td>@(row.Folio ?? "-")</td>
+                                    <td>@row.Cct</td>
+                                    <td>@row.PeriodoInicio - @row.PeriodoFin</td>
+                                    <td>@row.Curp</td>
+                                    <td>@row.NombreCompleto</td>
+                                    <td>@row.FechaVerificacion.ToString("dd/MM/yyyy")</td>
+                                    <td>@row.NivelEducativo</td>
+                                    <td>@row.TipoCorreccion</td>
+                                    <td>@(row.Validador ?? "-")</td>
+                                    <td>@row.AuditorUsuario</td>
+                                    <td>@row.Estatus</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="_Pager" model="pager" />
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

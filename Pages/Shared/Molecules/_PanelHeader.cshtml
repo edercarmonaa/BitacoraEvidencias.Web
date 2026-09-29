@@ -1,0 +1,15 @@
+@model BitacoraEvidencias.Web.ViewComponents.DashboardPanelHeaderModel
+
+<header class="d-flex flex-wrap justify-content-between align-items-center gap-2 dash-panel__body border-bottom">
+    <h2 class="h5 mb-0">@Model.Title</h2>
+    @if (!string.IsNullOrWhiteSpace(Model.ActionText) && !string.IsNullOrWhiteSpace(Model.ActionHref))
+    {
+        <a class="tw-btn-subtle"
+           href="@Model.ActionHref"
+           hx-get="@Model.ActionHref"
+           hx-target="#app-main"
+           hx-select="#app-main"
+           hx-swap="outerHTML transition:true"
+           hx-push-url="true">@Model.ActionText</a>
+    }
+</header>

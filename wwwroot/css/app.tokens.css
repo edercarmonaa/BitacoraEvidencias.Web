@@ -1,0 +1,304 @@
+:root {
+  color-scheme: light;
+
+  /* Brand palette */
+  --color-brand-guinda: #851339;
+  --color-brand-guinda-dark: #5f0f2a;
+  --color-brand-arena: #bc945b;
+  --color-brand-arena-soft: #ddc9a2;
+  --color-brand-crema: #f6f2ea;
+  --color-surface: #fffdfa;
+  --color-ink: #1d1d1b;
+  --color-muted: #706f6f;
+  --color-outline: #e6dbc8;
+  --color-focus: #85133966;
+
+  /* Spacing scale */
+  --space-1: clamp(0.25rem, 0.2rem + 0.2vw, 0.35rem);
+  --space-2: clamp(0.5rem, 0.45rem + 0.25vw, 0.65rem);
+  --space-3: clamp(0.75rem, 0.65rem + 0.35vw, 0.95rem);
+  --space-4: clamp(1rem, 0.9rem + 0.45vw, 1.25rem);
+  --space-5: clamp(1.25rem, 1.1rem + 0.7vw, 1.65rem);
+  --space-6: clamp(1.5rem, 1.3rem + 0.9vw, 2rem);
+  --space-7: clamp(2rem, 1.7rem + 1.4vw, 2.8rem);
+  --space-8: clamp(2.5rem, 2rem + 2vw, 3.6rem);
+
+  /* Fluid typography */
+  --font-size-xs: clamp(0.75rem, 0.72rem + 0.2vw, 0.88rem);
+  --font-size-sm: clamp(0.88rem, 0.84rem + 0.25vw, 1rem);
+  --font-size-base: clamp(1rem, 0.96rem + 0.35vw, 1.12rem);
+  --font-size-lg: clamp(1.12rem, 1.03rem + 0.6vw, 1.38rem);
+  --font-size-xl: clamp(1.28rem, 1.13rem + 1vw, 1.78rem);
+  --font-size-2xl: clamp(1.5rem, 1.2rem + 1.35vw, 2.05rem);
+
+  --radius-md: 0.6rem;
+  --radius-lg: 0.85rem;
+  --radius-xl: 1.1rem;
+  --shadow-soft: 0 6px 18px rgb(29 29 27 / 0.05);
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+html {
+  font-size: 16px;
+  text-size-adjust: 100%;
+  font-family: "Segoe UI Variable", "Montserrat", "Gotham", "Myriad Pro", "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 100% 0%, rgb(188 148 91 / 0.14), transparent 35%),
+    radial-gradient(circle at 0% 100%, rgb(133 19 57 / 0.08), transparent 35%),
+    var(--color-brand-crema);
+  font-size: var(--font-size-base);
+}
+
+.app-shell-grid {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-areas:
+    "topbar"
+    "main"
+    "footer";
+  grid-template-rows: auto 1fr auto;
+}
+
+.app-topbar {
+  grid-area: topbar;
+}
+
+.app-main {
+  grid-area: main;
+  padding-block: var(--space-6);
+}
+
+.app-footer {
+  grid-area: footer;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1200;
+  background: #fff;
+  color: var(--color-brand-guinda-dark);
+  border: 2px solid var(--color-brand-guinda);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.7rem;
+}
+
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-3);
+}
+
+.critical-shell {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+.identity-strip {
+  background: #fff;
+  border-bottom: 1px solid var(--color-outline);
+}
+
+.identity-strip .critical-shell {
+  min-height: 84px;
+  padding-block: var(--space-2);
+}
+
+.identity-strip img:first-child {
+  max-height: 74px;
+}
+
+.identity-strip img:last-child {
+  max-height: 56px;
+}
+
+.identity-bar {
+  background: linear-gradient(90deg, var(--color-brand-guinda-dark), var(--color-brand-guinda));
+  border-bottom: 2px solid var(--color-brand-arena);
+}
+
+.identity-bar__inner {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.identity-badge {
+  color: #fff;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.identity-caption {
+  color: #f7efe3;
+  font-size: var(--font-size-xs);
+}
+
+.dash-organism {
+  container-type: inline-size;
+  container-name: dash;
+}
+
+.dash-panels {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr;
+}
+
+.dash-metrics {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.dash-card {
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-4);
+}
+
+.dash-panel {
+  border: 1px solid var(--color-outline);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.dash-panel__body {
+  padding: var(--space-4);
+}
+
+.dash-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-list > li + li {
+  border-top: 1px solid var(--color-outline);
+}
+
+.dash-list__link {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+}
+
+.dash-list__link:hover,
+.dash-list__link:focus-visible {
+  background: rgb(188 148 91 / 0.08);
+  color: var(--color-brand-guinda-dark);
+}
+
+.dash-meta {
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+}
+
+.dash-title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  letter-spacing: 0.01em;
+}
+
+.dash-subtitle {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+}
+
+.dash-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.tw-btn-brand,
+.tw-btn-subtle {
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 0.55rem 0.9rem;
+  text-decoration: none;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.tw-btn-brand {
+  background: var(--color-brand-guinda);
+  border-color: var(--color-brand-guinda);
+  color: #fff;
+}
+
+.tw-btn-brand:hover,
+.tw-btn-brand:focus-visible {
+  background: var(--color-brand-guinda-dark);
+  border-color: var(--color-brand-guinda-dark);
+  color: #fff;
+}
+
+.tw-btn-subtle {
+  background: transparent;
+  border-color: var(--color-brand-guinda);
+  color: var(--color-brand-guinda);
+}
+
+.tw-btn-subtle:hover,
+.tw-btn-subtle:focus-visible {
+  background: var(--color-brand-guinda);
+  color: #fff;
+}
+
+.border-brand-guinda {
+  border-color: var(--color-brand-guinda) !important;
+}
+
+.border-brand-arena {
+  border-color: var(--color-brand-arena) !important;
+}
+
+.border-brand-guinda-dark {
+  border-color: var(--color-brand-guinda-dark) !important;
+}
+
+@container dash (min-width: 42rem) {
+  .dash-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container dash (min-width: 58rem) {
+  .dash-panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .identity-strip .critical-shell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .identity-strip img:last-child {
+    max-height: 48px;
+    width: 100%;
+    object-fit: contain;
+  }
+}

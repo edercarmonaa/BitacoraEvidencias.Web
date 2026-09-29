@@ -1,0 +1,221 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Usuarios del sistema</h1>
+        <small class="text-muted">Admin: alta, desactivar/activar, reset de contraseña y cambio de rol.</small>
+    </div>
+</div>
+
+<section id="users-results">
+    <div id="users-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
+        <div class="app-skeleton-row w-90"></div>
+        <div class="app-skeleton-row w-75"></div>
+        <div class="app-skeleton-row w-60"></div>
+        <div class="app-skeleton-row w-90"></div>
+    </div>
+
+    <div class="app-results-body">
+        @if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+        {
+            <div class="alert app-alert-success">@Model.FlashSuccess</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.FlashError))
+        {
+            <div class="alert app-alert-error">@Model.FlashError</div>
+        }
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Alta de usuario</h2>
+                <form method="post"
+                      asp-page-handler="Create"
+                      data-busy
+                      hx-post="@Url.Page("/Admin/Users", "Create")"
+                      hx-indicator="#users-loading"
+                      hx-target="#app-main"
+                      hx-select="#app-main"
+                      hx-swap="outerHTML transition:true"
+                      hx-push-url="false">
+                    <input type="hidden" name="PageNumber" value="@Model.PageNumber" />
+                    <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label asp-for="NewUser.Username" class="form-label"></label>
+                            <input asp-for="NewUser.Username" class="form-control" />
+                            <span asp-validation-for="NewUser.Username" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="NewUser.Role" class="form-label"></label>
+                            <select asp-for="NewUser.Role" class="form-select">
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+                            <span asp-validation-for="NewUser.Role" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Crear usuario</button>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Se genera contraseña temporal y el usuario debe cambiarla en su primer login.</small>
+                </form>
+            </div>
+        </div>
+
+        @{
+            var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+            {
+                PageNumber = Model.PageNumber,
+                TotalPages = Model.TotalPages,
+                PageSize = Model.PageSize,
+                TotalRows = Model.TotalRows,
+                CurrentCount = Model.Users.Count,
+                PageName = "/Admin/Users",
+                RowsLabel = "usuario(s)",
+                MaxPageSizeText = $"Máximo {Model.MaxAllowedPageSize} por página.",
+                RouteValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+                UseHtmx = true,
+                HxTarget = "#users-results",
+                HxSelect = "#users-results",
+                HxSwap = "outerHTML transition:true",
+                HxPushUrl = true
+            };
+        }
+
+        <partial name="_Pager" model="pager" />
+
+        <div class="table-responsive">
+            <table class="table table-zebra-white table-sm table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Primer login pendiente</th>
+                        <th>Intentos/Lock</th>
+                        <th>Último acceso</th>
+                        <th>Actualización clave</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Users.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-muted">Sin usuarios.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@user.Username</div>
+                                    <div class="small text-muted">Creado: @user.CreatedAtLocal.ToString("dd/MM/yyyy HH:mm")</div>
+                                </td>
+                                <td>
+                                    <form method="post"
+                                          asp-page-handler="UpdateRole"
+                                          class="d-flex gap-2"
+                                          data-busy
+                                          hx-post="@Url.Page("/Admin/Users", "UpdateRole")"
+                                          hx-indicator="#users-loading"
+                                          hx-target="#app-main"
+                                          hx-select="#app-main"
+                                          hx-swap="outerHTML transition:true"
+                                          hx-push-url="false">
+                                        <input type="hidden" name="PageNumber" value="@Model.PageNumber" />
+                                        <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                                        <input type="hidden" name="id" value="@user.Id" />
+                                        <select name="role" class="form-select form-select-sm" style="min-width:130px;">
+                                            @foreach (var role in Model.Roles)
+                                            {
+                                                <option value="@role" selected="@(role == user.Role ? "selected" : null)">@role</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">Guardar</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    @if (user.Active)
+                                    {
+                                        <span class="badge text-bg-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary">Inactivo</span>
+                                    }
+                                </td>
+                                <td>@(user.MustChangePassword ? "Sí" : "No")</td>
+                                <td>
+                                    @user.FailedAttempts
+                                    <div class="small text-muted">
+                                        @(user.LockedUntilLocal.HasValue ? $"Bloqueado hasta {user.LockedUntilLocal.Value:dd/MM HH:mm}" : "Sin bloqueo")
+                                    </div>
+                                </td>
+                                <td>@(user.LastAccessLocal.HasValue ? user.LastAccessLocal.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+                                <td>@(user.PasswordUpdatedLocal.HasValue ? user.PasswordUpdatedLocal.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <form method="post"
+                                              asp-page-handler="ResetPassword"
+                                              class="d-inline"
+                                              data-busy
+                                              hx-post="@Url.Page("/Admin/Users", "ResetPassword")"
+                                              hx-indicator="#users-loading"
+                                              hx-target="#app-main"
+                                              hx-select="#app-main"
+                                              hx-swap="outerHTML transition:true"
+                                              hx-push-url="false">
+                                            <input type="hidden" name="PageNumber" value="@Model.PageNumber" />
+                                            <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">Reset clave</button>
+                                        </form>
+                                        <form method="post"
+                                              asp-page-handler="ToggleActive"
+                                              class="d-inline"
+                                              data-busy
+                                              hx-post="@Url.Page("/Admin/Users", "ToggleActive")"
+                                              hx-indicator="#users-loading"
+                                              hx-target="#app-main"
+                                              hx-select="#app-main"
+                                              hx-swap="outerHTML transition:true"
+                                              hx-push-url="false">
+                                            <input type="hidden" name="PageNumber" value="@Model.PageNumber" />
+                                            <input type="hidden" name="PageSize" value="@Model.PageSize" />
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            @if (user.Active)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Desactivar</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="pager" />
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

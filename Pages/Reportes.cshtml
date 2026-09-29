@@ -1,0 +1,282 @@
+@page
+@model BitacoraEvidencias.Web.Pages.ReportesModel
+@{
+    ViewData["Title"] = "Reportes";
+    var oficiosIncorrectosHeader = new BitacoraEvidencias.Web.ViewComponents.DashboardPanelHeaderModel
+    {
+        Title = "Oficios con evidencia incorrecta",
+        ActionText = Model.TotalCasosConEvidenciaIncorrecta > Model.CasosConEvidenciaIncorrecta.Count ? "Mostrar todos" : string.Empty,
+        ActionHref = Model.TotalCasosConEvidenciaIncorrecta > Model.CasosConEvidenciaIncorrecta.Count
+            ? Url.Page("/Reportes/OficiosConEvidenciaIncorrecta") ?? "/Reportes/OficiosConEvidenciaIncorrecta"
+            : string.Empty
+    };
+}
+
+<section id="reportes-results" class="dash-organism">
+    <div id="reportes-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
+        <div class="app-skeleton-row w-90"></div>
+        <div class="app-skeleton-row w-75"></div>
+        <div class="app-skeleton-row w-60"></div>
+        <div class="app-skeleton-row w-90"></div>
+    </div>
+
+    <div class="app-results-body">
+        <header class="dash-header mb-4">
+            <div>
+                <h1 class="dash-title">Reportes</h1>
+                <p class="dash-subtitle">Resumen operativo y seguimiento de auditoria.</p>
+            </div>
+            <div class="dash-actions">
+                <a class="tw-btn-subtle"
+                   asp-page="/Reportes/Ejecutivo"
+                   hx-get="@Url.Page("/Reportes/Ejecutivo")"
+                   hx-target="#app-main"
+                   hx-select="#app-main"
+                   hx-swap="outerHTML transition:true"
+                   hx-push-url="true">Reporte ejecutivo</a>
+                <button type="button"
+                        class="tw-btn-subtle"
+                        data-busy
+                        hx-get="@Url.Page("/Reportes")"
+                        hx-indicator="#reportes-loading"
+                        hx-target="#reportes-results"
+                        hx-select="#reportes-results"
+                        hx-swap="outerHTML transition:true"
+                        hx-push-url="true">Actualizar</button>
+            </div>
+        </header>
+
+        <section class="dash-metrics report-metrics mb-4" aria-label="Indicadores principales">
+            @foreach (var item in Model.StatCards)
+            {
+                <partial name="~/Pages/Shared/Atoms/_StatCard.cshtml" model="item" />
+            }
+        </section>
+
+        <section class="dash-panels report-panels">
+            <article class="dash-panel">
+                <div class="dash-panel__body border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h2 class="h5 mb-0">Oficios por tipo de correccion</h2>
+                        @if (Model.TotalTiposCorreccionCompletados > Model.CasosPorTipoCorreccion.Count)
+                        {
+                            <small class="text-muted d-block">
+                                Mostrando los primeros @Model.CasosPorTipoCorreccion.Count de @Model.TotalTiposCorreccionCompletados.
+                            </small>
+                        }
+                    </div>
+
+                    @if (Model.TotalTiposCorreccionCompletados > Model.CasosPorTipoCorreccion.Count)
+                    {
+                        <a class="tw-btn-subtle"
+                           asp-page="/Reportes/OficiosPorTipoCorreccion"
+                           hx-get="@Url.Page("/Reportes/OficiosPorTipoCorreccion")"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Mostrar todos</a>
+                    }
+                </div>
+
+                <div class="dash-panel__body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.CasosPorTipoCorreccion.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted py-3">
+                                            Sin datos para agrupar.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.CasosPorTipoCorreccion)
+                                    {
+                                        <tr>
+                                            <td>@item.TipoCorreccion</td>
+                                            <td>@item.Total</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dash-panel">
+                <div class="dash-panel__body border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h2 class="h5 mb-0">Casos pendientes</h2>
+                        @if (Model.TotalCasosNoCompletados > Model.CasosNoCompletados.Count)
+                        {
+                            <small class="text-muted d-block">
+                                Mostrando los primeros @Model.CasosNoCompletados.Count de @Model.TotalCasosNoCompletados.
+                            </small>
+                        }
+                    </div>
+
+                    @if (Model.TotalCasosNoCompletados > Model.CasosNoCompletados.Count)
+                    {
+                        <a class="tw-btn-subtle"
+                           asp-page="/Reportes/CasosNoCompletados"
+                           hx-get="@Url.Page("/Reportes/CasosNoCompletados")"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Mostrar todos</a>
+                    }
+                </div>
+
+                <div class="dash-panel__body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Oficio</th>
+                                    <th>Caso</th>
+                                    <th>Tipo</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.CasosNoCompletados.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">
+                                            Todos los casos estan completados.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.CasosNoCompletados)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@item.NumeroOficio</td>
+                                            <td>@item.ConsecutivoTexto</td>
+                                            <td>@item.TipoCorreccion</td>
+                                            <td>@item.Estatus</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dash-panel">
+                <div class="dash-panel__body border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h2 class="h5 mb-0">Pendientes de evidencia</h2>
+                        @if (Model.TotalPendientesEvidencia > Model.PendientesEvidencia.Count)
+                        {
+                            <small class="text-muted d-block">
+                                Mostrando los primeros @Model.PendientesEvidencia.Count de @Model.TotalPendientesEvidencia.
+                            </small>
+                        }
+                    </div>
+
+                    @if (Model.TotalPendientesEvidencia > Model.PendientesEvidencia.Count)
+                    {
+                        <a class="tw-btn-subtle"
+                           asp-page="/Reportes/PendientesEvidencia"
+                           hx-get="@Url.Page("/Reportes/PendientesEvidencia")"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Mostrar todos</a>
+                    }
+                </div>
+
+                <div class="dash-panel__body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Oficio</th>
+                                    <th>Nivel</th>
+                                    <th>Tipo</th>
+                                    <th>CURP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PendientesEvidencia.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">
+                                            Todos los casos tienen al menos una evidencia o imagen enlazada.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.PendientesEvidencia)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@item.NumeroOficio</td>
+                                            <td>@item.NivelEducativo</td>
+                                            <td>@item.TipoCorreccion</td>
+                                            <td>@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dash-panel">
+                <partial name="~/Pages/Shared/Molecules/_PanelHeader.cshtml"
+                         model="oficiosIncorrectosHeader" />
+
+                <div class="dash-panel__body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-zebra-white table-striped table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Oficio</th>
+                                    <th>Nivel</th>
+                                    <th>Tipo</th>
+                                    <th>CURP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.CasosConEvidenciaIncorrecta.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">
+                                            No hay casos auditados con evidencia incorrecta.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.CasosConEvidenciaIncorrecta)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">@item.NumeroOficio</td>
+                                            <td>@item.NivelEducativo</td>
+                                            <td>@item.TipoCorreccion</td>
+                                            <td>@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </div>
+</section>

@@ -1,0 +1,109 @@
+@page
+@model BitacoraEvidencias.Web.Pages.Reportes.CasosNoCompletadosModel
+@{
+    ViewData["Title"] = "Casos pendientes";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Casos pendientes</h1>
+        <small class="text-muted">Listado completo de casos con estatus distinto a Completado.</small>
+    </div>
+    <a class="btn btn-outline-secondary"
+       asp-page="/Reportes"
+       hx-get="@Url.Page("/Reportes")"
+       hx-target="#app-main"
+       hx-select="#app-main"
+       hx-swap="outerHTML transition:true"
+       hx-push-url="true">Volver a reportes</a>
+</div>
+
+@{
+    var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+    {
+        PageNumber = Model.PageNumber,
+        TotalPages = Model.TotalPages,
+        PageSize = Model.PageSize,
+        TotalRows = Model.TotalRows,
+        CurrentCount = Model.Items.Count,
+        PageName = "/Reportes/CasosNoCompletados",
+        RowsLabel = "caso(s)",
+        MaxPageSizeText = $"Maximo {Model.MaxAllowedPageSize} por pagina.",
+        RouteValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase),
+        UseHtmx = true,
+        HxTarget = "#app-main",
+        HxSelect = "#app-main",
+        HxSwap = "outerHTML transition:true",
+        HxPushUrl = true
+    };
+}
+
+<partial name="_Pager" model="pager" />
+
+<div class="table-responsive">
+    <table class="table table-zebra-white table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Oficio</th>
+                <th>Caso</th>
+                <th>Nivel</th>
+                <th>Tipo</th>
+                <th>CURP</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        Todos los casos estan completados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.NumeroOficio</td>
+                        <td>@item.ConsecutivoTexto</td>
+                        <td>@item.NivelEducativo</td>
+                        <td>@item.TipoCorreccion</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Curp) ? "-" : item.Curp)</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   asp-page="/Casos/Details"
+                                   asp-route-id="@item.CasoId"
+                                   hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Abrir</a>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-page="/Casos/Edit"
+                                   asp-route-id="@item.CasoId"
+                                   hx-get="@Url.Page("/Casos/Edit", new { id = item.CasoId })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Editar</a>
+                                <a class="btn btn-sm btn-outline-danger"
+                                   asp-page="/Casos/Delete"
+                                   asp-route-id="@item.CasoId"
+                                   hx-get="@Url.Page("/Casos/Delete", new { id = item.CasoId })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<partial name="_Pager" model="pager" />

@@ -1,0 +1,340 @@
+@page
+@model BitacoraEvidencias.Web.Pages.AuditoriaModel
+@{
+    ViewData["Title"] = "Auditoria";
+}
+
+@functions {
+    private static string GetAuditBadgeClass(string? estado)
+    {
+        return BitacoraEvidencias.Web.Models.CatalogosAuditoriaCaso.NormalizarEstado(estado) switch
+        {
+            BitacoraEvidencias.Web.Models.CatalogosAuditoriaCaso.Coincidente => "audit-badge audit-badge--ok",
+            BitacoraEvidencias.Web.Models.CatalogosAuditoriaCaso.NoCoincidente => "audit-badge audit-badge--error",
+            _ => "audit-badge audit-badge--pending"
+        };
+    }
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+{
+    <div class="alert alert-success">@Model.FlashSuccess</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashError))
+{
+    <div class="alert alert-danger">@Model.FlashError</div>
+}
+
+<section class="dash-organism audit-page">
+    <header class="dash-header mb-4">
+        <div>
+            <h1 class="dash-title">Auditoria de evidencia</h1>
+            <p class="dash-subtitle">Revisa la concordancia entre oficio, caso y evidencia sin salir del listado.</p>
+        </div>
+        <div class="dash-actions">
+            <button type="button"
+                    class="tw-btn-subtle"
+                    hx-get="@Url.Page("/Auditoria", new { casoId = Model.SelectedCaseId, numeroOficio = Model.NumeroOficioFiltro })"
+                    hx-target="#app-main"
+                    hx-select="#app-main"
+                    hx-swap="outerHTML transition:true"
+                    hx-push-url="true">
+                Actualizar
+            </button>
+        </div>
+    </header>
+
+    <div class="audit-layout" data-audit-layout>
+        <section class="dash-panel audit-list-panel" data-audit-list-panel>
+            <div class="dash-panel__body border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <h2 class="h5 mb-0">Oficios auditables</h2>
+                        @if (Model.HasNumeroOficioFiltro)
+                        {
+                            @if (Model.TotalOficiosPendientes > Model.VisibleOficios.Count)
+                            {
+                                <p class="dash-meta mb-0">Mostrando @Model.VisibleOficios.Count de @Model.TotalOficiosPendientes oficio(s) encontrados. Total listos para revision: @Model.TotalOficiosAuditables.</p>
+                            }
+                            else
+                            {
+                                <p class="dash-meta mb-0">@Model.TotalOficiosPendientes oficio(s) encontrados. Total listos para revision: @Model.TotalOficiosAuditables.</p>
+                            }
+                        }
+                        else if (Model.TotalOficiosPendientes > Model.VisibleOficios.Count)
+                        {
+                            <p class="dash-meta mb-0">Mostrando @Model.VisibleOficios.Count de @Model.TotalOficiosPendientes oficio(s) pendientes.</p>
+                        }
+                        else
+                        {
+                            <p class="dash-meta mb-0">@Model.TotalOficiosPendientes oficio(s) listos para revision.</p>
+                        }
+                    </div>
+
+                    @if (Model.TotalOficiosPendientes > 0)
+                    {
+                        <a class="tw-btn-subtle"
+                           asp-page="/Auditoria/OficiosPendientes"
+                           asp-route-numeroOficio="@Model.NumeroOficioFiltro"
+                           hx-get="@Url.Page("/Auditoria/OficiosPendientes", new { numeroOficio = Model.NumeroOficioFiltro })"
+                           hx-target="#app-main"
+                           hx-select="#app-main"
+                           hx-swap="outerHTML transition:true"
+                           hx-push-url="true">Mostrar todos</a>
+                    }
+                </div>
+
+                @if (Model.TotalOficiosAuditables > 0 || Model.HasNumeroOficioFiltro)
+                {
+                    <form class="mt-3" method="get" asp-page="/Auditoria">
+                        <input type="hidden" name="casoId" value="@Model.SelectedCaseId" />
+                        <label class="form-label mb-1" for="audit-office-search">Buscar por numero de oficio</label>
+                        <input id="audit-office-search"
+                               type="search"
+                               name="numeroOficio"
+                               value="@Model.NumeroOficioFiltro"
+                               class="form-control"
+                               placeholder="Ej. DG/123/2026"
+                               autocomplete="off"
+                               hx-get="@Url.Page("/Auditoria")"
+                               hx-include="closest form"
+                               hx-target="#app-main"
+                               hx-select="#app-main"
+                               hx-swap="outerHTML transition:true"
+                               hx-push-url="true"
+                               hx-trigger="input changed delay:250ms, search" />
+                    </form>
+                }
+            </div>
+
+            <div class="audit-list-scroll">
+                @if (Model.TotalOficiosPendientes == 0)
+                {
+                    <div class="dash-panel__body">
+                        @if (Model.TotalOficiosAuditables == 0)
+                        {
+                            <p class="mb-0 text-muted">No hay oficios pendientes de auditoria. Un oficio aparece aqui solo cuando todos sus casos tienen al menos una evidencia o imagen enlazada y todavia requiere revision.</p>
+                        }
+                        else
+                        {
+                            <p class="mb-0 text-muted">No se encontraron oficios con ese numero. Prueba con otra busqueda.</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    @foreach (var oficio in Model.VisibleOficios)
+                    {
+                        <details class="audit-group" @(oficio.IsExpanded ? "open" : null)>
+                            <summary class="audit-group__summary">
+                                <div>
+                                    <div class="fw-semibold">@oficio.NumeroOficio</div>
+                                    <div class="dash-meta">@oficio.FechaOficio.ToString("dd/MM/yyyy") | @oficio.Casos.Count caso(s)</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="@GetAuditBadgeClass(oficio.AuditoriaEstado)">@oficio.AuditoriaEstadoDisplay</span>
+                                    <div class="dash-meta mt-1">@oficio.Asunto</div>
+                                </div>
+                            </summary>
+
+                            <ul class="dash-list audit-case-list">
+                                @foreach (var caso in oficio.Casos)
+                                {
+                                    var isSelected = Model.SelectedCaseId == caso.Id;
+                                    <li>
+                                        <a class="dash-list__link audit-case-link @(isSelected ? "is-selected" : null)"
+                                           href="@Url.Page("/Auditoria", new { casoId = caso.Id, numeroOficio = Model.NumeroOficioFiltro })"
+                                           hx-get="@Url.Page("/Auditoria", new { casoId = caso.Id, numeroOficio = Model.NumeroOficioFiltro })"
+                                           hx-target="#app-main"
+                                           hx-select="#app-main"
+                                           hx-swap="outerHTML transition:true"
+                                           hx-push-url="true">
+                                            <span class="fw-semibold">Caso @caso.ConsecutivoTexto</span>
+                                            <span>@caso.TipoCorreccion | @caso.NivelEducativo</span>
+                                            <span class="dash-meta">Fuentes: @caso.TotalFuentesEvidencia | CURP: @(string.IsNullOrWhiteSpace(caso.Curp) ? "-" : caso.Curp)</span>
+                                            <span class="@GetAuditBadgeClass(caso.AuditoriaEstado)">@caso.AuditoriaEstadoDisplay</span>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                }
+            </div>
+        </section>
+
+        <aside class="dash-panel audit-detail-panel" data-audit-detail-panel>
+            @if (Model.SelectedCase is null)
+            {
+                <div class="dash-panel__body">
+                    <p class="mb-0 text-muted">Selecciona un caso para revisar su evidencia.</p>
+                </div>
+            }
+            else
+            {
+                var showNoCoincidenteForm =
+                    (ViewData.ModelState.TryGetValue("NoCoincidente.Observacion", out var observacionState) &&
+                     observacionState.Errors.Count > 0) ||
+                    !string.IsNullOrWhiteSpace(Model.NoCoincidente.Observacion);
+                var noCoincidentePanelId = $"audit-no-coincidente-{Model.SelectedCase.Id}";
+
+                <div class="dash-panel__body border-bottom">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <h2 class="h4 mb-0">Caso @Model.SelectedCase.ConsecutivoTexto</h2>
+                            <p class="dash-meta mb-0">Oficio @Model.SelectedCase.NumeroOficio</p>
+                        </div>
+                        <span class="@GetAuditBadgeClass(Model.SelectedCase.AuditoriaEstado)">@Model.SelectedCase.AuditoriaEstadoDisplay</span>
+                    </div>
+                </div>
+
+                <div class="dash-panel__body audit-case-summary">
+                    <div class="audit-summary-grid">
+                        <div><span class="text-muted">Nombre:</span> @(string.IsNullOrWhiteSpace(Model.SelectedCase.NombreCompleto) ? "-" : Model.SelectedCase.NombreCompleto)</div>
+                        <div><span class="text-muted">CURP:</span> @(string.IsNullOrWhiteSpace(Model.SelectedCase.Curp) ? "-" : Model.SelectedCase.Curp)</div>
+                        <div><span class="text-muted">CCT:</span> @(string.IsNullOrWhiteSpace(Model.SelectedCase.Cct) ? "-" : Model.SelectedCase.Cct)</div>
+                        <div><span class="text-muted">Nivel:</span> @Model.SelectedCase.NivelEducativo</div>
+                        <div><span class="text-muted">Tipo:</span> @Model.SelectedCase.TipoCorreccion</div>
+                        <div><span class="text-muted">Folio:</span> @(string.IsNullOrWhiteSpace(Model.SelectedCase.Folio) ? "-" : Model.SelectedCase.Folio)</div>
+                        <div><span class="text-muted">Periodo:</span> @(Model.SelectedCase.PeriodoInicio.HasValue || Model.SelectedCase.PeriodoFin.HasValue ? $"{Model.SelectedCase.PeriodoInicio?.ToString() ?? "-"} - {Model.SelectedCase.PeriodoFin?.ToString() ?? "-"}" : "-")</div>
+                        <div><span class="text-muted">Fecha verificacion:</span> @(Model.SelectedCase.FechaVerificacion.HasValue ? Model.SelectedCase.FechaVerificacion.Value.ToString("dd/MM/yyyy") : "-")</div>
+                    </div>
+
+                    <div class="audit-last-review">
+                        <div class="fw-semibold mb-1">Ultima revision registrada</div>
+                        @if (Model.SelectedCase.AuditoriaUltimaRevisionLocal.HasValue && !string.IsNullOrWhiteSpace(Model.SelectedCase.UltimoResultadoDisplay))
+                        {
+                            <div class="small">
+                                <span class="@GetAuditBadgeClass(Model.SelectedCase.AuditoriaUltimoResultado)">@Model.SelectedCase.UltimoResultadoDisplay</span>
+                            </div>
+                            <div class="dash-meta">
+                                @(string.IsNullOrWhiteSpace(Model.SelectedCase.AuditoriaUltimoUsuario) ? "Sin usuario" : Model.SelectedCase.AuditoriaUltimoUsuario)
+                                | @Model.SelectedCase.AuditoriaUltimaRevisionLocal.Value.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.SelectedCase.AuditoriaUltimaObservacion))
+                            {
+                                <div class="mt-1 small">@Model.SelectedCase.AuditoriaUltimaObservacion</div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="dash-meta">Sin revisiones registradas.</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="dash-panel__body border-top audit-decision-wrap">
+                    <div class="audit-decision-dock">
+                        <div class="audit-decision-dock__header">
+                            <div class="fw-semibold">Resultado de auditoria</div>
+                            <span class="@GetAuditBadgeClass(Model.SelectedCase.AuditoriaEstado)">@Model.SelectedCase.AuditoriaEstadoDisplay</span>
+                        </div>
+
+                        <div class="audit-decision-actions">
+                            <form method="post"
+                                  asp-page-handler="Coincidente"
+                                  data-ui-loading
+                                  class="audit-decision-primary">
+                                <input type="hidden" name="caseId" value="@Model.SelectedCase.Id" />
+                                <input type="hidden" name="numeroOficio" value="@Model.NumeroOficioFiltro" />
+                                <button type="submit" class="btn btn-success">Coincidente</button>
+                            </form>
+
+                            <button type="button"
+                                    class="btn btn-outline-danger audit-decision-toggle"
+                                    data-audit-toggle-panel="@noCoincidentePanelId"
+                                    aria-expanded="@(showNoCoincidenteForm ? "true" : "false")"
+                                    aria-controls="@noCoincidentePanelId">
+                                No coincidente
+                            </button>
+                        </div>
+
+                        <div id="@noCoincidentePanelId"
+                             class="audit-decision-panel @(!showNoCoincidenteForm ? "is-hidden" : null)"
+                             aria-hidden="@(!showNoCoincidenteForm ? "true" : "false")">
+                            <div class="audit-decision-panel__inner">
+                                <form method="post"
+                                      asp-page-handler="NoCoincidente"
+                                      data-ui-loading
+                                      class="audit-decision-secondary">
+                                    <input asp-for="NoCoincidente.CaseId" type="hidden" />
+                                    <input type="hidden" name="numeroOficio" value="@Model.NumeroOficioFiltro" />
+                                    <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+                                    <label asp-for="NoCoincidente.Observacion" class="form-label mb-1"></label>
+                                    <textarea asp-for="NoCoincidente.Observacion"
+                                              class="form-control"
+                                              rows="2"
+                                              maxlength="100"
+                                              placeholder="Describe por que la evidencia no corresponde"
+                                              data-audit-observacion></textarea>
+                                    <span asp-validation-for="NoCoincidente.Observacion" class="text-danger"></span>
+                                    <div>
+                                        <button type="submit" class="btn btn-outline-danger">Confirmar no coincidente</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-panel__body border-top audit-viewer-wrap">
+                    @if (Model.SelectedCase.Evidencias.Count == 0)
+                    {
+                        <p class="mb-0 text-muted">Este caso no tiene imagenes disponibles para auditoria.</p>
+                    }
+                    else
+                    {
+                        var currentEvidence = Model.SelectedCase.CurrentEvidence ?? Model.SelectedCase.Evidencias[0];
+
+                        <div class="audit-viewer" data-audit-viewer>
+                            <div class="audit-viewer__toolbar">
+                                <div class="fw-semibold">Evidencia visible</div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-audit-action="zoom-out">- Zoom</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-audit-action="zoom-in">+ Zoom</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-audit-action="rotate-left">Rotar -90°</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-audit-action="rotate-right">Rotar +90°</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-audit-action="reset">Reset</button>
+                                </div>
+                            </div>
+
+                            <div class="audit-viewer__stage" data-audit-stage>
+                                <div class="audit-viewer__canvas" data-audit-canvas>
+                                    <img src="@currentEvidence.FullUrl"
+                                         alt="@currentEvidence.Title"
+                                         class="audit-viewer__image"
+                                         draggable="false"
+                                         data-audit-main-image />
+                                </div>
+                            </div>
+                            <div class="dash-meta" data-audit-caption>@currentEvidence.SourceLabel | @currentEvidence.Title. @currentEvidence.Caption</div>
+
+                            <div class="audit-thumb-strip" role="list">
+                                @foreach (var evidencia in Model.SelectedCase.Evidencias)
+                                {
+                                    var isActive = string.Equals(evidencia.Key, currentEvidence.Key, StringComparison.Ordinal);
+                                    <button type="button"
+                                            class="audit-thumb @(isActive ? "is-active" : null)"
+                                            data-audit-thumb
+                                            data-full-src="@evidencia.FullUrl"
+                                            data-alt="@evidencia.Title"
+                                            data-caption="@($"{evidencia.SourceLabel} | {evidencia.Title}. {evidencia.Caption}")">
+                                        <img src="@evidencia.ThumbnailUrl" alt="@evidencia.Title" loading="lazy" />
+                                        <span>@evidencia.SourceLabel</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+            }
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,194 @@
+@page "{id:int}"
+@model BitacoraEvidencias.Web.Pages.Casos.DetailsModel
+@{
+    ViewData["Title"] = "Detalle de Caso";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
+{
+    <div class="alert alert-success">@Model.FlashSuccess</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.FlashError))
+{
+    <div class="alert alert-danger">@Model.FlashError</div>
+}
+
+@if (Model.Caso is not null && Model.Caso.Oficio is not null)
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-0">Caso @Model.Caso.ConsecutivoTexto</h1>
+            <small class="text-muted">Oficio @Model.Caso.Oficio.NumeroOficio</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary"
+               asp-page="/Oficios/Details"
+               asp-route-id="@Model.Caso.OficioId"
+               hx-get="@Url.Page("/Oficios/Details", new { id = Model.Caso.OficioId })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Volver al oficio</a>
+            <a class="btn btn-outline-primary"
+               asp-page="/Casos/Edit"
+               asp-route-id="@Model.Caso.Id"
+               hx-get="@Url.Page("/Casos/Edit", new { id = Model.Caso.Id })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Editar caso</a>
+            <a class="btn btn-outline-danger"
+               asp-page="/Casos/Delete"
+               asp-route-id="@Model.Caso.Id"
+               hx-get="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id })"
+               hx-target="#app-main"
+               hx-select="#app-main"
+               hx-swap="outerHTML transition:true"
+               hx-push-url="true">Eliminar caso</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Datos del caso</h2>
+                    <p class="mb-1"><span class="text-muted">CURP:</span> @(string.IsNullOrWhiteSpace(Model.Caso.Curp) ? "-" : Model.Caso.Curp)</p>
+                    <p class="mb-1"><span class="text-muted">Nombre:</span> @(string.IsNullOrWhiteSpace(Model.Caso.NombreCompleto) ? "-" : Model.Caso.NombreCompleto)</p>
+                    <p class="mb-1"><span class="text-muted">CCT:</span> @(string.IsNullOrWhiteSpace(Model.Caso.Cct) ? "-" : Model.Caso.Cct)</p>
+                    <p class="mb-1"><span class="text-muted">Validador:</span> @(string.IsNullOrWhiteSpace(Model.Caso.Validador) ? "-" : Model.Caso.Validador)</p>
+                    <p class="mb-1"><span class="text-muted">Auditor:</span> @(Model.Caso.AuditorUsuario is null ? "-" : Model.Caso.AuditorUsuario.Usuario)</p>
+                    <p class="mb-1"><span class="text-muted">Nivel educativo:</span> @Model.Caso.NivelEducativo</p>
+                    <p class="mb-1"><span class="text-muted">Tipo:</span> @Model.Caso.TipoCorreccion</p>
+                    <p class="mb-1"><span class="text-muted">Folio certificado:</span> @(string.IsNullOrWhiteSpace(Model.Caso.Folio) ? "-" : Model.Caso.Folio)</p>
+                    <p class="mb-1"><span class="text-muted">Periodo:</span> @(Model.Caso.PeriodoInicio.HasValue || Model.Caso.PeriodoFin.HasValue ? $"{Model.Caso.PeriodoInicio?.ToString() ?? "-"} - {Model.Caso.PeriodoFin?.ToString() ?? "-"}" : "-")</p>
+                    <p class="mb-1"><span class="text-muted">Fecha de verificacion:</span> @(Model.Caso.FechaVerificacion.HasValue ? Model.Caso.FechaVerificacion.Value.ToString("dd/MM/yyyy") : "-")</p>
+                    <p class="mb-1"><span class="text-muted">Evidencia (liga):</span>
+                        @if (string.IsNullOrWhiteSpace(Model.Caso.EvidenciaUrl))
+                        {
+                            <span>-</span>
+                        }
+                        else
+                        {
+                            <a href="@Model.Caso.EvidenciaUrl" target="_blank" rel="noopener">Abrir enlace</a>
+                        }
+                    </p>
+                    <p class="mb-0"><span class="text-muted">Estatus:</span> @Model.Caso.Estatus</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">Observaciones</h2>
+                    <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.Caso.Observaciones) ? "Sin observaciones." : Model.Caso.Observaciones)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Agregar evidencias</h2>
+
+            <form method="post"
+                  asp-page-handler="Upload"
+                  enctype="multipart/form-data"
+                  hx-post="@Url.Page("/Casos/Details", new { id = Model.Caso.Id, handler = "Upload" })"
+                  hx-target="#app-main"
+                  hx-select="#app-main"
+                  hx-swap="outerHTML transition:true"
+                  hx-push-url="false"
+                  hx-encoding="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label asp-for="Input.TipoEvidencia" class="form-label"></label>
+                        <select asp-for="Input.TipoEvidencia" class="form-select">
+                            @foreach (var tipo in Model.TiposEvidencia)
+                            {
+                                <option value="@tipo">@tipo</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.TipoEvidencia" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Input.FechaEvidencia" class="form-label"></label>
+                        <input asp-for="Input.FechaEvidencia" class="form-control" />
+                        <span asp-validation-for="Input.FechaEvidencia" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Input.Notas" class="form-label"></label>
+                        <input asp-for="Input.Notas" class="form-control" />
+                        <span asp-validation-for="Input.Notas" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Input.Archivos" class="form-label"></label>
+                        <input asp-for="Input.Archivos" type="file" class="form-control" accept="image/*" multiple />
+                        <span asp-validation-for="Input.Archivos" class="text-danger"></span>
+                        <small class="text-muted">Puedes seleccionar varias fotos. Maximo 8 MB por archivo; se convierte a JPG optimizado (2000 px, calidad 78).</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3">Subir evidencias</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Galeria de evidencia</h2>
+        <span class="text-muted">@Model.Evidencias.Count archivo(s)</span>
+    </div>
+
+    @if (Model.Evidencias.Count == 0)
+    {
+        <div class="alert alert-secondary">Este caso no tiene evidencias todavia.</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var item in Model.Evidencias)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card evidence-card h-100">
+                        <img src="@Model.ToEvidenceUrl(item.Id, true)" class="card-img-top evidence-thumb" alt="Evidencia @item.Id" loading="lazy" />
+                        <div class="card-body p-2">
+                            <div class="small fw-semibold">@item.TipoEvidencia</div>
+                            <div class="small text-muted">@item.FechaEvidencia.ToString("dd/MM/yyyy")</div>
+                            <div class="small text-truncate">@(!string.IsNullOrWhiteSpace(item.Notas) ? item.Notas : "Sin notas")</div>
+                            <div class="d-flex gap-1 mt-2">
+                                <a class="btn btn-sm btn-outline-secondary" href="@Model.ToEvidenceUrl(item.Id, false)" target="_blank" rel="noopener">Ver</a>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-page="/Evidencias/Edit"
+                                   asp-route-id="@item.Id"
+                                   hx-get="@Url.Page("/Evidencias/Edit", new { id = item.Id })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Editar</a>
+                                <a class="btn btn-sm btn-outline-danger"
+                                   asp-page="/Evidencias/Delete"
+                                   asp-route-id="@item.Id"
+                                   hx-get="@Url.Page("/Evidencias/Delete", new { id = item.Id })"
+                                   hx-target="#app-main"
+                                   hx-select="#app-main"
+                                   hx-swap="outerHTML transition:true"
+                                   hx-push-url="true">Eliminar</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
