@@ -56,9 +56,9 @@ El proyecto esta pensado para equipos administrativos u operativos que gestionan
 
 El proyecto tiene interfaz web, pero este repositorio no incluye capturas publicas verificadas. Si se agregan en el futuro, se recomienda usar una ruta como:
 
-```markdown
-![Panel principal](docs/images/dashboard.png)
-```
+
+![Panel principal](docs/dashboard.png)
+
 
 Las imagenes deben ser anonimizadas y no deben mostrar datos personales, rutas internas, IPs reales ni evidencias privadas.
 
