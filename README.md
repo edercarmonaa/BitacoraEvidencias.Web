@@ -54,9 +54,6 @@ El proyecto esta pensado para equipos administrativos u operativos que gestionan
 
 ## Capturas
 
-El proyecto tiene interfaz web, pero este repositorio no incluye capturas publicas verificadas. Si se agregan en el futuro, se recomienda usar una ruta como:
-
-
 ![Panel principal](docs/dashboard.png)
 
 
