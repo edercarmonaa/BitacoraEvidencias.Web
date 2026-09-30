@@ -56,9 +56,6 @@ El proyecto esta pensado para equipos administrativos u operativos que gestionan
 
 ![Panel principal](docs/dashboard.png)
 
-
-Las imagenes deben ser anonimizadas y no deben mostrar datos personales, rutas internas, IPs reales ni evidencias privadas.
-
 ## Tecnologias utilizadas
 
 - ASP.NET Core Razor Pages sobre .NET 9 para la aplicacion web server-rendered.
