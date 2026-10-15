@@ -51,14 +51,15 @@ try {
         }
         $global:BitacoraConnectionTestState.ExpectedDatabase = 'BitacoraEvidencias_Pruebas'
         & (Join-Path $root 'scripts\migration\Invoke-BitacoraSqlMigration.ps1') -Mode upgrade -TrustLocalSqlCertificate:$trust
+        & (Join-Path $root 'scripts\migration\Invoke-BitacoraSqlMigration.ps1') -Mode profile -TrustLocalSqlCertificate:$trust
         & (Join-Path $root 'scripts\deploy\Start-BitacoraSqlServer.ps1') -TrustLocalSqlCertificate:$trust
     }
-    if ($global:BitacoraConnectionTestState.Calls -ne 8) { throw 'No se ejercitaron todos los casos.' }
+    if ($global:BitacoraConnectionTestState.Calls -ne 10) { throw 'No se ejercitaron todos los casos.' }
     if ([Environment]::GetEnvironmentVariable('BITACORA_MIGRATION_SQL_CONNECTION','Process') -cne $initialMigration -or
         [Environment]::GetEnvironmentVariable('ConnectionStrings__DefaultConnection','Process') -cne $initialApp) {
         throw 'Los wrappers no restauraron las variables del proceso.'
     }
-    Write-Host 'OK: ocho ejecuciones de los scripts reales, entradas PSObject, caracteres especiales, destinos, TLS y restauracion de variables.'
+    Write-Host 'OK: diez ejecuciones de los scripts reales, entradas PSObject, caracteres especiales, destinos, TLS y restauracion de variables.'
 } finally {
     foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name,$saved[$name],'Process') }
     [Environment]::SetEnvironmentVariable('BITACORA_MIGRATION_SQL_CONNECTION',$initialMigration,'Process')

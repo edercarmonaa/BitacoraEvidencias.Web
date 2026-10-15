@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('preflight','import','verify','upgrade')][string]$Mode = 'preflight',
+    [ValidateSet('preflight','import','verify','upgrade','profile')][string]$Mode = 'preflight',
     [string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas',
     [string]$SourceDatabase = '',
     [string]$SourceEvidence = '',
@@ -8,6 +8,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if ($Mode -eq 'profile' -and $Production) { throw 'El diagnostico solo admite la base de pruebas.' }
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $tool = Join-Path $projectRoot 'tools\BitacoraMigration\bin\Release\net9.0\BitacoraMigration.dll'
 if (-not (Test-Path -LiteralPath $tool)) { throw 'Compila primero tools/BitacoraMigration/BitacoraMigration.csproj en Release.' }

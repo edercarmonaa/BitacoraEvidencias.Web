@@ -174,9 +174,22 @@ public class BusquedaModel(
             .ThenBy(x => x.Consecutivo)
             .ThenBy(x => x.Id);
 
-        Resultados = await orderedQuery
+        // Keep encrypted/wide display fields out of the pagination sort. Loading
+        // the bounded page in a second statement also prevents SQL Server from
+        // moving those fields back into the sort through query flattening.
+        var pageIds = await orderedQuery
             .Skip(skip)
             .Take(PageSize)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+        if (pageIds.Count == 0)
+        {
+            Resultados = [];
+            return;
+        }
+
+        var rows = await dbContext.CasosCorreccion.AsNoTracking()
+            .Where(x => pageIds.Contains(x.Id))
             .Select(x => new ResultadoRow
             {
                 CasoId = x.Id,
@@ -191,6 +204,8 @@ public class BusquedaModel(
                 Estatus = x.Estatus
             })
             .ToListAsync(cancellationToken);
+        var positions = pageIds.Select((id, index) => (id, index)).ToDictionary(x => x.id, x => x.index);
+        Resultados = rows.OrderBy(x => positions[x.CasoId]).ToList();
     }
 
     public string GetSortIndicator(string sortBy)

@@ -21,6 +21,12 @@ public static class MigrationRunner
 
     public static async Task RunAsync(string mode, string sourceFile, string storageRoot, bool production)
     {
+        if (mode == "profile")
+        {
+            Require(!production, "El diagnostico solo admite la base de pruebas.");
+            await SearchDiagnostics.RunAsync(BuildConnection(false, allowWindowsDiagnostic: true).ConnectionString);
+            return;
+        }
         if (mode == "upgrade") { await UpgradeIndexesAsync(production); return; }
         sourceFile = Path.GetFullPath(sourceFile);
         storageRoot = Path.GetFullPath(storageRoot);
@@ -132,12 +138,13 @@ public static class MigrationRunner
         Console.WriteLine("Esquema actualizado: indices de paginacion aplicados; no se reimportaron ni modificaron registros.");
     }
 
-    private static SqlConnectionStringBuilder BuildConnection(bool production)
+    private static SqlConnectionStringBuilder BuildConnection(bool production, bool allowWindowsDiagnostic = false)
     {
         var connectionString = Environment.GetEnvironmentVariable("BITACORA_MIGRATION_SQL_CONNECTION");
         Require(!string.IsNullOrWhiteSpace(connectionString), "Falta BITACORA_MIGRATION_SQL_CONNECTION en el proceso.");
         var builder = new SqlConnectionStringBuilder(connectionString);
-        Require(!builder.IntegratedSecurity && !string.IsNullOrWhiteSpace(builder.UserID), "Se requiere autenticacion SQL externa.");
+        Require((!builder.IntegratedSecurity && !string.IsNullOrWhiteSpace(builder.UserID))
+            || (allowWindowsDiagnostic && builder.IntegratedSecurity), "Se requiere autenticacion SQL externa.");
         Require(builder.Encrypt != SqlConnectionEncryptOption.Optional, "La conexion SQL debe usar cifrado.");
         Require(string.Equals(builder.DataSource, @".\Auditoria", StringComparison.OrdinalIgnoreCase), "La instancia de destino debe ser .\\Auditoria.");
         Require(builder.InitialCatalog == (production ? "BitacoraEvidencias" : "BitacoraEvidencias_Pruebas"),

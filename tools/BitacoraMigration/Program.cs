@@ -1,8 +1,8 @@
 using BitacoraEvidencias.Migration;
 
-if (args.Length < 3 || args[0] is not ("import" or "verify" or "preflight" or "upgrade"))
+if (args.Length < 3 || args[0] is not ("import" or "verify" or "preflight" or "upgrade" or "profile"))
 {
-    Console.Error.WriteLine("Uso: BitacoraMigration <preflight|import|verify|upgrade> <copia.db> <copia-evidencias> [--production]");
+    Console.Error.WriteLine("Uso: BitacoraMigration <preflight|import|verify|upgrade|profile> <copia.db> <copia-evidencias> [--production]");
     return 2;
 }
 

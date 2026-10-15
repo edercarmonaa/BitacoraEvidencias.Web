@@ -11,6 +11,26 @@ namespace BitacoraEvidencias.Web.Tests.Pages;
 
 public class PaginationTests
 {
+    [Theory]
+    [InlineData("oficio", "asc", 8, 1)]
+    [InlineData("oficio", "desc", 38, -1)]
+    [InlineData("fecha", "desc", 8, 1)]
+    public async Task Search_TwoStagePagePreservesRequestedOrder(string sort, string direction, int start, int step)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var protection = new SensitiveDataProtectionService(Options.Create(new SensitiveDataProtectionOptions
+        { KeyEnvironmentVariable = "UNCONFIGURED_PAGINATION_TEST_KEY" }));
+        var page = new BusquedaModel(fixture.Context, protection)
+        { SortBy = sort, SortDirection = direction, PageSize = 7, PageNumber = 2 };
+        await page.OnGetAsync();
+        Assert.Equal(Enumerable.Range(0, 7).Select(i => $"OF-{start + i * step:000}"),
+            page.Resultados.Select(r => r.NumeroOficio));
+        var empty = new BusquedaModel(fixture.Context, protection) { NumeroOficio = "NONEXISTENT" };
+        await empty.OnGetAsync();
+        Assert.Empty(empty.Resultados);
+        Assert.Equal(0, empty.TotalRows);
+    }
+
     [Fact]
     public async Task ProtectedSearch_UsesExactIndexAndDecryptsOnlyVisibleRows()
     {

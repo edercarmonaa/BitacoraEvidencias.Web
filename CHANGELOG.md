@@ -4,6 +4,8 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Busquedas: corregida espera RESOURCE_SEMAPHORE reproducida en SQL Server de pruebas; paginar identificadores antes de cargar campos visibles reduce el ancho del ordenamiento. Medicion del handler sin filtros: 25 segundos antes, 347 ms primera carga y 27 ms segunda carga despues; pendiente confirmacion en navegador.
+- Diagnostico `profile` de Busquedas en la base de pruebas: separa conteo, identificadores y datos; resume tiempos, memoria y esperas del plan real sin mostrar consultas, parametros ni registros.
 - Revision de paginacion: cancelacion de lecturas GET y orden estable en los listados; galeria de caso paginada y reporte de evidencia incorrecta paginado en SQL.
 - Agregaciones de auditoria/reportes en SQL y filtros protegidos de Busquedas conservados, con descifrado limitado a la pagina.
 - Ocho indices SQL aditivos mediante PagingIndexes y modo upgrade para bases ya importadas; mediciones por pagina sin valores sensibles.
