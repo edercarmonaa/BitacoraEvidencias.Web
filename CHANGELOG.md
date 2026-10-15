@@ -4,6 +4,8 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Correccion del panel posterior al login: esperar cada consulta para evitar operaciones concurrentes sobre el mismo DbContext; prueba con lector asincrono demorado.
+
 - Contexto y migracion inicial EF Core independientes para SQL Server Express.
 - Importador transaccional desde una copia SQLite: conserva identificadores, hashes de contrasenas, sales, cifrado y auditoria; compara todos los campos antes de confirmar.
 - Comprobacion de integridad, relaciones, longitudes, archivos y descifrado con la llave existente; rechazo de destinos no vacios.

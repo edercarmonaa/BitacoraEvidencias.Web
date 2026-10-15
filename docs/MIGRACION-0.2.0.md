@@ -98,6 +98,8 @@ Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y 
 
 ## Verificaciones pendientes
 
+- El arranque SQL de ensayo permitio llegar al flujo de login; al cargar el panel se confirmo una excepcion por consultas concurrentes en DashboardOverviewViewComponent. Se corrigio la carga para esperar cada consulta y se valido con una prueba que fuerza asincronia. Cinco pruebas de panel/esquema y seis casos de scripts aprobados. Falta confirmar el panel en el ensayo real con los nuevos binarios; SQLite 0.1.0 permanece congelada.
+
 - Conexion SQL y escritura en la base de pruebas confirmadas por la importacion reportada. Verificar acceso con el usuario de operacion; la base SQL productiva no se ha migrado.
 - Cuenta SQL y permisos de preparacion, migracion y operacion; credenciales suministradas fuera del chat y de Git.
 - Configuracion TLS de SQL Server y confianza del certificado en el servidor.

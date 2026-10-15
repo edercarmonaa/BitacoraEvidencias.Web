@@ -78,6 +78,8 @@ La transferencia inicial solo admite la migracion `InitialSqlServer`. Para poste
 .\scripts\deploy\Start-BitacoraSqlServer.ps1
 ```
 
+Ambos scripts admiten `-AppFolder` para usar otra carpeta de binarios dentro del ensayo sin sustituir una publicacion en ejecucion. La correccion del panel posterior al login se publica en `App-dashboard-fix`; para usarla, detener solo el ensayo con Ctrl+C y arrancar con `-AppFolder App-dashboard-fix -TrustLocalSqlCertificate` si se usa el certificado SQL local sin confianza configurada. La base y las copias de evidencias se mantienen: no repetir import.
+
 Publica en `C:\BitacoraEvidencias_Pruebas\App` y usa exclusivamente la base de pruebas y `Input\Evidencias`. El puerto predeterminado es 5068; no admite 5067 ni detiene procesos existentes. La cuenta debe poder leer el certificado HTTPS y la llave existentes. Si el certificado no cubre 127.0.0.1, usar `-ServerAddress` con el nombre o direccion cubierto por el certificado. El parametro de confianza SQL tambien esta disponible en el lanzador si se autorizo para el ensayo local.
 
 Validar cuentas existentes, permisos de ambos roles, lectura de datos protegidos, fotografias y miniaturas, busqueda, reportes, auditoria y operaciones de alta, modificacion y eliminacion sobre las copias. Confirmar que se pueden crear nuevos registros sin colision de identificadores.

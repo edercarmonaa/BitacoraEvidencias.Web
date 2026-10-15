@@ -1,12 +1,13 @@
 param(
     [string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas',
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')][string]$AppFolder = 'App',
     [string]$ServerAddress = '127.0.0.1',
     [int]$HttpsPort = 5068,
     [switch]$TrustLocalSqlCertificate
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$publish = [IO.Path]::GetFullPath((Join-Path $TrialRoot 'App'))
+$publish = [IO.Path]::GetFullPath((Join-Path $TrialRoot $AppFolder))
 $storage = [IO.Path]::GetFullPath((Join-Path $TrialRoot 'Input\Evidencias'))
 $productionRoot = [IO.Path]::GetFullPath('C:\BitacoraEvidencias')
 foreach ($path in @($publish,$storage)) {

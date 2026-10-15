@@ -1,8 +1,11 @@
-param([string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas')
+param(
+    [string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas',
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')][string]$AppFolder = 'App'
+)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$target = [IO.Path]::GetFullPath((Join-Path $TrialRoot 'App'))
+$target = [IO.Path]::GetFullPath((Join-Path $TrialRoot $AppFolder))
 $production = [IO.Path]::GetFullPath('C:\BitacoraEvidencias')
 if ($target.Equals($production,[StringComparison]::OrdinalIgnoreCase) -or $target.StartsWith($production + '\',[StringComparison]::OrdinalIgnoreCase)) {
     throw 'Este publicador no sustituye la instalacion productiva.'
