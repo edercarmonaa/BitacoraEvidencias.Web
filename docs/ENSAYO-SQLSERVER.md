@@ -25,6 +25,7 @@ Requisitos: SDK .NET 9, runtime ASP.NET Core 9 y las variables existentes de lla
 dotnet restore -p:NuGetAudit=false
 dotnet build tools/BitacoraMigration/BitacoraMigration.csproj -c Release --no-restore
 dotnet test -c Release --no-restore
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/validation/Test-SqlServerConnectionScripts.ps1
 ```
 
 `NuGetAudit=false` permite restaurar sin el servicio de auditoria disponible durante la preparacion; no constituye una revision de vulnerabilidades. Resolver el acceso al servicio y revisar dependencias antes de liberar.

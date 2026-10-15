@@ -21,17 +21,17 @@ if ($Production -and $Mode -eq 'import') {
 $previousConnection = [Environment]::GetEnvironmentVariable('BITACORA_MIGRATION_SQL_CONNECTION','Process')
 try {
     if ($Mode -ne 'preflight') {
-        $user = Read-Host 'Usuario SQL (no se guardara)'
+        [string]$user = Read-Host 'Usuario SQL (no se guardara)'
         $password = Read-Host 'Contrasena SQL' -AsSecureString
         $credential = [Management.Automation.PSCredential]::new($user, $password)
         $connection = [System.Data.SqlClient.SqlConnectionStringBuilder]::new()
-        $connection['Data Source'] = '.\Auditoria'
-        $connection['Initial Catalog'] = if ($Production) { 'BitacoraEvidencias' } else { 'BitacoraEvidencias_Pruebas' }
-        $connection['User ID'] = $user
-        $connection['Password'] = $credential.GetNetworkCredential().Password
-        $connection['Encrypt'] = $true
-        $connection['TrustServerCertificate'] = [bool]$TrustLocalSqlCertificate
-        $connection['Persist Security Info'] = $false
+        $connection.set_DataSource('.\Auditoria')
+        $connection.set_InitialCatalog($(if ($Production) { 'BitacoraEvidencias' } else { 'BitacoraEvidencias_Pruebas' }))
+        $connection.set_UserID([string]$user)
+        $connection.set_Password($credential.GetNetworkCredential().Password)
+        $connection.set_Encrypt($true)
+        $connection.set_TrustServerCertificate([bool]$TrustLocalSqlCertificate)
+        $connection.set_PersistSecurityInfo($false)
         $env:BITACORA_MIGRATION_SQL_CONNECTION = $connection.ConnectionString
     }
     $arguments = @($tool, $Mode, $SourceDatabase, $SourceEvidence)
