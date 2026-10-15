@@ -1,6 +1,6 @@
 # Acuerdos para la version 0.2.0
 
-Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y preflight del respaldo aprobado. Importacion a SQL Server de pruebas confirmada por la salida compartida por el responsable; verificacion posterior y validacion de la aplicacion pendientes. Este documento no cambia la configuracion de produccion. Procedimiento ejecutable en [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md).
+Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y preflight del respaldo aprobado. Importacion a SQL Server de pruebas confirmada por la salida compartida por el responsable; verificacion posterior aprobada segun la salida compartida por el responsable; validacion de la aplicacion pendiente. Este documento no cambia la configuracion de produccion. Procedimiento ejecutable en [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md).
 
 ## Versiones y conservacion del codigo
 
@@ -93,7 +93,8 @@ Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y 
 - Se publicaron binarios de ensayo en `C:\BitacoraEvidencias_Pruebas\App`, sin arrancarlos. No se cambiaron variables persistentes, secretos, instalacion ni scripts originales de arranque productivo.
 - Cuatro pruebas nuevas SQL aprobadas sin conexion al servidor. Suite completa: 60 aprobadas y los mismos 6 fallos conocidos (66 pruebas); no considerar aprobada la liberacion por estos resultados parciales.
 - El responsable ejecuto la importacion a `BitacoraEvidencias_Pruebas` con la opcion explicita de confianza del certificado local. La salida confirma transaccion completada y coincidencia de todos los campos de las cinco tablas: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,904 registros de auditoria. Este resultado corresponde al respaldo de ensayo, no a una migracion final de produccion.
-- Pendiente: ejecutar verify contra la base ya confirmada antes de pruebas de escritura, iniciar el ensayo con el usuario SQL de operacion, validar flujos y preparacion operativa SQL, y coordinar el mantenimiento para el cambio productivo.
+- El responsable ejecuto verify despues de confirmar la importacion y compartio el resultado Verificacion completa aprobada: coincidencia de las cinco tablas y comprobacion de evidencias. La conexion se realizo con la cuenta administradora; el acceso con el usuario SQL de operacion sigue pendiente.
+- Pendiente: iniciar el ensayo con el usuario SQL de operacion, validar flujos y preparacion operativa SQL, y coordinar el mantenimiento para el cambio productivo.
 
 ## Verificaciones pendientes
 
