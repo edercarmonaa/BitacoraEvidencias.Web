@@ -2,6 +2,7 @@ using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 
 namespace BitacoraEvidencias.Web.Pages.Reportes;
 
@@ -25,15 +26,15 @@ public class OficiosConEvidenciaIncorrectaModel(AppDbContext dbContext) : PageMo
     {
         PageSize = Math.Clamp(PageSize <= 0 ? DefaultPageSize : PageSize, 1, MaxPageSize);
 
-        var cases = await IncorrectAuditOfficeQueries.LoadCasesAsync(dbContext, cancellationToken);
-        TotalRows = cases.Count;
+        var cases = IncorrectAuditOfficeQueries.Cases(dbContext);
+        TotalRows = await cases.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
 
-        Items = cases
+        Items = await cases
             .Skip(skip)
             .Take(PageSize)
-            .ToList();
+            .ToListAsync(cancellationToken);
     }
 }

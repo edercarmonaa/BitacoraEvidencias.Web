@@ -25,7 +25,7 @@
             <a class="btn btn-outline-secondary"
                asp-page="/Oficios/Details"
                asp-route-id="@Model.Caso.OficioId"
-               hx-get="@Url.Page("/Oficios/Details", new { id = Model.Caso.OficioId })"
+               hx-sync="#app-main:replace" hx-get="@Url.Page("/Oficios/Details", new { id = Model.Caso.OficioId })"
                hx-target="#app-main"
                hx-select="#app-main"
                hx-swap="outerHTML transition:true"
@@ -33,7 +33,7 @@
             <a class="btn btn-outline-primary"
                asp-page="/Casos/Edit"
                asp-route-id="@Model.Caso.Id"
-               hx-get="@Url.Page("/Casos/Edit", new { id = Model.Caso.Id })"
+               hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Edit", new { id = Model.Caso.Id })"
                hx-target="#app-main"
                hx-select="#app-main"
                hx-swap="outerHTML transition:true"
@@ -41,7 +41,7 @@
             <a class="btn btn-outline-danger"
                asp-page="/Casos/Delete"
                asp-route-id="@Model.Caso.Id"
-               hx-get="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id })"
+               hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id })"
                hx-target="#app-main"
                hx-select="#app-main"
                hx-swap="outerHTML transition:true"
@@ -143,7 +143,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h2 class="h5 mb-0">Galeria de evidencia</h2>
-        <span class="text-muted">@Model.Evidencias.Count archivo(s)</span>
+        <span class="text-muted">@Model.TotalRows archivo(s)</span>
     </div>
 
     @if (Model.Evidencias.Count == 0)
@@ -167,7 +167,7 @@
                                 <a class="btn btn-sm btn-outline-primary"
                                    asp-page="/Evidencias/Edit"
                                    asp-route-id="@item.Id"
-                                   hx-get="@Url.Page("/Evidencias/Edit", new { id = item.Id })"
+                                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Evidencias/Edit", new { id = item.Id })"
                                    hx-target="#app-main"
                                    hx-select="#app-main"
                                    hx-swap="outerHTML transition:true"
@@ -175,7 +175,7 @@
                                 <a class="btn btn-sm btn-outline-danger"
                                    asp-page="/Evidencias/Delete"
                                    asp-route-id="@item.Id"
-                                   hx-get="@Url.Page("/Evidencias/Delete", new { id = item.Id })"
+                                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Evidencias/Delete", new { id = item.Id })"
                                    hx-target="#app-main"
                                    hx-select="#app-main"
                                    hx-swap="outerHTML transition:true"
@@ -189,6 +189,16 @@
     }
 }
 
+@if (Model.Caso is not null && Model.TotalRows > 0)
+{
+    <partial name="_Pager" model="@(new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel
+        {
+            PageNumber = Model.PageNumber, TotalPages = Model.TotalPages, PageSize = Model.PageSize,
+            TotalRows = Model.TotalRows, CurrentCount = Model.Evidencias.Count, PageName = "/Casos/Details",
+            RowsLabel = "evidencia(s)", UseHtmx = true, HxTarget = "#app-main", HxSelect = "#app-main",
+            RouteValues = new Dictionary<string, string> { ["id"] = Model.Caso!.Id.ToString() }
+        })" />
+}
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

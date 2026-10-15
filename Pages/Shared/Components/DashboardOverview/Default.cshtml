@@ -35,14 +35,14 @@
         <div class="dash-actions" role="group" aria-label="Acciones del dashboard">
             <a class="tw-btn-brand"
                href="@Url.Page("/Oficios/Create")"
-               hx-get="@Url.Page("/Oficios/Create")"
+               hx-sync="#app-main:replace" hx-get="@Url.Page("/Oficios/Create")"
                hx-target="#app-main"
                hx-select="#app-main"
                hx-swap="outerHTML transition:true"
                hx-push-url="true">Registrar oficio</a>
             <button type="button"
                     class="tw-btn-subtle"
-                    hx-get="@Url.Page("/Fragments/DashboardOverview")"
+                    hx-sync="#app-main:replace" hx-get="@Url.Page("/Fragments/DashboardOverview")"
                     hx-target="#dashboard-overview"
                     hx-swap="outerHTML transition:true"
                     hx-push-url="false">
@@ -75,7 +75,7 @@
                             <li>
                                 <a class="dash-list__link"
                                    href="@Url.Page("/Oficios/Details", new { id = item.Id })"
-                                   hx-get="@Url.Page("/Oficios/Details", new { id = item.Id })"
+                                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Oficios/Details", new { id = item.Id })"
                                    hx-target="#app-main"
                                    hx-select="#app-main"
                                    hx-swap="outerHTML transition:true"
@@ -107,7 +107,7 @@
                             <li>
                                 <a class="dash-list__link"
                                    href="@Url.Page("/Casos/Details", new { id = item.Id })"
-                                   hx-get="@Url.Page("/Casos/Details", new { id = item.Id })"
+                                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Details", new { id = item.Id })"
                                    hx-target="#app-main"
                                    hx-select="#app-main"
                                    hx-swap="outerHTML transition:true"

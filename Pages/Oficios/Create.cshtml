@@ -52,7 +52,7 @@
         </button>
         <a class="btn btn-outline-secondary"
            asp-page="./Index"
-           hx-get="@Url.Page("./Index")"
+           hx-sync="#app-main:replace" hx-get="@Url.Page("./Index")"
            hx-target="#app-main"
            hx-select="#app-main"
            hx-swap="outerHTML transition:true"

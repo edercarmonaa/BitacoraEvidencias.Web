@@ -150,11 +150,7 @@ public class AuditoriaModel(
             .OrderByDescending(x => x.FechaOficio)
             .ThenBy(x => x.NumeroOficio)
             .ThenBy(x => x.Id);
-        var visibleOfficeIds = await orderedOficios
-            .Select(x => x.Id)
-            .Take(OfficePreviewLimit)
-            .ToListAsync(cancellationToken);
-
+        IQueryable<Oficio> visibleOfficeQuery = orderedOficios.Take(OfficePreviewLimit);
         if (SelectedCaseId.HasValue)
         {
             var selectedOfficeId = await dbContext.CasosCorreccion
@@ -164,16 +160,18 @@ public class AuditoriaModel(
                 .SingleOrDefaultAsync(cancellationToken);
             if (!selectedOfficeId.HasValue)
                 SelectedCaseId = null;
-            else if (!visibleOfficeIds.Contains(selectedOfficeId.Value))
+            else
             {
-                if (visibleOfficeIds.Count == OfficePreviewLimit)
-                    visibleOfficeIds.RemoveAt(visibleOfficeIds.Count - 1);
-                visibleOfficeIds.Add(selectedOfficeId.Value);
+                var selectedId = selectedOfficeId.Value;
+                var otherOfficeIds = orderedOficios.Where(o => o.Id != selectedId)
+                    .Take(OfficePreviewLimit - 1).Select(o => o.Id);
+                visibleOfficeQuery = dbContext.Oficios.AsNoTracking()
+                    .Where(o => o.Id == selectedId || otherOfficeIds.Contains(o.Id));
             }
         }
 
-        var oficioProjections = await orderedOficios
-            .Where(x => visibleOfficeIds.Contains(x.Id))
+        var oficioProjections = await visibleOfficeQuery
+            .OrderByDescending(o => o.FechaOficio).ThenBy(o => o.NumeroOficio).ThenBy(o => o.Id)
             .Select(x => new OficioAuditProjection
             {
                 Id = x.Id,

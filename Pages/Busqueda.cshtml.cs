@@ -67,7 +67,7 @@ public class BusquedaModel(
     public bool IsSortedBy(string sortBy) => string.Equals(ActiveSortBy, sortBy, StringComparison.OrdinalIgnoreCase);
     public bool IsSortDescending => string.Equals(ActiveSortDirection, "desc", StringComparison.OrdinalIgnoreCase);
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
         PageSize = Math.Clamp(PageSize <= 0 ? DefaultPageSize : PageSize, 1, MaxPageSize);
         ActiveSortBy = NormalizeSortBy(SortBy);
@@ -163,7 +163,7 @@ public class BusquedaModel(
             }
         }
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
@@ -190,7 +190,7 @@ public class BusquedaModel(
                 TipoCorreccion = x.TipoCorreccion,
                 Estatus = x.Estatus
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public string GetSortIndicator(string sortBy)

@@ -150,6 +150,9 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.HasIndex("Username");
 
+                    b.HasIndex("OccurredAtUtc", "Id")
+                        .IsDescending();
+
                     b.ToTable("AuditLogs");
                 });
 
@@ -298,11 +301,24 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.HasIndex("NivelEducativo");
 
+                    b.HasIndex("CreadoEn", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("FechaVerificacion", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("OficioId", "AuditoriaEstado");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("OficioId", "AuditoriaEstado"), new[] { "EvidenciaUrl", "Consecutivo" });
+
                     b.HasIndex("OficioId", "Consecutivo")
                         .IsUnique();
 
                     b.HasIndex("OficioId", "NivelEducativo")
                         .IsUnique();
+
+                    b.HasIndex("Estatus", "CreadoEn", "Id")
+                        .IsDescending(false, true, true);
 
                     b.ToTable("CasosCorreccion", t =>
                         {
@@ -354,6 +370,9 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.HasIndex("CasoCorreccionId");
 
+                    b.HasIndex("CasoCorreccionId", "FechaEvidencia", "Id")
+                        .IsDescending(false, true, true);
+
                     b.ToTable("EvidenciasFoto", t =>
                         {
                             t.HasCheckConstraint("CK_EvidenciasFoto_TipoEvidencia", "\"TipoEvidencia\" IN ('Oficio', 'Lista', 'Extra')");
@@ -395,6 +414,11 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.HasIndex("NumeroOficio")
                         .IsUnique();
+
+                    b.HasIndex("FechaOficio", "NumeroOficio", "Id")
+                        .IsDescending(true, false, false);
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("FechaOficio", "NumeroOficio", "Id"), new[] { "Asunto" });
 
                     b.ToTable("Oficios");
                 });
@@ -464,6 +488,8 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
                         .IsUnique();
 
                     b.HasIndex("Rol", "Activo");
+
+                    b.HasIndex("Usuario", "Id");
 
                     b.ToTable("UsuariosSistema");
                 });

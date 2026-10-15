@@ -31,19 +31,20 @@ public class ReportesModel(AppDbContext dbContext) : PageModel
     public int TotalCasosNoCompletados { get; private set; }
     public IReadOnlyList<DashboardStatCardModel> StatCards { get; private set; } = [];
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
-        TotalOficios = await dbContext.Oficios.CountAsync();
-        TotalCasos = await dbContext.CasosCorreccion.CountAsync();
-        TotalEvidencias = await dbContext.EvidenciasFoto.CountAsync();
+        TotalOficios = await dbContext.Oficios.CountAsync(cancellationToken);
+        TotalCasos = await dbContext.CasosCorreccion.CountAsync(cancellationToken);
+        TotalEvidencias = await dbContext.EvidenciasFoto.CountAsync(cancellationToken);
         TotalPendientesEvidencia = await dbContext.CasosCorreccion
             .AsNoTracking()
-            .CountAsync(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty));
+            .CountAsync(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty), cancellationToken);
 
         PendientesEvidencia = await dbContext.CasosCorreccion
             .AsNoTracking()
             .Where(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty))
             .OrderByDescending(x => x.CreadoEn)
+            .ThenByDescending(x => x.Id)
             .Select(x => new PendienteEvidenciaRow
             {
                 CasoId = x.Id,
@@ -55,7 +56,7 @@ public class ReportesModel(AppDbContext dbContext) : PageModel
                 Estatus = x.Estatus
             })
             .Take(PendientesPreviewLimit)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var oficiosPorTipoCorreccionQuery = dbContext.CasosCorreccion
             .AsNoTracking()
@@ -67,20 +68,21 @@ public class ReportesModel(AppDbContext dbContext) : PageModel
                 Total = group.Select(x => x.OficioId).Distinct().Count()
             });
 
-        TotalTiposCorreccionCompletados = await oficiosPorTipoCorreccionQuery.CountAsync();
+        TotalTiposCorreccionCompletados = await oficiosPorTipoCorreccionQuery.CountAsync(cancellationToken);
         CasosPorTipoCorreccion = await oficiosPorTipoCorreccionQuery
             .OrderByDescending(x => x.Total)
             .ThenBy(x => x.TipoCorreccion)
             .Take(TiposCorreccionPreviewLimit)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var casosNoCompletadosQuery = dbContext.CasosCorreccion
             .AsNoTracking()
             .Where(x => x.Estatus != "Completado");
 
-        TotalCasosNoCompletados = await casosNoCompletadosQuery.CountAsync();
+        TotalCasosNoCompletados = await casosNoCompletadosQuery.CountAsync(cancellationToken);
         CasosNoCompletados = await casosNoCompletadosQuery
             .OrderByDescending(x => x.CreadoEn)
+            .ThenByDescending(x => x.Id)
             .Select(x => new CasoNoCompletadoRow
             {
                 CasoId = x.Id,
@@ -92,34 +94,19 @@ public class ReportesModel(AppDbContext dbContext) : PageModel
                 Estatus = x.Estatus
             })
             .Take(NoCompletadosPreviewLimit)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-        var auditableOficios = await dbContext.Oficios
-            .AsNoTracking()
-            .Where(x =>
-                x.Casos.Any() &&
-                x.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)))
-            .Select(x => new
-            {
-                Estados = x.Casos.Select(c => c.AuditoriaEstado).ToList()
-            })
-            .ToListAsync();
+        TotalOficiosAuditadosCorrectos = await dbContext.Oficios.AsNoTracking()
+            .CountAsync(o => o.Casos.Any() &&
+                o.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)) &&
+                o.Casos.All(c => c.AuditoriaEstado != null && c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.Coincidente), cancellationToken);
 
-        TotalOficiosAuditadosCorrectos = auditableOficios.Count(x =>
-            x.Estados.Count > 0 &&
-            x.Estados.All(estado => CatalogosAuditoriaCaso.NormalizarEstado(estado) == CatalogosAuditoriaCaso.Coincidente));
-
-        var incorrectAuditOffices = await IncorrectAuditOfficeQueries.LoadAsync(dbContext);
-        TotalOficiosConEvidenciaIncorrecta = incorrectAuditOffices.Count;
-        OficiosConEvidenciaIncorrecta = incorrectAuditOffices
-            .Take(IncorrectosPreviewLimit)
-            .ToList();
-        var incorrectAuditCases = await IncorrectAuditOfficeQueries.LoadCasesAsync(dbContext);
-        TotalCasosConEvidenciaIncorrecta = incorrectAuditCases.Count;
-        CasosConEvidenciaIncorrecta = incorrectAuditCases
-            .Take(IncorrectosPreviewLimit)
-            .ToList();
-
+        var incorrectAuditOffices = IncorrectAuditOfficeQueries.Offices(dbContext);
+        TotalOficiosConEvidenciaIncorrecta = await incorrectAuditOffices.CountAsync(cancellationToken);
+        OficiosConEvidenciaIncorrecta = await incorrectAuditOffices.Take(IncorrectosPreviewLimit).ToListAsync(cancellationToken);
+        var incorrectAuditCases = IncorrectAuditOfficeQueries.Cases(dbContext);
+        TotalCasosConEvidenciaIncorrecta = await incorrectAuditCases.CountAsync(cancellationToken);
+        CasosConEvidenciaIncorrecta = await incorrectAuditCases.Take(IncorrectosPreviewLimit).ToListAsync(cancellationToken);
         StatCards =
         [
             new DashboardStatCardModel

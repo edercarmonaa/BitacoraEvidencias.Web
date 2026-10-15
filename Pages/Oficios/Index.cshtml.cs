@@ -31,7 +31,7 @@ public class IndexModel(AppDbContext dbContext) : PageModel
     public int TotalPages { get; private set; } = 1;
     public int MaxAllowedPageSize => MaxPageSize;
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
         PageSize = Math.Clamp(PageSize <= 0 ? DefaultPageSize : PageSize, 1, MaxPageSize);
         var query = dbContext.Oficios.AsNoTracking();
@@ -44,7 +44,7 @@ public class IndexModel(AppDbContext dbContext) : PageModel
                 EF.Functions.Like(x.Asunto, $"%{term}%"));
         }
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
@@ -66,7 +66,7 @@ public class IndexModel(AppDbContext dbContext) : PageModel
                 CasosPendientesAuditoria = x.Casos.Count(c => c.AuditoriaEstado == CatalogosAuditoriaCaso.Pendiente),
                 CasosIncorrectosAuditoria = x.Casos.Count(c => c.AuditoriaEstado == CatalogosAuditoriaCaso.NoCoincidente)
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public class OficioRow

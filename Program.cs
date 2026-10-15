@@ -26,6 +26,8 @@ builder.Services.AddDbContext<SqlServerAppDbContext>((serviceProvider, options) 
     if (!serviceProvider.GetRequiredService<ISensitiveDataProtectionService>().IsConfigured)
         throw new InvalidOperationException("La version SQL Server requiere la llave de proteccion existente en el entorno.");
     options.UseSqlServer(connection);
+    options.AddInterceptors(serviceProvider.GetRequiredService<QueryTimingInterceptor>(),
+        serviceProvider.GetRequiredService<ConnectionTimingInterceptor>());
 });
 builder.Services.AddScoped<AppDbContext>(provider => provider.GetRequiredService<SqlServerAppDbContext>());
 builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();

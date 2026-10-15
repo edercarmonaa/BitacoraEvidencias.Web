@@ -29,7 +29,7 @@
             <div class="dash-actions">
                 <a class="tw-btn-subtle"
                    asp-page="/Reportes/Ejecutivo"
-                   hx-get="@Url.Page("/Reportes/Ejecutivo")"
+                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes/Ejecutivo")"
                    hx-target="#app-main"
                    hx-select="#app-main"
                    hx-swap="outerHTML transition:true"
@@ -37,7 +37,7 @@
                 <button type="button"
                         class="tw-btn-subtle"
                         data-busy
-                        hx-get="@Url.Page("/Reportes")"
+                        hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes")"
                         hx-indicator="#reportes-loading"
                         hx-target="#reportes-results"
                         hx-select="#reportes-results"
@@ -70,7 +70,7 @@
                     {
                         <a class="tw-btn-subtle"
                            asp-page="/Reportes/OficiosPorTipoCorreccion"
-                           hx-get="@Url.Page("/Reportes/OficiosPorTipoCorreccion")"
+                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes/OficiosPorTipoCorreccion")"
                            hx-target="#app-main"
                            hx-select="#app-main"
                            hx-swap="outerHTML transition:true"
@@ -128,7 +128,7 @@
                     {
                         <a class="tw-btn-subtle"
                            asp-page="/Reportes/CasosNoCompletados"
-                           hx-get="@Url.Page("/Reportes/CasosNoCompletados")"
+                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes/CasosNoCompletados")"
                            hx-target="#app-main"
                            hx-select="#app-main"
                            hx-swap="outerHTML transition:true"
@@ -190,7 +190,7 @@
                     {
                         <a class="tw-btn-subtle"
                            asp-page="/Reportes/PendientesEvidencia"
-                           hx-get="@Url.Page("/Reportes/PendientesEvidencia")"
+                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes/PendientesEvidencia")"
                            hx-target="#app-main"
                            hx-select="#app-main"
                            hx-swap="outerHTML transition:true"

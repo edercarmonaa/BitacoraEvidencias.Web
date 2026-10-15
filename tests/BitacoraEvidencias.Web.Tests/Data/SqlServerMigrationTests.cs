@@ -9,12 +9,32 @@ namespace BitacoraEvidencias.Web.Tests.Data;
 public class SqlServerMigrationTests
 {
     [Fact]
+    public void PagingUpgrade_OnlyCreatesIndexes()
+    {
+        var migration = new BitacoraEvidencias.Web.Data.SqlServerMigrations.PagingIndexes();
+        Assert.Equal(8, migration.UpOperations.Count);
+        Assert.All(migration.UpOperations, operation => Assert.IsType<Microsoft.EntityFrameworkCore.Migrations.Operations.CreateIndexOperation>(operation));
+    }
+
+    [Fact]
+    public void IncorrectEvidenceReport_TranslatesPagingAndFiltersToSqlServer()
+    {
+        using var context = new SqlServerAppDbContext(new DbContextOptionsBuilder<SqlServerAppDbContext>()
+            .UseSqlServer("Server=localhost;Database=DesignOnly;Integrated Security=true;Encrypt=true").Options);
+        var sql = BitacoraEvidencias.Web.Services.IncorrectAuditOfficeQueries.Cases(context).Skip(20).Take(20).ToQueryString();
+        Assert.Contains("OFFSET", sql);
+        Assert.Contains("FETCH NEXT", sql);
+        Assert.Contains("TOP", BitacoraEvidencias.Web.Services.IncorrectAuditOfficeQueries.Offices(context).Take(5).ToQueryString());
+    }
+
+    [Fact]
     public void SqlServerSchema_HasIndependentMigrationAndMatchesSnapshot()
     {
         using var context = new SqlServerAppDbContext(new DbContextOptionsBuilder<SqlServerAppDbContext>()
             .UseSqlServer("Server=localhost;Database=DesignOnly;Integrated Security=true;Encrypt=true").Options);
         var migrations = context.Database.GetMigrations().ToArray();
-        Assert.Single(migrations);
+        Assert.Equal(2, migrations.Length);
+        Assert.EndsWith("_PagingIndexes", migrations[1]);
         Assert.EndsWith("_InitialSqlServer", migrations[0]);
         Assert.False(context.Database.HasPendingModelChanges());
         var script = context.Database.GenerateCreateScript();

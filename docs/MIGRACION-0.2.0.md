@@ -98,6 +98,8 @@ Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y 
 
 ## Verificaciones pendientes
 
+- Tras mediciones de Auditoria de 999 a 1,303 ms y reporte de lentitud en Busquedas, se revisaron los listados y se preparo una actualizacion de paginacion e indices. Detalle y pasos en [PERFORMANCE-0.2.0.md](PERFORMANCE-0.2.0.md). Pendiente aplicar upgrade en pruebas y medir con App-pagination-fix; no se ha aplicado el indice ni modificado produccion desde esta revision.
+
 - Se reporto lentitud al entrar y salir de Auditoria durante el ensayo. Se limito la carga de casos a cinco oficios desde SQL y se coordinaron las solicitudes GET para cancelar lecturas anteriores al navegar. Se conservan conteos globales, filtros y oficio seleccionado fuera de la vista inicial. Ocho pruebas dirigidas de auditoria, panel y esquema aprobadas; falta medir en el ensayo SQL real con `App-audit-fix` y la linea de duracion en consola.
 
 - El arranque SQL de ensayo permitio llegar al flujo de login; al cargar el panel se confirmo una excepcion por consultas concurrentes en DashboardOverviewViewComponent. Se corrigio la carga para esperar cada consulta y se valido con una prueba que fuerza asincronia. Cinco pruebas de panel/esquema y seis casos de scripts aprobados. Falta confirmar el panel en el ensayo real con los nuevos binarios; SQLite 0.1.0 permanece congelada.

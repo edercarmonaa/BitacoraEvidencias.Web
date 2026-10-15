@@ -67,7 +67,7 @@ La conexion exige cifrado y verifica el certificado SQL por defecto. Si el certi
 
 Se crean tablas e indices, se transfieren valores almacenados sin usar SaveChanges, se conservan identidades y se ajustan sus secuencias. Se compara cada campo de cada fila mediante una huella determinista, incluyendo distincion de nulos y vacios y precision de fechas. Todo se confirma en una sola transaccion; los fallos revierten esquema y datos. El historial EF Core SQL se registra independientemente del historial SQLite.
 
-La transferencia inicial solo admite la migracion `InitialSqlServer`. Para posteriores cambios de esquema usar nuevas migraciones SQL; actualizar el importador si cambia el modelo.
+La transferencia inicial admite `InitialSqlServer` y `PagingIndexes`, registrando ambas sobre el modelo completo. Para la base de ensayo ya importada, aplicar exclusivamente los indices con `-Mode upgrade`: ver [PERFORMANCE-0.2.0.md](PERFORMANCE-0.2.0.md). No repetir import. Ante otras migraciones futuras, revisar el importador antes de usarlas.
 
 `verify` compara contra el respaldo original: ejecutarlo antes de las pruebas de escritura, pues estas modificaran la copia SQL. Tras probar escrituras, conservar los resultados y preparar otra base vacia para repetir; este proceso no incluye borrado automatico.
 

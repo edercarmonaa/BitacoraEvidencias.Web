@@ -10,7 +10,7 @@
 <form method="get"
       class="card card-body mb-3 search-filters-card"
       data-busy
-      hx-get="@Url.Page("./Busqueda")"
+      hx-sync="#app-main:replace" hx-get="@Url.Page("./Busqueda")"
       hx-indicator="#search-loading"
       hx-target="#search-results"
       hx-select="#search-results"
@@ -78,7 +78,7 @@
         <button type="submit" class="btn btn-primary">Buscar</button>
         <a class="btn btn-outline-secondary"
            asp-page="./Busqueda"
-           hx-get="@Url.Page("./Busqueda")"
+           hx-sync="#app-main:replace" hx-get="@Url.Page("./Busqueda")"
            hx-target="#app-main"
            hx-select="#app-main"
            hx-swap="outerHTML transition:true"
@@ -160,7 +160,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("oficio") @(Model.IsSortedBy("oficio") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("oficio")"
-                               hx-get="@BuildSortUrl("oficio")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("oficio")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -175,7 +175,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("fecha") @(Model.IsSortedBy("fecha") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("fecha")"
-                               hx-get="@BuildSortUrl("fecha")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("fecha")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -190,7 +190,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("fechaVerificacion") @(Model.IsSortedBy("fechaVerificacion") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("fechaVerificacion")"
-                               hx-get="@BuildSortUrl("fechaVerificacion")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("fechaVerificacion")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -205,7 +205,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("nivel") @(Model.IsSortedBy("nivel") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("nivel")"
-                               hx-get="@BuildSortUrl("nivel")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("nivel")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -220,7 +220,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("tipo") @(Model.IsSortedBy("tipo") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("tipo")"
-                               hx-get="@BuildSortUrl("tipo")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("tipo")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -235,7 +235,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("estatus") @(Model.IsSortedBy("estatus") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("estatus")"
-                               hx-get="@BuildSortUrl("estatus")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("estatus")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -250,7 +250,7 @@
                         <th class="text-nowrap">
                             <a class="search-sort-link @SortHeaderClass("curp") @(Model.IsSortedBy("curp") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("curp")"
-                               hx-get="@BuildSortUrl("curp")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("curp")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -265,7 +265,7 @@
                         <th>
                             <a class="search-sort-link @SortHeaderClass("nombre") @(Model.IsSortedBy("nombre") ? "is-active" : string.Empty)"
                                href="@BuildSortUrl("nombre")"
-                               hx-get="@BuildSortUrl("nombre")"
+                               hx-sync="#app-main:replace" hx-get="@BuildSortUrl("nombre")"
                                hx-target="#search-results"
                                hx-select="#search-results"
                                hx-swap="outerHTML transition:true"
@@ -297,7 +297,7 @@
                                 <td class="fw-semibold text-nowrap">
                                     <a asp-page="/Casos/Details"
                                        asp-route-id="@item.CasoId"
-                                       hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                       hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
                                        hx-target="#app-main"
                                        hx-select="#app-main"
                                        hx-swap="outerHTML transition:true"
@@ -322,7 +322,7 @@
                                     {
                                         <a asp-page="/Casos/Details"
                                            asp-route-id="@item.CasoId"
-                                           hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
                                            hx-target="#app-main"
                                            hx-select="#app-main"
                                            hx-swap="outerHTML transition:true"
@@ -334,7 +334,7 @@
                                         <a class="btn btn-outline-primary"
                                            asp-page="/Casos/Details"
                                            asp-route-id="@item.CasoId"
-                                           hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
+                                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Details", new { id = item.CasoId })"
                                            hx-target="#app-main"
                                            hx-select="#app-main"
                                            hx-swap="outerHTML transition:true"
@@ -343,7 +343,7 @@
                                            asp-page="/Casos/Edit"
                                            asp-route-id="@item.CasoId"
                                            asp-route-returnUrl="@returnUrl"
-                                           hx-get="@Url.Page("/Casos/Edit", new { id = item.CasoId, returnUrl })"
+                                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Edit", new { id = item.CasoId, returnUrl })"
                                            hx-target="#app-main"
                                            hx-select="#app-main"
                                            hx-swap="outerHTML transition:true"
@@ -352,7 +352,7 @@
                                            asp-page="/Casos/Delete"
                                            asp-route-id="@item.CasoId"
                                            asp-route-returnUrl="@returnUrl"
-                                           hx-get="@Url.Page("/Casos/Delete", new { id = item.CasoId, returnUrl })"
+                                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Casos/Delete", new { id = item.CasoId, returnUrl })"
                                            hx-target="#app-main"
                                            hx-select="#app-main"
                                            hx-swap="outerHTML transition:true"

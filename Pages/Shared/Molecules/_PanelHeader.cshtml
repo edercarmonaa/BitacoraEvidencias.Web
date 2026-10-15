@@ -6,7 +6,7 @@
     {
         <a class="tw-btn-subtle"
            href="@Model.ActionHref"
-           hx-get="@Model.ActionHref"
+           hx-sync="#app-main:replace" hx-get="@Model.ActionHref"
            hx-target="#app-main"
            hx-select="#app-main"
            hx-swap="outerHTML transition:true"

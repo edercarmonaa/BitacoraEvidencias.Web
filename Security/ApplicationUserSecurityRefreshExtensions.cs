@@ -39,7 +39,7 @@ public static class ApplicationUserSecurityRefreshExtensions
                     x.Usuario,
                     x.Rol
                 })
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync(context.RequestAborted);
 
             if (securityState is null || !securityState.Activo)
             {

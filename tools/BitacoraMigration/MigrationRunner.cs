@@ -21,6 +21,7 @@ public static class MigrationRunner
 
     public static async Task RunAsync(string mode, string sourceFile, string storageRoot, bool production)
     {
+        if (mode == "upgrade") { await UpgradeIndexesAsync(production); return; }
         sourceFile = Path.GetFullPath(sourceFile);
         storageRoot = Path.GetFullPath(storageRoot);
         RejectProductionSource(sourceFile);
@@ -47,16 +48,7 @@ public static class MigrationRunner
         Console.WriteLine($"Evidencias verificadas; huella del conjunto referenciado: {evidenceHash}");
         if (mode == "preflight") return;
 
-        var connectionString = Environment.GetEnvironmentVariable("BITACORA_MIGRATION_SQL_CONNECTION");
-        Require(!string.IsNullOrWhiteSpace(connectionString), "Falta BITACORA_MIGRATION_SQL_CONNECTION en el proceso.");
-        var builder = new SqlConnectionStringBuilder(connectionString);
-        Require(!builder.IntegratedSecurity && !string.IsNullOrWhiteSpace(builder.UserID), "Se requiere autenticacion SQL externa.");
-        Require(builder.Encrypt != SqlConnectionEncryptOption.Optional, "La conexion SQL debe usar cifrado.");
-        Require(string.Equals(builder.DataSource, @".\Auditoria", StringComparison.OrdinalIgnoreCase), "La instancia de destino debe ser .\\Auditoria.");
-        Require(builder.InitialCatalog == (production ? "BitacoraEvidencias" : "BitacoraEvidencias_Pruebas"),
-            "Destino incorrecto: pruebas por defecto; produccion requiere --production.");
-        builder.PersistSecurityInfo = false;
-        builder.ApplicationName = "BitacoraMigration-0.2.0";
+        var builder = BuildConnection(production);
         await using var destination = new SqlConnection(builder.ConnectionString);
         await destination.OpenAsync();
         await using var transaction = (SqlTransaction)await destination.BeginTransactionAsync(IsolationLevel.Serializable);
@@ -89,10 +81,13 @@ public static class MigrationRunner
                 using var history = new SqlCommand("CREATE TABLE [dbo].[__EFMigrationsHistory] ([MigrationId] nvarchar(150) NOT NULL PRIMARY KEY, [ProductVersion] nvarchar(32) NOT NULL);", destination, transaction);
                 await history.ExecuteNonQueryAsync();
                 var migrations = modelContext.Database.GetMigrations().ToArray();
-                Require(migrations.Length == 1, "El importador inicial requiere exactamente una migracion SQL Server; actualizarlo antes de futuras versiones.");
-                using var stamp = new SqlCommand("INSERT INTO [dbo].[__EFMigrationsHistory] VALUES (@id,N'9.0.0');", destination, transaction);
-                stamp.Parameters.AddWithValue("@id", migrations[0]);
-                await stamp.ExecuteNonQueryAsync();
+                Require(migrations.Length == 2 && migrations[0].EndsWith("_InitialSqlServer") && migrations[1].EndsWith("_PagingIndexes"), "El importador admite solo el esquema inicial y sus indices; revisar ante nuevas migraciones.");
+                foreach (var migration in migrations)
+                {
+                    using var stamp = new SqlCommand("INSERT INTO [dbo].[__EFMigrationsHistory] VALUES (@id,N'9.0.0');", destination, transaction);
+                    stamp.Parameters.AddWithValue("@id", migration);
+                    await stamp.ExecuteNonQueryAsync();
+                }
             }
             foreach (var (table, expected) in data)
             {
@@ -114,6 +109,43 @@ public static class MigrationRunner
         }
     }
 
+    private static async Task UpgradeIndexesAsync(bool production)
+    {
+        var connection = BuildConnection(production);
+        await using var context = new SqlServerAppDbContext(new DbContextOptionsBuilder<SqlServerAppDbContext>()
+            .UseSqlServer(connection.ConnectionString).Options);
+        Require(await context.Database.CanConnectAsync(), "No se puede conectar a la base existente. No se crean bases.");
+        var applied = (await context.Database.GetAppliedMigrationsAsync()).ToArray();
+        Require(applied.Any(id => id.EndsWith("_InitialSqlServer")), "Primero debe existir la importacion inicial; upgrade no importa datos.");
+        var known = context.Database.GetMigrations().ToArray();
+        Require(applied.All(known.Contains), "El destino tiene migraciones desconocidas. Se cancela.");
+        var pending = (await context.Database.GetPendingMigrationsAsync()).ToArray();
+        Require(pending.All(id => id.EndsWith("_PagingIndexes")), "Upgrade solo permite la migracion aditiva de indices.");
+        var assembly = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsAssembly>(context);
+        foreach (var id in pending)
+        {
+            var migration = assembly.CreateMigration(assembly.Migrations[id], context.Database.ProviderName!);
+            Require(migration.UpOperations.All(operation => operation is Microsoft.EntityFrameworkCore.Migrations.Operations.CreateIndexOperation),
+                "La migracion contiene operaciones distintas de crear indices; requiere revision.");
+        }
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Esquema actualizado: indices de paginacion aplicados; no se reimportaron ni modificaron registros.");
+    }
+
+    private static SqlConnectionStringBuilder BuildConnection(bool production)
+    {
+        var connectionString = Environment.GetEnvironmentVariable("BITACORA_MIGRATION_SQL_CONNECTION");
+        Require(!string.IsNullOrWhiteSpace(connectionString), "Falta BITACORA_MIGRATION_SQL_CONNECTION en el proceso.");
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        Require(!builder.IntegratedSecurity && !string.IsNullOrWhiteSpace(builder.UserID), "Se requiere autenticacion SQL externa.");
+        Require(builder.Encrypt != SqlConnectionEncryptOption.Optional, "La conexion SQL debe usar cifrado.");
+        Require(string.Equals(builder.DataSource, @".\Auditoria", StringComparison.OrdinalIgnoreCase), "La instancia de destino debe ser .\\Auditoria.");
+        Require(builder.InitialCatalog == (production ? "BitacoraEvidencias" : "BitacoraEvidencias_Pruebas"),
+            "Destino incorrecto: pruebas por defecto; produccion requiere --production.");
+        builder.PersistSecurityInfo = false;
+        builder.ApplicationName = "BitacoraMigration-0.2.0";
+        return builder;
+    }
     public static object ConvertValue(object value, Type type)
     {
         if (value is DBNull) return DBNull.Value;

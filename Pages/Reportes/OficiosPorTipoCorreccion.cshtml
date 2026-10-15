@@ -11,7 +11,7 @@
     </div>
     <a class="btn btn-outline-secondary"
        asp-page="/Reportes"
-       hx-get="@Url.Page("/Reportes")"
+       hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes")"
        hx-target="#app-main"
        hx-select="#app-main"
        hx-swap="outerHTML transition:true"

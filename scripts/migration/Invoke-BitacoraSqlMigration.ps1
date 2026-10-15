@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('preflight','import','verify')][string]$Mode = 'preflight',
+    [ValidateSet('preflight','import','verify','upgrade')][string]$Mode = 'preflight',
     [string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas',
     [string]$SourceDatabase = '',
     [string]$SourceEvidence = '',
@@ -13,7 +13,7 @@ $tool = Join-Path $projectRoot 'tools\BitacoraMigration\bin\Release\net9.0\Bitac
 if (-not (Test-Path -LiteralPath $tool)) { throw 'Compila primero tools/BitacoraMigration/BitacoraMigration.csproj en Release.' }
 if (-not $SourceDatabase) { $SourceDatabase = Join-Path $TrialRoot 'Input\Data\bitacora-evidencias.db' }
 if (-not $SourceEvidence) { $SourceEvidence = Join-Path $TrialRoot 'Input\Evidencias' }
-if ($Production -and $Mode -eq 'import') {
+if ($Production -and $Mode -in @('import','upgrade')) {
     if ((Read-Host 'Confirma ventana de mantenimiento, respaldo final y servicio SQLite detenido: escribe MIGRAR PRODUCCION') -cne 'MIGRAR PRODUCCION') {
         throw 'Migracion productiva cancelada.'
     }

@@ -51,7 +51,7 @@
         <a class="btn btn-outline-secondary"
            asp-page="./Details"
            asp-route-id="@Model.Input.Id"
-           hx-get="@Url.Page("./Details", new { id = Model.Input.Id })"
+           hx-sync="#app-main:replace" hx-get="@Url.Page("./Details", new { id = Model.Input.Id })"
            hx-target="#app-main"
            hx-select="#app-main"
            hx-swap="outerHTML transition:true"

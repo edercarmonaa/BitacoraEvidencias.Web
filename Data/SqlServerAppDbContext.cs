@@ -18,6 +18,26 @@ public sealed class SqlServerAppDbContext : AppDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Models.Oficio>()
+            .HasIndex(o => new { o.FechaOficio, o.NumeroOficio, o.Id })
+            .IsDescending(true, false, false).IncludeProperties(nameof(Models.Oficio.Asunto));
+        modelBuilder.Entity<Models.CasoCorreccion>()
+            .HasIndex(c => new { c.OficioId, c.AuditoriaEstado })
+            .IncludeProperties(nameof(Models.CasoCorreccion.EvidenciaUrl), nameof(Models.CasoCorreccion.Consecutivo));
+        modelBuilder.Entity<Models.CasoCorreccion>()
+            .HasIndex(c => new { c.Estatus, c.CreadoEn, c.Id }).IsDescending(false, true, true);
+        modelBuilder.Entity<Models.CasoCorreccion>()
+            .HasIndex(c => new { c.CreadoEn, c.Id }).IsDescending(true, true);
+        modelBuilder.Entity<Models.CasoCorreccion>()
+            .HasIndex(c => new { c.FechaVerificacion, c.Id }).IsDescending(true, true);
+        modelBuilder.Entity<Models.AuditLog>()
+            .HasIndex(a => new { a.OccurredAtUtc, a.Id }).IsDescending(true, true);
+        modelBuilder.Entity<Models.UsuarioSistema>()
+            .HasIndex(u => new { u.Usuario, u.Id });
+        modelBuilder.Entity<Models.EvidenciaFoto>()
+            .HasIndex(e => e.CasoCorreccionId);
+        modelBuilder.Entity<Models.EvidenciaFoto>()
+            .HasIndex(e => new { e.CasoCorreccionId, e.FechaEvidencia, e.Id }).IsDescending(false, true, true);
         // SQLite comparisons are case-sensitive. Do not merge distinct legacy values.
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
             foreach (var property in entity.GetProperties().Where(p => p.ClrType == typeof(string)))
