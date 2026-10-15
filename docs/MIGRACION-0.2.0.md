@@ -1,6 +1,6 @@
 # Acuerdos para la version 0.2.0
 
-Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y preflight del respaldo aprobado. Importacion SQL y validacion de la aplicacion pendientes de credenciales locales. Este documento no cambia la configuracion de produccion. Procedimiento ejecutable en [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md).
+Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y preflight del respaldo aprobado. Importacion a SQL Server de pruebas confirmada por la salida compartida por el responsable; verificacion posterior y validacion de la aplicacion pendientes. Este documento no cambia la configuracion de produccion. Procedimiento ejecutable en [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md).
 
 ## Versiones y conservacion del codigo
 
@@ -92,11 +92,12 @@ Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y 
 - Preflight aprobado: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,904 registros de auditoria. Integridad, relaciones, esquema, longitudes, archivos referenciados y descifrado con la llave actual verificados sobre la copia.
 - Se publicaron binarios de ensayo en `C:\BitacoraEvidencias_Pruebas\App`, sin arrancarlos. No se cambiaron variables persistentes, secretos, instalacion ni scripts originales de arranque productivo.
 - Cuatro pruebas nuevas SQL aprobadas sin conexion al servidor. Suite completa: 60 aprobadas y los mismos 6 fallos conocidos (66 pruebas); no considerar aprobada la liberacion por estos resultados parciales.
-- Pendiente: introducir credenciales localmente, importar y comparar la base de pruebas, validar flujos y preparacion operativa SQL, y coordinar el mantenimiento para el cambio productivo.
+- El responsable ejecuto la importacion a `BitacoraEvidencias_Pruebas` con la opcion explicita de confianza del certificado local. La salida confirma transaccion completada y coincidencia de todos los campos de las cinco tablas: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,904 registros de auditoria. Este resultado corresponde al respaldo de ensayo, no a una migracion final de produccion.
+- Pendiente: ejecutar verify contra la base ya confirmada antes de pruebas de escritura, iniciar el ensayo con el usuario SQL de operacion, validar flujos y preparacion operativa SQL, y coordinar el mantenimiento para el cambio productivo.
 
 ## Verificaciones pendientes
 
-- Verificar conectividad a la instancia SQL Server y disponibilidad de los nombres de bases acordados.
+- Conexion SQL y escritura en la base de pruebas confirmadas por la importacion reportada. Verificar acceso con el usuario de operacion; la base SQL productiva no se ha migrado.
 - Cuenta SQL y permisos de preparacion, migracion y operacion; credenciales suministradas fuera del chat y de Git.
 - Configuracion TLS de SQL Server y confianza del certificado en el servidor.
 - Rutas operativas reales y disponibilidad del respaldo para ejecutar el ensayo, mediante acceso local seguro.
