@@ -223,6 +223,27 @@ La carpeta `tests/BitacoraEvidencias.Web.Tests` contiene pruebas para servicios,
 
 ## Estado del proyecto
 
+La version actual es `0.1.0`, declarada en `BitacoraEvidencias.Web.csproj`. Los cambios por version se registran en [CHANGELOG.md](CHANGELOG.md).
+
+### Versionado
+
+Se usa el formato `MAJOR.MINOR.PATCH`. Mientras la aplicacion permanezca en `0.x`, se considera en desarrollo: incrementa `MINOR` para nuevas funcionalidades o cambios incompatibles y `PATCH` para correcciones compatibles.
+
+Para preparar una nueva version:
+
+1. Actualiza `<Version>` en `BitacoraEvidencias.Web.csproj`.
+2. Documenta los cambios y la fecha en `CHANGELOG.md`.
+3. Ejecuta `dotnet test -c Release` y revisa los cambios con `git diff`.
+4. Crea el commit y una etiqueta anotada con la misma version (por ejemplo, `v0.1.0`):
+
+   ```powershell
+   git add BitacoraEvidencias.Web.csproj CHANGELOG.md README.md
+   git commit -m "chore: release 0.1.0"
+   git tag -a v0.1.0 -m "Bitacora Evidencias 0.1.0"
+   ```
+
+5. Para publicar el commit y su etiqueta en GitHub, usa `git push origin main` y `git push origin v0.1.0` una vez integrada cualquier actualizacion remota pendiente. Sustituye `0.1.0` por la version que estes preparando.
+
 El proyecto parece una version funcional en desarrollo, con flujos principales implementados, scripts operativos y pruebas automatizadas. No debe asumirse como listo para produccion publica sin una revision manual de infraestructura, datos reales, llaves, permisos del sistema operativo y procedimientos de respaldo.
 
 ## Limitaciones actuales
