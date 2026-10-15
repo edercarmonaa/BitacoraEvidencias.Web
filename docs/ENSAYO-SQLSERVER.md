@@ -84,6 +84,8 @@ Publica en `C:\BitacoraEvidencias_Pruebas\App` y usa exclusivamente la base de p
 
 Validar cuentas existentes, permisos de ambos roles, lectura de datos protegidos, fotografias y miniaturas, busqueda, reportes, auditoria y operaciones de alta, modificacion y eliminacion sobre las copias. Confirmar que se pueden crear nuevos registros sin colision de identificadores.
 
+La optimizacion de Auditoria se publica en `App-audit-fix`. Usar `Start-BitacoraSqlServer.ps1 -AppFolder App-audit-fix -TrustLocalSqlCertificate` despues de detener el ensayo anterior. Verificar entrada, seleccion de casos, busqueda, Mostrar todos y salida a otro modulo. La consola muestra `Auditoria: carga de datos ... ms; oficios cargados ... de ...`; compartir solo esa linea para comparar tiempos, sin credenciales ni registros personales. El resultado en el entorno real sigue pendiente de validar.
+
 ## Antes de produccion
 
 El ensayo no autoriza un cambio inmediato de instalacion. Primero resolver los fallos relevantes y aprobar los resultados. Preparar y verificar respaldo/restauracion SQL Server, respaldo de evidencias y custodia externa de secretos; los scripts SQLite existentes no respaldan SQL Server.

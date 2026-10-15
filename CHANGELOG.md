@@ -4,6 +4,8 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Auditoria: limitar la carga y descifrado a los cinco oficios visibles, conservar seleccion fuera de la vista inicial y cancelar lecturas anteriores al navegar; registrar duracion sin datos personales.
+
 - Correccion del panel posterior al login: esperar cada consulta para evitar operaciones concurrentes sobre el mismo DbContext; prueba con lector asincrono demorado.
 
 - Contexto y migracion inicial EF Core independientes para SQL Server Express.

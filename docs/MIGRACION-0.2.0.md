@@ -98,6 +98,8 @@ Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y 
 
 ## Verificaciones pendientes
 
+- Se reporto lentitud al entrar y salir de Auditoria durante el ensayo. Se limito la carga de casos a cinco oficios desde SQL y se coordinaron las solicitudes GET para cancelar lecturas anteriores al navegar. Se conservan conteos globales, filtros y oficio seleccionado fuera de la vista inicial. Ocho pruebas dirigidas de auditoria, panel y esquema aprobadas; falta medir en el ensayo SQL real con `App-audit-fix` y la linea de duracion en consola.
+
 - El arranque SQL de ensayo permitio llegar al flujo de login; al cargar el panel se confirmo una excepcion por consultas concurrentes en DashboardOverviewViewComponent. Se corrigio la carga para esperar cada consulta y se valido con una prueba que fuerza asincronia. Cinco pruebas de panel/esquema y seis casos de scripts aprobados. Falta confirmar el panel en el ensayo real con los nuevos binarios; SQLite 0.1.0 permanece congelada.
 
 - Conexion SQL y escritura en la base de pruebas confirmadas por la importacion reportada. Verificar acceso con el usuario de operacion; la base SQL productiva no se ha migrado.
