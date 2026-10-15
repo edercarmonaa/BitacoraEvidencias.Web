@@ -25,13 +25,13 @@ try {
         $password = Read-Host 'Contrasena SQL' -AsSecureString
         $credential = [Management.Automation.PSCredential]::new($user, $password)
         $connection = [System.Data.SqlClient.SqlConnectionStringBuilder]::new()
-        $connection.DataSource = '.\Auditoria'
-        $connection.InitialCatalog = if ($Production) { 'BitacoraEvidencias' } else { 'BitacoraEvidencias_Pruebas' }
-        $connection.UserID = $user
-        $connection.Password = $credential.GetNetworkCredential().Password
-        $connection.Encrypt = $true
-        $connection.TrustServerCertificate = [bool]$TrustLocalSqlCertificate
-        $connection.PersistSecurityInfo = $false
+        $connection['Data Source'] = '.\Auditoria'
+        $connection['Initial Catalog'] = if ($Production) { 'BitacoraEvidencias' } else { 'BitacoraEvidencias_Pruebas' }
+        $connection['User ID'] = $user
+        $connection['Password'] = $credential.GetNetworkCredential().Password
+        $connection['Encrypt'] = $true
+        $connection['TrustServerCertificate'] = [bool]$TrustLocalSqlCertificate
+        $connection['Persist Security Info'] = $false
         $env:BITACORA_MIGRATION_SQL_CONNECTION = $connection.ConnectionString
     }
     $arguments = @($tool, $Mode, $SourceDatabase, $SourceEvidence)
