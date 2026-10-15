@@ -19,7 +19,7 @@ Evidencias/
 BackupsBitacora/
 AuditArchive/
 Monitoreo/
-deploy/
+/deploy/
 releases/
 
 # Logs and generated diagnostics
@@ -90,3 +90,4 @@ docs/SGSI-*.md
 *.xls
 *.pdf
 tools/tailwindcss-windows-x64.exe
+.dotnet-tools/

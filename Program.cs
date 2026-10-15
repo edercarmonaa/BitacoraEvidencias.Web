@@ -18,12 +18,16 @@ builder.Services.AddApplicationAuthentication(requireHttpsCookies);
 builder.Services.AddApplicationAuthorization();
 builder.Services.AddSensitiveDataProtection(builder.Configuration);
 builder.Services.AddValidatedFileStorageOptions(builder.Configuration);
-builder.Services.AddSingleton<SqlitePragmaConnectionInterceptor>();
-builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+builder.Services.AddDbContext<SqlServerAppDbContext>((serviceProvider, options) =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-    options.AddInterceptors(serviceProvider.GetRequiredService<SqlitePragmaConnectionInterceptor>());
+    var connection = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrWhiteSpace(connection))
+        throw new InvalidOperationException("Configura ConnectionStrings__DefaultConnection para SQL Server fuera del repositorio.");
+    if (!serviceProvider.GetRequiredService<ISensitiveDataProtectionService>().IsConfigured)
+        throw new InvalidOperationException("La version SQL Server requiere la llave de proteccion existente en el entorno.");
+    options.UseSqlServer(connection);
 });
+builder.Services.AddScoped<AppDbContext>(provider => provider.GetRequiredService<SqlServerAppDbContext>());
 builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ICaseAuditService, CaseAuditService>();
@@ -42,10 +46,8 @@ builder.Services.AddSingleton<ITabularImportFileParser, TabularImportFileParser>
 builder.Services.AddSingleton<IImportPreviewStore, ImportPreviewStore>();
 builder.Services.AddHttpContextAccessor();
 
-if (prepareApplicationData)
-{
-    builder.EnsureSqliteFolderExistsForStartup();
-}
+if (prepareApplicationData || resetApplicationData || checkLegacySchemaOnly || stampLegacyBaselineOnly || protectExistingData)
+    throw new InvalidOperationException("En 0.2.0 usa el proceso de migracion explicito. Las opciones de preparacion SQLite estan deshabilitadas.");
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 # Acuerdos para la version 0.2.0
 
-Estado: requisitos acordados; implementacion y ensayo pendientes. Este documento no cambia la configuracion de produccion.
+Estado: SQLite conservada en Git; implementacion inicial SQL Server preparada y preflight del respaldo aprobado. Importacion SQL y validacion de la aplicacion pendientes de credenciales locales. Este documento no cambia la configuracion de produccion. Procedimiento ejecutable en [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md).
 
 ## Versiones y conservacion del codigo
 
@@ -83,7 +83,18 @@ Estado: requisitos acordados; implementacion y ensayo pendientes. Este documento
 6. Si la validacion falla antes de reabrir el servicio, detener 0.2.0, restablecer binarios y configuracion 0.1.0 y restaurar el estado consistente del respaldo si la validacion modifico archivos compartidos.
 7. Conservar codigo y respaldos SQLite despues de aprobar el cambio. Una vez que 0.2.0 acepte datos nuevos, volver a SQLite requerira un procedimiento de transferencia y conciliacion adicional; arrancar la base antigua perderia esos cambios.
 
-## Datos por definir
+## Avance de preparacion (2026-10-15)
+
+- Se integraron los seis commits documentales pendientes de `origin/main`.
+- Se creo la etiqueta anotada local `v0.1.0` y la rama `archive/sqlite-0.1`. Se incluyeron los scripts de despliegue originales, que estaban excluidos accidentalmente por la regla `deploy/`; la regla ahora solo excluye el directorio generado en la raiz.
+- Desarrollo en `feature/sqlserver-0.2`, con contexto y migracion SQL independientes y version .NET 0.2.0 en preparacion.
+- Se extrajo y comparo por SHA256 el respaldo del 14 de octubre en la carpeta de ensayo: 3,658 archivos. No se accedio a la base productiva para importar.
+- Preflight aprobado: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,904 registros de auditoria. Integridad, relaciones, esquema, longitudes, archivos referenciados y descifrado con la llave actual verificados sobre la copia.
+- Se publicaron binarios de ensayo en `C:\BitacoraEvidencias_Pruebas\App`, sin arrancarlos. No se cambiaron variables persistentes, secretos, instalacion ni scripts originales de arranque productivo.
+- Cuatro pruebas nuevas SQL aprobadas sin conexion al servidor. Suite completa: 60 aprobadas y los mismos 6 fallos conocidos (66 pruebas); no considerar aprobada la liberacion por estos resultados parciales.
+- Pendiente: introducir credenciales localmente, importar y comparar la base de pruebas, validar flujos y preparacion operativa SQL, y coordinar el mantenimiento para el cambio productivo.
+
+## Verificaciones pendientes
 
 - Verificar conectividad a la instancia SQL Server y disponibilidad de los nombres de bases acordados.
 - Cuenta SQL y permisos de preparacion, migracion y operacion; credenciales suministradas fuera del chat y de Git.

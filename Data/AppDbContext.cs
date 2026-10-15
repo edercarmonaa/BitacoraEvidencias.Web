@@ -10,6 +10,12 @@ public class AppDbContext : DbContext
 {
     private readonly ISensitiveDataProtectionService? _sensitiveDataProtection;
 
+    protected AppDbContext(DbContextOptions options, ISensitiveDataProtectionService? sensitiveDataProtection)
+        : base(options)
+    {
+        _sensitiveDataProtection = sensitiveDataProtection;
+    }
+
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
     {

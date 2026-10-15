@@ -1,5 +1,8 @@
 # Bitacora Evidencias
 
+> Esta rama prepara **0.2.0 con SQL Server Express**. La version SQLite productiva se conserva en la etiqueta `v0.1.0` y la rama `archive/sqlite-0.1`. Los apartados y scripts SQLite de abajo son referencia historica: para preparar y ejecutar esta version sigue [ENSAYO-SQLSERVER.md](docs/ENSAYO-SQLSERVER.md). No ejecutes el despliegue SQLite para publicar SQL Server.
+
+
 Sistema web local para registrar oficios, casos de correccion, evidencias fotograficas y revisiones de auditoria cuando una institucion necesita trazabilidad sin depender de hojas sueltas, carpetas compartidas y registros dispersos.
 
 ## El problema
@@ -217,7 +220,7 @@ La carpeta `tests/BitacoraEvidencias.Web.Tests` contiene pruebas para servicios,
 
 ## Estado del proyecto
 
-La version actual es `0.1.0`, declarada en `BitacoraEvidencias.Web.csproj`. Los cambios por version se registran en [CHANGELOG.md](CHANGELOG.md).
+La version en preparacion es `0.2.0` (SQL Server); `0.1.0` (SQLite) esta congelada. La version de esta rama esta declarada en `BitacoraEvidencias.Web.csproj`. Los cambios por version se registran en [CHANGELOG.md](CHANGELOG.md).
 
 ### Versionado
 
