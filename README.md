@@ -54,13 +54,7 @@ El proyecto esta pensado para equipos administrativos u operativos que gestionan
 
 ## Capturas
 
-El proyecto tiene interfaz web, pero este repositorio no incluye capturas publicas verificadas. Si se agregan en el futuro, se recomienda usar una ruta como:
-
-```markdown
-![Panel principal](docs/images/dashboard.png)
-```
-
-Las imagenes deben ser anonimizadas y no deben mostrar datos personales, rutas internas, IPs reales ni evidencias privadas.
+![Panel principal](docs/dashboard.png)
 
 ## Tecnologias utilizadas
 
@@ -284,4 +278,4 @@ El proyecto parece una version funcional en desarrollo, con flujos principales i
 
 ## Licencia
 
-Este proyecto todavia no incluye un archivo de licencia.
+Este proyecto está publicado bajo licencia MIT. Consulta LICENSE para el texto completo.
