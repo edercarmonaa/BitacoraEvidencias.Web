@@ -4,6 +4,10 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Respaldo SQL nativo COPY_ONLY/CHECKSUM, VERIFYONLY, evidencias y manifiesto SHA256 en ZIP; retencion aislada de los respaldos SQLite. Credencial SQL protegida con DPAPI para tareas sin entrada interactiva.
+- Preparacion de tarea SQL diaria a las 14:00 de Mexico, inicialmente deshabilitada; cierre ordenado y reinicio mediante control local de la misma cuenta Windows, conservando configuracion solo en memoria. La tarea productiva SQLite no se modifica.
+- Script y guia SQLite conservados por separado; alerta de oficio duplicado simplificada a "Ya existe un oficio con ese numero."
+
 - Formularios: validacion al salir del campo, errores junto al control, resumen en toast y confirmaciones con Bootstrap local; integracion HTMX y mensajes predeterminados en espanol.
 - Reglas reforzadas de CURP/CCT (incluidas claves antiguas), periodos y fechas; folio/validador opcionales, historicos incompletos sin cambios permitidos y unicidad de oficio sin distinguir mayusculas en altas/ediciones/importaciones.
 - Adjuntos con comprobaciones anticipadas de extension/tamano y validacion de servidor conservada; errores de servidor asociados al campo correcto.

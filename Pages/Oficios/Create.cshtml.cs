@@ -31,7 +31,7 @@ public class CreateModel(
             return new JsonResult("Captura un numero de oficio de hasta 80 caracteres.");
         var exists = await dbContext.Oficios.AsNoTracking()
             .AnyAsync(x => x.Id != id && x.NumeroOficio.ToUpper() == normalized, HttpContext.RequestAborted);
-        return new JsonResult(exists ? (object)"Ya existe un oficio con ese numero (sin distinguir mayusculas)." : true);
+        return new JsonResult(exists ? (object)"Ya existe un oficio con ese numero." : true);
     }
 
     public async Task<IActionResult> OnPostAsync()

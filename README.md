@@ -2,6 +2,8 @@
 
 > Esta rama prepara **0.2.0 con SQL Server Express**. La version SQLite productiva se conserva en la etiqueta `v0.1.0` y la rama `archive/sqlite-0.1`. Los apartados y scripts SQLite de abajo son referencia historica: para preparar y ejecutar esta version sigue [ENSAYO-SQLSERVER.md](docs/ENSAYO-SQLSERVER.md). No ejecutes el despliegue SQLite para publicar SQL Server.
 
+Respaldo SQL y tarea diaria de las 14:00: [BACKUP-OPERACION.md](docs/BACKUP-OPERACION.md). La tarea SQLite actual se conserva hasta migrar produccion.
+
 
 Sistema web local para registrar oficios, casos de correccion, evidencias fotograficas y revisiones de auditoria cuando una institucion necesita trazabilidad sin depender de hojas sueltas, carpetas compartidas y registros dispersos.
 

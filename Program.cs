@@ -14,6 +14,7 @@ var checkLegacySchemaOnly = builder.Configuration.GetValue<bool>("Startup:CheckL
 var stampLegacyBaselineOnly = builder.Configuration.GetValue<bool>("Startup:StampLegacyBaselineOnly");
 
 builder.Services.AddApplicationRazorPages();
+builder.Services.AddHostedService<LocalBackupControlService>();
 builder.Services.AddApplicationAuthentication(requireHttpsCookies);
 builder.Services.AddApplicationAuthorization();
 builder.Services.AddSensitiveDataProtection(builder.Configuration);

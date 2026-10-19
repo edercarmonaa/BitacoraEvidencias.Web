@@ -44,6 +44,7 @@ coverage/
 *.jks
 *.kdbx
 credentials.json
+*.credential.xml
 service-account.json
 firebase-adminsdk*.json
 google-services.json

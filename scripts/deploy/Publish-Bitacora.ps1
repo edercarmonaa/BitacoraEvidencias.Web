@@ -37,7 +37,7 @@ $shouldCreateBackup = Convert-ToBooleanParameter -Value $createBackupRaw -Name "
 
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $projectFile = Join-Path $projectRoot "BitacoraEvidencias.Web.csproj"
-$backupScript = Join-Path $projectRoot "scripts\backup\Backup-Bitacora.ps1"
+$backupScript = Join-Path $projectRoot "scripts\backup\Backup-BitacoraSqlite.ps1"
 $localDotnet = Join-Path $projectRoot ".dotnet\dotnet.exe"
 $dotnetExe = if (Test-Path $localDotnet) { $localDotnet } else { "dotnet" }
 

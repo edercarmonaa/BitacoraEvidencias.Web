@@ -88,7 +88,7 @@ La optimizacion de Auditoria se publica en `App-audit-fix`. Usar `Start-Bitacora
 
 ## Antes de produccion
 
-El ensayo no autoriza un cambio inmediato de instalacion. Primero resolver los fallos relevantes y aprobar los resultados. Preparar y verificar respaldo/restauracion SQL Server, respaldo de evidencias y custodia externa de secretos; los scripts SQLite existentes no respaldan SQL Server.
+El ensayo no autoriza un cambio inmediato de instalacion. Primero resolver los fallos relevantes y aprobar los resultados. El nuevo respaldo SQL, evidencias y tarea de las 14:00 se documentan en [BACKUP-OPERACION.md](BACKUP-OPERACION.md); completar su ensayo de restauracion y custodia externa de secretos antes del cambio. La tarea y los scripts historicos SQLite se conservan por separado.
 
 Durante mantenimiento: detener todas las escrituras, crear respaldo final consistente y una copia de trabajo de ese respaldo, repetir preflight, importar con `-Production` usando esa nueva copia y validar antes de admitir usuarios. El switch exige confirmacion local; no usar para el ensayo. Mantener intacta la base SQLite y sus binarios.
 
