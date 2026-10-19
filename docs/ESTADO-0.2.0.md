@@ -19,7 +19,7 @@ Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.
 | Panel y navegacion | Corregidas consultas concurrentes del DbContext; el responsable confirmo funcionamiento del ensayo. |
 | Busquedas | Espera SQL reproducida y corregida; mediciones de handler 347/27 ms tras unos 25 s anteriores. El responsable confirmo solucion y funcionamiento. |
 | Formularios | Implementados y probados con reglas acordadas; 30 comprobaciones DOM. Falta aceptacion visual completa de esta mejora en navegador. |
-| Suite .NET | Ultima completa Debug: 132 aprobadas, cero fallos/omitidas. Fixtures de almacenamiento aislados de la clave real, cobertura de rutas antiguas/protegidas y bootstrap SQLite separado de las migraciones congeladas. Ver TESTING.md para alcance y limites. |
+| Suite .NET | Ultima completa Debug: 137 aprobadas, cero fallos/omitidas. Incluye cinco regresiones del filtro opcional de Auditoria, ademas de los fixtures de almacenamiento aislados y bootstrap SQLite separado de las migraciones congeladas. Ver TESTING.md para alcance y limites. |
 | Respaldo/restauracion | BAK/VERIFYONLY y ZIP SHA256 probados. Restauracion en base temporal y DBCC CHECKDB sin incidencias; cinco tablas con conteos iguales. No equivale a aceptar toda la aplicacion recuperada. |
 | Historicos | Exportadas 1,900 filas reales de ensayo sin retirarlas. Borrado transaccional/reversion comprobados con datos sinteticos en base temporal. |
 | Respaldo con historicos | 3,656 archivos de evidencias y 20 historicos/manifiestos incluidos y comparados. No se mezclan con la cifra inicial de 3,658 archivos totales extraidos. |

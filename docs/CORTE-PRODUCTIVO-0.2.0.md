@@ -25,6 +25,10 @@ La tarea real de respaldo se ejecuto el 19/10 a las 14:11 durante la ventana aut
 
 Monitor: disponibilidad, SQL y respaldo reciente OK; alerta real de capacidad, 20.15 GB libres frente al umbral de 25 GB en la primera medicion. Auditoria Preview: 1,900 elegibles, cero exportados/retirados. No se ejecuto Archive durante el corte.
 
+## Correccion posterior de Auditoria
+
+19/10: Auditoria y Oficios pendientes aceptan numeroOficio ausente/vacio, evitando el Required implicito de MVC. Cambio edc2a10, suite completa 137 aprobadas; nuevo release SQL publicado y HTTPS 200 despues del reinicio ordenado. Release SQL anterior conservado; no se aplicaron migraciones ni cambios de datos/secretos. La comprobacion visual del filtro corregido queda a cargo del responsable al recargar.
+
 ## Limites pendientes
 
 - El BAK del primer ZIP productivo se restauro en base temporal nueva. CHECKDB no termino en dos intentos (normal y MAXDOP=1): espera RESOURCE_SEMAPHORE y timeout; no se obtuvo un resultado de integridad. Se eliminaron solo las bases temporales con marcador de propiedad comprobado. SQL reporto unos 700 MB libres de 8 GB, memoria fisica baja y unos 5.62 MB disponibles para concesiones de consultas. No se cambiaron parametros globales de SQL ni se cerraron programas del usuario; se apagaron servidores de compilacion propios. El responsable ofrecio liberar RAM y avisar para completar esta prueba. No confundir VERIFYONLY aprobado con CHECKDB aprobado.
