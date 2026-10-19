@@ -4,6 +4,8 @@
 
 Respaldo SQL y tarea diaria de las 14:00: [BACKUP-OPERACION.md](docs/BACKUP-OPERACION.md). La tarea SQLite actual se conserva hasta migrar produccion.
 
+Auditoria y monitoreo SQL (30 dias en base; horarios 09:20 y 09:15): [AUDITORIA-MONITOREO-0.2.0.md](docs/AUDITORIA-MONITOREO-0.2.0.md).
+
 
 Sistema web local para registrar oficios, casos de correccion, evidencias fotograficas y revisiones de auditoria cuando una institucion necesita trazabilidad sin depender de hojas sueltas, carpetas compartidas y registros dispersos.
 

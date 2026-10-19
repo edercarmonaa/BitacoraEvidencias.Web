@@ -6,6 +6,7 @@ param(
     [switch]$IncludeDevDatabase,
     [ValidateSet('BitacoraEvidencias','BitacoraEvidencias_Pruebas')][string]$DatabaseName = 'BitacoraEvidencias',
     [string]$EvidenceRoot = '',
+    [string]$AuditArchiveRoot = '',
     [string]$TrialRoot = 'C:\BitacoraEvidencias_Pruebas',
     [string]$SqlBackupDirectory = $env:BITACORA_BACKUP_SQL_STAGING,
     [string]$SqlCredentialFile = $env:BITACORA_BACKUP_SQL_CREDENTIAL_FILE,
@@ -50,6 +51,10 @@ if (-not $DatabaseOnly) {
         ($EvidenceRoot.TrimEnd('\') -eq 'C:\BitacoraEvidencias' -or $EvidenceRoot.StartsWith('C:\BitacoraEvidencias\',[StringComparison]::OrdinalIgnoreCase))) {
         throw 'El ensayo debe usar su copia de evidencias, no las productivas.'
     }
+    if (-not $AuditArchiveRoot) { $AuditArchiveRoot = if ($DatabaseName -eq 'BitacoraEvidencias_Pruebas') { Join-Path $TrialRoot 'AuditArchive' } else { 'C:\BitacoraEvidencias\AuditArchive' } }
+    $AuditArchiveRoot = Assert-BitacoraBackupLocalPath $AuditArchiveRoot
+    if (-not (Test-Path -LiteralPath $AuditArchiveRoot -PathType Container)) { throw 'Falta la carpeta de historicos de auditoria. Revisar su ruta antes de considerar completo el respaldo.' }
+    if ($DatabaseName -eq 'BitacoraEvidencias_Pruebas' -and $AuditArchiveRoot.StartsWith('C:\BitacoraEvidencias\',[StringComparison]::OrdinalIgnoreCase)) { throw 'El ensayo no respalda historicos productivos.' }
 }
 
 $name = 'BitacoraSqlBackup_{0}_{1}_{2}' -f $DatabaseName,(Get-Date -Format 'yyyyMMdd_HHmmss'),([guid]::NewGuid().ToString('N'))
@@ -87,6 +92,13 @@ try {
     }
     $connection = New-BitacoraBackupConnection -DatabaseName $DatabaseName -Credential $SqlCredential -UseWindowsAuthentication:$UseWindowsAuthentication -TrustLocalSqlCertificate:$TrustLocalSqlCertificate
     $connection.Open()
+    if (-not $DatabaseOnly) {
+        # The SQL archiver uses the same resource exclusively. Hold this shared
+        # session lock until packaging completes so exports/deletions cannot race.
+        $archiveLock = $connection.CreateCommand()
+        $archiveLock.CommandText = "DECLARE @result int; EXEC @result=sys.sp_getapplock @Resource=N'BitacoraAuditArchive-0.2', @LockMode='Shared', @LockOwner='Session', @LockTimeout=0; SELECT @result;"
+        try { if ([int]$archiveLock.ExecuteScalar() -lt 0) { throw 'Archivado de auditoria activo; reintentar fuera de ese horario.' } } finally { $archiveLock.Dispose() }
+    }
     $phase = 'comprobar base migrada'
     $ready = New-BitacoraBackupCommand -Connection $connection -Operation Ready -DatabaseName $DatabaseName
     try { if ([int]$ready.ExecuteScalar() -lt 1) { throw 'La base no contiene la migracion SQL inicial. No se respalda una base vacia como si fuera la aplicacion migrada.' } } finally { $ready.Dispose() }
@@ -149,11 +161,25 @@ try {
         }
         Assert-BitacoraBackupStopped -Port $ApplicationPort
         Write-BackupLog ('Evidencias copiadas y comparadas por SHA256: ' + $sourceFiles.Count)
+        $phase = 'copiar historicos de auditoria'
+        New-Item -ItemType Directory -Path (Join-Path $staging 'AuditArchive') | Out-Null
+        $histories = @(Get-BitacoraAuditHistoryFiles -Root $AuditArchiveRoot -DatabaseName $DatabaseName)
+        foreach ($history in $histories) {
+            $relative = $history.FullName.Substring($AuditArchiveRoot.TrimEnd('\').Length + 1)
+            $target = Assert-BitacoraBackupChild (Join-Path $staging ('AuditArchive\' + $relative)) (Join-Path $staging 'AuditArchive')
+            New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($target)) -Force | Out-Null
+            $hash = (Get-FileHash -LiteralPath $history.FullName -Algorithm SHA256).Hash
+            Copy-Item -LiteralPath $history.FullName -Destination $target
+            if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -cne $hash) { throw 'Un historico cambio durante el respaldo.' }
+            $files.Add([ordered]@{ path = 'AuditArchive/' + $relative.Replace('\','/'); sha256 = $hash; bytes = (Get-Item -LiteralPath $target).Length })
+        }
+        Write-BackupLog ('Archivos historicos de auditoria incluidos: ' + $histories.Count)
     }
     $manifest = [ordered]@{
         formatVersion = 1; provider = 'SqlServer'; database = $DatabaseName; server = '.\Auditoria'
         createdAtUtc = [datetime]::UtcNow.ToString('o'); copyOnly = $true; backupChecksums = $true; verifyOnlyPassed = $true
         applicationWritesStopped = [bool](-not $DatabaseOnly); evidenceIncluded = [bool](-not $DatabaseOnly)
+        auditArchiveIncluded = [bool](-not $DatabaseOnly)
         secretsIncluded = $false; files = @($files.ToArray())
         recoveryRequires = @('Compatible SQL Server; RESTORE and DBCC CHECKDB rehearsal', 'External protected copy of BITACORA_DATA_PROTECTION_KEY and SQL application credentials', 'External HTTPS certificate and its password; application configuration and binaries')
     }

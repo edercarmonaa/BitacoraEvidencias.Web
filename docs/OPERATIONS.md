@@ -2,6 +2,8 @@
 
 ## English Summary
 
+SQL Server 0.2.0: seguir [AUDITORIA-MONITOREO-0.2.0.md](AUDITORIA-MONITOREO-0.2.0.md) y [BACKUP-OPERACION.md](BACKUP-OPERACION.md). Los lanzadores y ejemplos SQLite siguientes son referencia historica.
+
 The project includes operational scripts because the original scenario required a small internal system that could be backed up, monitored, started, and reviewed without a large platform team.
 
 ## Daily Review

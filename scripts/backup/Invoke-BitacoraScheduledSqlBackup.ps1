@@ -2,6 +2,7 @@ param(
     [ValidateSet('BitacoraEvidencias','BitacoraEvidencias_Pruebas')][string]$DatabaseName = 'BitacoraEvidencias',
     [string]$BackupRoot = '',
     [string]$EvidenceRoot = '',
+    [string]$AuditArchiveRoot = '',
     [string]$SqlBackupDirectory = $env:BITACORA_BACKUP_SQL_STAGING,
     [string]$SqlCredentialFile = $env:BITACORA_BACKUP_SQL_CREDENTIAL_FILE,
     [ValidateRange(1,36500)][int]$RetentionDays = 30,
@@ -77,6 +78,7 @@ try {
         TrustLocalSqlCertificate = $TrustLocalSqlCertificate; SkipRetention = $SkipRetention
     }
     if ($EvidenceRoot) { $arguments.EvidenceRoot = $EvidenceRoot }
+    if ($AuditArchiveRoot) { $arguments.AuditArchiveRoot = $AuditArchiveRoot }
     & (Join-Path $PSScriptRoot 'Backup-Bitacora.ps1') @arguments
 } catch {
     $backupFailed = $true

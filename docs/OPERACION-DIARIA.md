@@ -2,6 +2,8 @@
 
 ## 1) Datos base
 
+> SQL Server 0.2.0: consultar [AUDITORIA-MONITOREO-0.2.0.md](AUDITORIA-MONITOREO-0.2.0.md) y [BACKUP-OPERACION.md](BACKUP-OPERACION.md). Este procedimiento conserva la referencia SQLite; activar las tareas nuevas solo durante el cambio productivo.
+
 - URL oficial LAN: `https://<SERVER_IP>:5067`
 - Modo: HTTPS estricto (sin HTTP)
 - Evidencias: `C:\BitacoraEvidencias\Evidencias`

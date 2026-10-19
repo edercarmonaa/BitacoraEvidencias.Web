@@ -134,3 +134,15 @@ function New-BitacoraBackupPrivateStaging {
     }
     Set-Acl -LiteralPath $Path -AclObject $acl
 }
+
+function Get-BitacoraAuditHistoryFiles {
+    param([string]$Root, [string]$DatabaseName)
+    if (-not (Test-Path -LiteralPath $Root -PathType Container)) { return }
+    # Include the original SQLite daily files plus this SQL database's immutable
+    # exports. Do not copy changing logs/status files or another SQL database.
+    foreach ($file in Get-BitacoraBackupEvidenceFiles -Root $Root) {
+        $relative = $file.FullName.Substring($Root.TrimEnd('\').Length + 1)
+        if ($relative -match '^AuditLog_[0-9]{8}\.log$' -or
+            $relative -match ('^SqlServer\\' + [regex]::Escape($DatabaseName) + '\\AuditLog_[0-9T]+_[a-f0-9]{32}\.jsonl(\.manifest\.json)?$')) { $file }
+    }
+}

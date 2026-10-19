@@ -4,6 +4,10 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Auditoria/monitoreo adaptados a SQL Server con credenciales DPAPI y reportes separados por base; originales SQLite conservados. Archivado de mas de 30 dias en lotes verificados, sin sobrescritura y retirada transaccional por identificadores.
+- Monitoreo de conexion/esquema SQL, tamanos de datos/log y respaldos completos con manifiesto; errores/alertas devuelven fallo sin mensajes del proveedor. Preparacion de tareas SQL deshabilitadas, conservando 09:15 y 09:20.
+- Respaldo completo ampliado a historicos de auditoria SQLite/SQL y coordinado con el archivador mediante bloqueo SQL, para conservar registros retirados de la base.
+
 - Respaldo SQL nativo COPY_ONLY/CHECKSUM, VERIFYONLY, evidencias y manifiesto SHA256 en ZIP; retencion aislada de los respaldos SQLite. Credencial SQL protegida con DPAPI para tareas sin entrada interactiva.
 - Preparacion de tarea SQL diaria a las 14:00 de Mexico, inicialmente deshabilitada; cierre ordenado y reinicio mediante control local de la misma cuenta Windows, conservando configuracion solo en memoria. La tarea productiva SQLite no se modifica.
 - Script y guia SQLite conservados por separado; alerta de oficio duplicado simplificada a "Ya existe un oficio con ese numero."

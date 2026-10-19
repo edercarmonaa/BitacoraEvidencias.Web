@@ -6,7 +6,11 @@ Horario acordado: **diariamente a las 14:00, hora de Mexico**, sin usuarios. La 
 
 `scripts/backup/Backup-Bitacora.ps1` ahora usa SQL Server por defecto, instancia local `.\Auditoria`. Genera un respaldo nativo `COPY_ONLY` con `CHECKSUM`, ejecuta `RESTORE VERIFYONLY` y comprueba su cabecera. Rechaza una base sin la migracion SQL inicial.
 
-El ZIP contiene `Data/<archivo>.bak`, `Evidencias/` (originales y miniaturas, conservando su estado cifrado) y `backup-manifest.json` con tamanos y SHA256. Cada archivo se compara al copiarlo y dentro del ZIP. Solo entonces se publica el `.zip` definitivo y se aplica retencion de 30 dias. Los ZIP SQLite, otras bases y archivos incompletos quedan fuera de esa limpieza.
+El ZIP contiene `Data/<archivo>.bak`, `Evidencias/` (originales y miniaturas, conservando su estado cifrado), `AuditArchive/` (historicos diarios SQLite y lotes SQL finalizados de esa base) y `backup-manifest.json` con tamanos y SHA256. Cada archivo se compara al copiarlo y dentro del ZIP. Solo entonces se publica el `.zip` definitivo y se aplica retencion de 30 dias. Los ZIP SQLite, otras bases y archivos incompletos quedan fuera de esa limpieza.
+
+La raiz historica predeterminada es `C:\BitacoraEvidencias\AuditArchive` o `C:\BitacoraEvidencias_Pruebas\AuditArchive` para ensayo. Si el archivador usa otra raiz, pasar `-AuditArchiveRoot` al respaldo y al ejecutor programado. El respaldo obtiene un bloqueo SQL compartido que excluye archivados concurrentes. Ver [AUDITORIA-MONITOREO-0.2.0.md](AUDITORIA-MONITOREO-0.2.0.md).
+
+La carpeta historica debe existir; si falta, revisar la ruta en lugar de generar un respaldo supuestamente completo sin historicos. Crear una carpeta vacia solo si se comprobo que aun no existen archivos historicos.
 
 Destino: `<BITACORA_BACKUP_ROOT>\SqlServer\BitacoraEvidencias`. Se respeta el destino externo configurado; sin parametro ni variable se usa `C:\BitacoraEvidencias\BackupsBitacora`. Comprobar espacio disponible en destino y en TEMP: el empaquetado necesita una copia temporal de la base y las evidencias. La carpeta temporal tiene permisos limitados a la cuenta actual, SYSTEM y administradores. Si falla el empaquetado se conserva el `.bak` nativo; revisar el log antes de limpiar archivos concretos.
 
