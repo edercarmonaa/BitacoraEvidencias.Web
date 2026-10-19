@@ -956,3 +956,17 @@ form[data-ui-loading].is-submitting .btn-loading {
     min-height: 18rem;
   }
 }
+
+.app-feedback-toasts {
+  z-index: 1090;
+  max-width: min(100vw, 28rem);
+}
+.app-feedback-toasts .toast {
+  width: 26rem;
+  max-width: 100%;
+  background-color: var(--bs-body-bg, #fff);
+  overflow-wrap: anywhere;
+}
+.app-feedback-error { border-left: .3rem solid var(--bs-danger, #dc3545); }
+.app-feedback-success { border-left: .3rem solid var(--bs-success, #198754); }
+.field-validation-error { display: block; margin-top: .25rem; }

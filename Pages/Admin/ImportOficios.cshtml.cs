@@ -65,7 +65,7 @@ public class ImportOficiosModel(
 
         if (Input.File is null || Input.File.Length == 0)
         {
-            ModelState.AddModelError(nameof(Input.File), "Selecciona un archivo .csv o .xlsx.");
+            ModelState.AddModelError("Input.File", "Selecciona un archivo .csv o .xlsx.");
             return Page();
         }
 

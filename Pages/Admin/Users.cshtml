@@ -22,12 +22,12 @@
     <div class="app-results-body">
         @if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
         {
-            <div class="alert app-alert-success">@Model.FlashSuccess</div>
+            <div class="alert app-alert-success" data-feedback="success" data-feedback-persistent>@Model.FlashSuccess</div>
         }
 
         @if (!string.IsNullOrWhiteSpace(Model.FlashError))
         {
-            <div class="alert app-alert-error">@Model.FlashError</div>
+            <div class="alert app-alert-error" data-feedback="error">@Model.FlashError</div>
         }
 
         <div class="card mb-4">
@@ -125,6 +125,7 @@
                                 <td>
                                     <form method="post"
                                           asp-page-handler="UpdateRole"
+                                          data-confirm="Se cambiara el rol de este usuario y sus permisos de acceso."
                                           class="d-flex gap-2"
                                           data-busy
                                           hx-post="@Url.Page("/Admin/Users", "UpdateRole")"
@@ -168,6 +169,7 @@
                                     <div class="d-flex flex-wrap gap-1">
                                         <form method="post"
                                               asp-page-handler="ResetPassword"
+                                              data-confirm="Se restablecera la contrasena de este usuario."
                                               class="d-inline"
                                               data-busy
                                               hx-post="@Url.Page("/Admin/Users", "ResetPassword")"
@@ -183,6 +185,7 @@
                                         </form>
                                         <form method="post"
                                               asp-page-handler="ToggleActive"
+                                              data-confirm="Se cambiara el estado de acceso de este usuario."
                                               class="d-inline"
                                               data-busy
                                               hx-post="@Url.Page("/Admin/Users", "ToggleActive")"

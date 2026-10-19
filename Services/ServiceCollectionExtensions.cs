@@ -14,7 +14,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<QueryTimingInterceptor>();
         services.AddScoped<ConnectionTimingInterceptor>();
         services.AddScoped<PageQueryTimingFilter>();
-        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options => options.Filters.AddService<PageQueryTimingFilter>());
+        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
+        {
+            options.Filters.AddService<PageQueryTimingFilter>();
+            Validation.SpanishValidationMessages.Configure(options);
+        });
         services.AddRazorPages(options =>
         {
             options.Conventions.AllowAnonymousToPage("/Login");

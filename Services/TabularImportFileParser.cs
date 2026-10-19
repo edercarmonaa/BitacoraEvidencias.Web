@@ -9,7 +9,7 @@ namespace BitacoraEvidencias.Web.Services;
 public class TabularImportFileParser : ITabularImportFileParser
 {
     private const int MaxDataRows = 1000;
-    private const long MaxImportFileBytes = 10 * 1024 * 1024;
+    public const long MaxImportFileBytes = 10 * 1024 * 1024;
 
     private static readonly HashSet<int> BuiltInDateNumberFormats =
     [

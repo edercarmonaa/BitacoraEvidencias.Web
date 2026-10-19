@@ -11,6 +11,8 @@ public class EditModel(
     AppDbContext dbContext,
     IOficioApplicationService oficioApplicationService) : PageModel
 {
+    public DateTime? OriginalDate { get; private set; }
+    public object? OriginalValues { get; private set; }
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
@@ -25,6 +27,8 @@ public class EditModel(
             return NotFound();
         }
 
+        OriginalDate = oficio.FechaOficio;
+        OriginalValues = new { oficio.NumeroOficio, oficio.Asunto };
         Input = new InputModel
         {
             Id = oficio.Id,
@@ -39,6 +43,17 @@ public class EditModel(
 
     public async Task<IActionResult> OnPostAsync()
     {
+        var original = await dbContext.Oficios.AsNoTracking().Where(o => o.Id == Input.Id)
+            .Select(o => new { o.FechaOficio, o.NumeroOficio, o.Asunto }).FirstOrDefaultAsync();
+        OriginalDate = original?.FechaOficio;
+        if (original is not null)
+        {
+            OriginalValues = new { original.NumeroOficio, original.Asunto };
+            if (string.Equals(original.NumeroOficio.Trim(), Input.NumeroOficio?.Trim() ?? "", StringComparison.Ordinal))
+                PreserveHistoricalField("Input.NumeroOficio");
+            if (string.Equals(original.Asunto.Trim(), Input.Asunto?.Trim() ?? "", StringComparison.Ordinal))
+                PreserveHistoricalField("Input.Asunto");
+        }
         if (!ModelState.IsValid)
         {
             return Page();
@@ -47,9 +62,9 @@ public class EditModel(
         var result = await oficioApplicationService.UpdateAsync(new OficioUpdateRequest
         {
             Id = Input.Id,
-            NumeroOficio = Input.NumeroOficio,
+            NumeroOficio = Input.NumeroOficio ?? "",
             FechaOficio = Input.FechaOficio,
-            Asunto = Input.Asunto,
+            Asunto = Input.Asunto ?? "",
             Notas = Input.Notas
         });
 
@@ -91,6 +106,13 @@ public class EditModel(
     private bool IsHtmxRequest()
     {
         return string.Equals(Request.Headers["HX-Request"], "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void PreserveHistoricalField(string key)
+    {
+        if (!ModelState.TryGetValue(key, out var entry)) return;
+        entry.Errors.Clear();
+        entry.ValidationState = Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Valid;
     }
 
     public class InputModel

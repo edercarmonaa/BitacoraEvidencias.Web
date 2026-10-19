@@ -48,7 +48,7 @@ public class UsersModel(
     {
         if (!Roles.Contains(NewUser.Role))
         {
-            ModelState.AddModelError(nameof(NewUser.Role), "Rol no valido.");
+            ModelState.AddModelError("NewUser.Role", "Rol no valido.");
         }
 
         if (!ModelState.IsValid)

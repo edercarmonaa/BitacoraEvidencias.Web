@@ -6,12 +6,12 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
 {
-    <div class="alert alert-success">@Model.FlashSuccess</div>
+    <div class="alert alert-success" data-feedback="success">@Model.FlashSuccess</div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.FlashError))
 {
-    <div class="alert alert-danger">@Model.FlashError</div>
+    <div class="alert alert-danger" data-feedback="error">@Model.FlashError</div>
 }
 
 @if (Model.Oficio is not null)

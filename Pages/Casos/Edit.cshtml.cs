@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Services;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,8 @@ public class EditModel(
     ICasoApplicationService casoApplicationService) : PageModel
 {
     public CasoHeader? Header { get; private set; }
+    public CaseFormValues? OriginalValues { get; private set; }
+    public IReadOnlyList<string> OtherLevels { get; private set; } = [];
     public IReadOnlyList<AuditorOption> AuditoresDisponibles { get; private set; } = [];
     public IReadOnlyList<string> EstatusDisponibles => CatalogosCaso.Estatus;
     public IReadOnlyList<string> NivelesEducativosDisponibles => CatalogosCaso.NivelesEducativos;
@@ -32,12 +35,16 @@ public class EditModel(
             return NotFound();
         }
 
+        OriginalValues = CaseFormValues.From(caso);
+        OtherLevels = await dbContext.CasosCorreccion.AsNoTracking().Where(c => c.OficioId == caso.OficioId && c.Id != caso.Id)
+            .Select(c => c.NivelEducativo).ToListAsync();
         Header = new CasoHeader
         {
             Id = caso.Id,
             OficioId = caso.OficioId,
             NumeroOficio = caso.Oficio.NumeroOficio,
-            Consecutivo = caso.Consecutivo
+            Consecutivo = caso.Consecutivo,
+            FechaOficio = caso.Oficio.FechaOficio
         };
 
         Input = new InputModel
@@ -190,12 +197,16 @@ public class EditModel(
             return;
         }
 
+        OriginalValues = CaseFormValues.From(caso);
+        OtherLevels = await dbContext.CasosCorreccion.AsNoTracking().Where(c => c.OficioId == caso.OficioId && c.Id != caso.Id)
+            .Select(c => c.NivelEducativo).ToListAsync();
         Header = new CasoHeader
         {
             Id = caso.Id,
             OficioId = caso.OficioId,
             NumeroOficio = caso.Oficio.NumeroOficio,
-            Consecutivo = caso.Consecutivo
+            Consecutivo = caso.Consecutivo,
+            FechaOficio = caso.Oficio.FechaOficio
         };
 
         AuditoresDisponibles = await LoadAuditoresDisponiblesAsync(selectedAuditorUsuarioId);
@@ -231,6 +242,7 @@ public class EditModel(
         public int OficioId { get; init; }
         public string NumeroOficio { get; init; } = string.Empty;
         public int Consecutivo { get; init; }
+        public DateTime FechaOficio { get; init; }
         public string ConsecutivoTexto => Consecutivo.ToString("000");
     }
 
@@ -286,7 +298,7 @@ public class EditModel(
         public DateTime? FechaVerificacion { get; set; }
 
         [Display(Name = "Evidencia (liga)")]
-        [Url(ErrorMessage = "Captura una URL valida (http/https).")]
+        [HttpUrl]
         [StringLength(1000)]
         public string? EvidenciaUrl { get; set; }
 

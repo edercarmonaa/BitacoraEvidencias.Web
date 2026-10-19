@@ -1,0 +1,10 @@
+@* Included inside app-main so HTMX responses carry server validation feedback. *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div data-form-errors hidden>
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(value => value.Errors))
+        {
+            <span>@(string.IsNullOrWhiteSpace(error.ErrorMessage) ? "Revisa el valor capturado." : error.ErrorMessage)</span>
+        }
+    </div>
+}

@@ -1,5 +1,6 @@
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
+using BitacoraEvidencias.Web.Validation;
 using BitacoraEvidencias.Web.Pages.Admin;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -124,7 +125,7 @@ public sealed class OficioImportPreviewService(
             .Select(x => x.NumeroOficio)
             .ToListAsync(cancellationToken);
 
-        var seenNumbers = new HashSet<string>(StringComparer.Ordinal);
+        var seenNumbers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var seenFolders = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var candidate in candidates)
         {
@@ -149,7 +150,7 @@ public sealed class OficioImportPreviewService(
                     rowErrors.Add("NumeroOficio repetido dentro del archivo.");
                 }
 
-                if (existingNumbers.Contains(numeroOficio, StringComparer.Ordinal))
+                if (existingNumbers.Contains(numeroOficio, StringComparer.OrdinalIgnoreCase))
                 {
                     rowErrors.Add("NumeroOficio ya existe en la base.");
                 }
@@ -174,6 +175,7 @@ public sealed class OficioImportPreviewService(
             {
                 rowErrors.Add("FechaOficio no tiene un formato valido. Usa dd/MM/yyyy.");
             }
+            else rowErrors.AddRange(FormRules.ValidateOfficeDate(fechaOficio).Select(error => error.Message));
 
             if (string.IsNullOrWhiteSpace(asunto))
             {

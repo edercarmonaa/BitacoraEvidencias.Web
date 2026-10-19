@@ -23,6 +23,7 @@
             </div>
 
             <form method="post"
+                  data-confirm="Se eliminara este caso junto con sus evidencias. Esta accion no se puede deshacer."
                   data-busy
                   data-ui-loading
                   hx-post="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id, returnOficioId = Model.ReturnOficioId, returnUrl = Model.ReturnUrl })"

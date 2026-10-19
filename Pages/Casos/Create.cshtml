@@ -27,6 +27,12 @@
 }
 
 <form method="post"
+      data-case-form="create"
+      data-used-levels="@System.Text.Json.JsonSerializer.Serialize(Model.Oficio?.Niveles ?? [])"
+      data-today="@BitacoraEvidencias.Web.Validation.FormRules.Today.ToString("yyyy-MM-dd")"
+      data-office-date="@Model.Oficio?.FechaOficio.ToString("yyyy-MM-dd")"
+      data-curp-pattern="@BitacoraEvidencias.Web.Validation.FormRules.CurpPattern"
+      data-cct-pattern="@BitacoraEvidencias.Web.Validation.FormRules.CctPattern"
       data-busy
       data-ui-loading
       hx-post="@Url.Page("/Casos/Create", new { oficioId = Model.Input.OficioId, returnOficioId = Model.Input.ReturnOficioId })"

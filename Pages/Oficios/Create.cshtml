@@ -7,6 +7,8 @@
 <h1 class="h3 mb-3">Nuevo oficio</h1>
 
 <form method="post"
+      data-today="@BitacoraEvidencias.Web.Validation.FormRules.Today.ToString("yyyy-MM-dd")"
+      data-number-check="@Url.Page("/Oficios/Create", "ValidateNumber")"
       data-busy
       data-ui-loading
       hx-post="@Url.Page("./Create")"

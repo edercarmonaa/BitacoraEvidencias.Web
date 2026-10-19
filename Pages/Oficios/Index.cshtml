@@ -39,12 +39,12 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.FlashSuccess))
 {
-    <div class="alert app-alert-success">@Model.FlashSuccess</div>
+    <div class="alert app-alert-success" data-feedback="success">@Model.FlashSuccess</div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.FlashError))
 {
-    <div class="alert app-alert-error">@Model.FlashError</div>
+    <div class="alert app-alert-error" data-feedback="error">@Model.FlashError</div>
 }
 
 <form method="get"

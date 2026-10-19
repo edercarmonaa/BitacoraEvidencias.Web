@@ -2,6 +2,7 @@ using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Pages.Admin;
 using BitacoraEvidencias.Web.Security;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitacoraEvidencias.Web.Services;
@@ -56,6 +57,13 @@ public sealed class CasoImportApplicationService(
             }
 
             if (officeTarget.ExistingLevels.Contains(row.NivelEducativo))
+            {
+                failedRows.Add(row);
+                continue;
+            }
+
+            if (FormRules.ValidateCase(new(row.Curp, row.NombreCompleto, row.Cct,
+                row.PeriodoInicio, row.PeriodoFin, row.FechaVerificacion), officeTarget.FechaOficio).Count > 0)
             {
                 failedRows.Add(row);
                 continue;
@@ -148,7 +156,7 @@ public sealed class CasoImportApplicationService(
         var offices = await dbContext.Oficios
             .AsNoTracking()
             .Where(x => officeNumbers.Contains(x.NumeroOficio))
-            .Select(x => new { x.Id, x.NumeroOficio })
+            .Select(x => new { x.Id, x.NumeroOficio, x.FechaOficio })
             .ToListAsync(cancellationToken);
 
         var officeIds = offices.Select(item => item.Id).ToList();
@@ -179,6 +187,7 @@ public sealed class CasoImportApplicationService(
                 return new OfficeImportTarget
                 {
                     OficioId = office.Id,
+                    FechaOficio = office.FechaOficio,
                     ExistingLevels = officeCases
                         .Select(item => item.NivelEducativo)
                         .ToHashSet(StringComparer.Ordinal),
@@ -203,6 +212,7 @@ public sealed class CasoImportApplicationService(
     private sealed class OfficeImportTarget
     {
         public int OficioId { get; init; }
+        public DateTime FechaOficio { get; init; }
         public HashSet<string> ExistingLevels { get; init; } = new(StringComparer.Ordinal);
         public int NextConsecutivo { get; set; }
     }
