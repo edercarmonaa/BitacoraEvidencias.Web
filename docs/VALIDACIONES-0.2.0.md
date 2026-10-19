@@ -47,17 +47,17 @@ La comparacion de valores historicos se hace con el registro persistido, no con 
 
 ## Comprobacion del ensayo
 
-Publicacion independiente: `C:\BitacoraEvidencias_Pruebas\App-validation-fix`.
+Publicacion inicial de esta mejora: `App-validation-fix` (historica). Para verificar el conjunto actual usar `C:\BitacoraEvidencias_Pruebas\App-backup-final`.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy\Start-BitacoraSqlServer.ps1 -AppFolder App-validation-fix -TrustLocalSqlCertificate
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\deploy\Start-BitacoraSqlServer.ps1 -AppFolder App-backup-final
 ```
 
 Detener primero el ensayo anterior del puerto 5068. En navegador comprobar: campo vacio al salir, resumen al guardar con errores, las cuatro CCT de ejemplo, fechas y periodos incorrectos, repeticion de numero cambiando mayusculas, nivel ya ocupado, edicion de historico incompleto, adjuntos incorrectos, y aceptar/cancelar confirmaciones. Probar tambien entrar a formularios mediante navegacion HTMX. Los valores de texto se conservan al fallar; por restricciones del navegador puede ser necesario seleccionar nuevamente archivos despues de una respuesta del servidor. Las contrasenas conservan su tratamiento de seguridad existente.
 
-Las pruebas de JavaScript usan un DOM aislado, no sustituyen la revision visual en un navegador real. Para repetirlas con Node 22.20+/24 y npm:
+Las pruebas de JavaScript usan un DOM aislado, no sustituyen la revision visual en un navegador real. El estado actual de pruebas/pendientes esta en [TESTING.md](TESTING.md) y [ESTADO-0.2.0.md](ESTADO-0.2.0.md). Para repetirlas con Node 22.20+/24 y npm:
 
-Resultado de validacion: 110 pruebas .NET ejecutadas, 104 aprobadas y los mismos seis fallos previos de almacenamiento/preparacion SQLite. Las 30 comprobaciones del DOM aislado pasaron, incluyendo campos historicos, cancelacion sin POST, confirmacion con un solo envio, duplicados al salir del campo, adjuntos y reinicializacion HTMX. No habia un navegador conectado disponible para verificar visualmente el ensayo.
+Resultado de esa etapa: 110 pruebas .NET ejecutadas, 104 aprobadas y los mismos seis fallos previos de almacenamiento/preparacion SQLite. Las 30 comprobaciones del DOM aislado pasaron, incluyendo campos historicos, cancelacion sin POST, confirmacion con un solo envio, duplicados al salir del campo, adjuntos y reinicializacion HTMX. No habia un navegador conectado disponible para verificar visualmente el ensayo.
 
 ```powershell
 npm install --prefix tmp/form-dom-tests --no-save --ignore-scripts happy-dom@21.0.3

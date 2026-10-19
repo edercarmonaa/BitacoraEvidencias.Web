@@ -1,55 +1,25 @@
-# Arranque Manual - Bitacora de Evidencias
+# Arranque manual por version
 
-Fecha de actualizacion: 2026-05-11
+Actualizado: 19/10/2026. No se agrega inicio automatico de la aplicacion al iniciar sesion en Windows. Las tareas SQL de mantenimiento tampoco sustituyen su arranque diario.
 
-## Decision vigente
+## Ensayo SQL 0.2.0
 
-La aplicacion ya no se inicia automaticamente al reiniciar Windows ni al iniciar sesion.
+La publicacion comprobada mas reciente es App-backup-final. Con el puerto 5068 libre y las variables de llave/certificado disponibles:
 
-Se elimino el enfoque de tarea programada de inicio de sesion porque en la operacion real podia ejecutar mas de un arranque y dejar el proceso sin escuchar en el puerto `5067`.
-
-## Estado final
-
-- No existe tarea programada de inicio de sesion para la aplicacion.
-- No existe archivo de inicio automatico en la carpeta Startup del usuario.
-- No se conservan scripts `Start-BitacoraStartup.cmd` ni `Run-BitacoraApp.cmd` en `C:\BitacoraEvidencias\deploy`.
-- El arranque diario se realiza manualmente.
-
-## Arranque manual
-
-Desde el repositorio:
-
-```bat
-.\scripts\deploy\Start-BitacoraManual.cmd <SERVER_IP>
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-backup-final
 ```
 
-En la PC operativa se dejaron accesos convenientes:
+Solicita usuario/contrasena SQL, usa BitacoraEvidencias_Pruebas e Input/Evidencias y arranca Production/HTTPS 5068. Ctrl+C detiene solo ese ensayo. No cambia variables persistentes. Para publicar otros cambios, usar una carpeta nueva con Publish-BitacoraSqlServer.ps1; no repetir import.
 
-```text
-C:\BitacoraEvidencias\Iniciar Bitacora Manual.cmd
-Escritorio del usuario operativo\Iniciar Bitacora Manual.cmd
-```
+TrustLocalSqlCertificate solo admite explicitamente un certificado SQL local sin confianza configurada. Si HTTPS cubre otro nombre/direccion usar ServerAddress; no ocultar errores HTTPS ni regenerar la llave de datos.
 
-El launcher manual:
+## SQLite productiva 0.1.0
 
-- Usa el release publicado en `C:\BitacoraEvidencias\deploy\current`.
-- Configura HTTPS en `https://<SERVER_IP>:5067`.
-- Usa `BITACORA_HTTPS_CERT_PATH`, `BITACORA_HTTPS_CERT_PASSWORD` y `BITACORA_DATA_PROTECTION_KEY`.
-- Espera a que el puerto `5067` quede escuchando.
-- Abre `https://<SERVER_IP>:5067/Login`.
+El arranque anterior sigue apuntando a los binarios publicados en C:\BitacoraEvidencias\deploy\current y puerto 5067. Los scripts Start-BitacoraManual.cmd y Start-BitacoraPublished.ps1 configuran SQLite. Conservar su acceso directo, binarios, configuracion y logs; no cambiarlos por el ensayo SQL.
 
-## Logs
+La version congelada y procedimientos originales se consultan en [SQLITE-0.1.md](SQLITE-0.1.md). No publicar el codigo SQL con Publish-Bitacora.ps1 ni ejecutar Start-BitacoraWithHttps.ps1 de esta rama suponiendo que preparara SQL.
 
-Los logs del arranque manual quedan en:
+## Produccion SQL pendiente
 
-```text
-C:\BitacoraEvidencias\deploy\logs\manual-start.log
-C:\BitacoraEvidencias\deploy\logs\manual-app.out.log
-C:\BitacoraEvidencias\deploy\logs\manual-app.err.log
-```
-
-## Scripts conservados
-
-- `scripts\deploy\Publish-Bitacora.ps1`: publica el release.
-- `scripts\deploy\Start-BitacoraManual.cmd`: arranque operativo manual.
-- `scripts\deploy\Start-BitacoraPublished.ps1`: arranque tecnico de diagnostico.
+Falta implementar/ensayar el cambio del lanzador productivo y aprobar la migracion; [DEPLOYMENT.md](DEPLOYMENT.md) detalla sus condiciones. El backup SQL puede cerrar/reiniciar una instancia compatible que ya este activa, conservando configuracion en memoria; si estaba detenida no la inicia. No es un servicio Windows ni recupera automaticamente un reinicio del equipo.

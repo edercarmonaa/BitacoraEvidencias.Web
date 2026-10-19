@@ -1,4 +1,6 @@
-﻿# Operacion Diaria - Bitacora de Evidencias
+# Operacion Diaria - Bitacora de Evidencias
+
+> Documento historico SQLite 0.1.0. Para procedimientos vigentes SQL usar [OPERATIONS.md](OPERATIONS.md) y [ESTADO-0.2.0.md](ESTADO-0.2.0.md); no ejecutar los comandos SQLite con los binarios 0.2.0.
 
 ## 1) Datos base
 
@@ -285,7 +287,7 @@ C:\BitacoraEvidencias\Iniciar Bitacora Manual.cmd
 - Validar:
 
 ```powershell
-[Environment]::GetEnvironmentVariable("BITACORA_DATA_PROTECTION_KEY", "Machine")
+-not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable("BITACORA_DATA_PROTECTION_KEY", "Machine"))
 ```
 
 - Reiniciar con:

@@ -1,5 +1,7 @@
 # Rendimiento de Busqueda
 
+> Medicion historica SQLite con ocho casos; no representa Busquedas SQL. Mediciones y confirmacion actual en [PERFORMANCE-0.2.0.md](PERFORMANCE-0.2.0.md).
+
 ## Objetivo
 
 Validar el impacto del cambio aplicado en `Busqueda`:

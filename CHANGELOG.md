@@ -4,6 +4,8 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Documentacion revisada el 19/10/2026: indice, estado de aceptacion, configuracion/arranque SQL, recuperacion, seguridad, pruebas y referencias historicas SQLite. Se corrigen instrucciones de inicializacion incompatibles y pendientes ya resueltos; se mantiene pendiente el cambio productivo.
+
 - Auditoria/monitoreo adaptados a SQL Server con credenciales DPAPI y reportes separados por base; originales SQLite conservados. Archivado de mas de 30 dias en lotes verificados, sin sobrescritura y retirada transaccional por identificadores.
 - Monitoreo de conexion/esquema SQL, tamanos de datos/log y respaldos completos con manifiesto; errores/alertas devuelven fallo sin mensajes del proveedor. Preparacion de tareas SQL deshabilitadas, conservando 09:15 y 09:20.
 - Respaldo completo ampliado a historicos de auditoria SQLite/SQL y coordinado con el archivador mediante bloqueo SQL, para conservar registros retirados de la base.
@@ -15,7 +17,7 @@
 - Formularios: validacion al salir del campo, errores junto al control, resumen en toast y confirmaciones con Bootstrap local; integracion HTMX y mensajes predeterminados en espanol.
 - Reglas reforzadas de CURP/CCT (incluidas claves antiguas), periodos y fechas; folio/validador opcionales, historicos incompletos sin cambios permitidos y unicidad de oficio sin distinguir mayusculas en altas/ediciones/importaciones.
 - Adjuntos con comprobaciones anticipadas de extension/tamano y validacion de servidor conservada; errores de servidor asociados al campo correcto.
-- Busquedas: corregida espera RESOURCE_SEMAPHORE reproducida en SQL Server de pruebas; paginar identificadores antes de cargar campos visibles reduce el ancho del ordenamiento. Medicion del handler sin filtros: 25 segundos antes, 347 ms primera carga y 27 ms segunda carga despues; pendiente confirmacion en navegador.
+- Busquedas: corregida espera RESOURCE_SEMAPHORE reproducida en SQL Server de pruebas; paginar identificadores antes de cargar campos visibles reduce el ancho del ordenamiento. Medicion del handler sin filtros: 25 segundos antes, 347 ms primera carga y 27 ms segunda carga despues; funcionamiento confirmado posteriormente por el responsable en el ensayo.
 - Diagnostico `profile` de Busquedas en la base de pruebas: separa conteo, identificadores y datos; resume tiempos, memoria y esperas del plan real sin mostrar consultas, parametros ni registros.
 - Revision de paginacion: cancelacion de lecturas GET y orden estable en los listados; galeria de caso paginada y reporte de evidencia incorrecta paginado en SQL.
 - Agregaciones de auditoria/reportes en SQL y filtros protegidos de Busquedas conservados, con descifrado limitado a la pagina.

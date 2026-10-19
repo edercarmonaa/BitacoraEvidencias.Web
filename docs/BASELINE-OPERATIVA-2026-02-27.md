@@ -1,4 +1,6 @@
-﻿# Baseline Operativa Final
+# Baseline Operativa Final
+
+> Evidencia historica de la version SQLite, conservada con su fecha. No certifica el estado SQL 0.2.0: consultar [ESTADO-0.2.0.md](ESTADO-0.2.0.md).
 Fecha: 2026-02-27
 
 ## Estado

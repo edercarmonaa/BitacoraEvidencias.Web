@@ -1,4 +1,6 @@
-﻿# QA Funcional UI/UX + Seguridad (Manual)
+# QA Funcional UI/UX + Seguridad (Manual)
+
+> Checklist historico SQLite. La aceptacion actual requiere [SMOKE-TEST-INTEGRAL.md](SMOKE-TEST-INTEGRAL.md) y [VALIDACIONES-0.2.0.md](VALIDACIONES-0.2.0.md); sus resultados anteriores no aprueban 0.2.0.
 Fecha: 2026-02-27  
 Sistema: BitÃ¡cora Evidencias  
 Ambiente sugerido: `https://127.0.0.1:5067`

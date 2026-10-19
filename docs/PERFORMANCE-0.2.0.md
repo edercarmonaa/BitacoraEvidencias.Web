@@ -1,6 +1,6 @@
 # Paginacion y rendimiento de 0.2.0
 
-Estado: codigo y pruebas locales preparados. Los indices y los tiempos reales deben validarse en SQL Server de pruebas antes del cambio productivo.
+Estado actualizado 19/10/2026: consultas e indices incorporados al ensayo SQL, mediciones reales registradas y funcionamiento confirmado por el responsable. No equivale a aceptar formularios posteriores ni el cambio productivo. Ver [ESTADO-0.2.0.md](ESTADO-0.2.0.md).
 
 Medicion del ensayo `App-pagination-fix`: Auditoria 275 ms de handler (192 ms SQL, cinco oficios); Busquedas 25059 ms de handler y 25042 ms SQL.
 
@@ -10,10 +10,10 @@ La demora se reprodujo ejecutando el handler real sobre SQL Server de pruebas co
 
 La consulta ahora ordena/pagina solo identificadores y despues carga los campos visibles para esos identificadores (maximo 100), restaurando el orden exacto en memoria. Dos sentencias separadas evitan que el optimizador vuelva a incluir campos anchos/cifrados en el ordenamiento de paginacion. El conteo, filtros y descifrado limitado a la pagina se conservan. Una modificacion concurrente puede cambiar resultados entre consultas, igual que antes entre conteo y pagina; no se incorporan bloqueos largos para este listado.
 
-Medicion real despues: handler 347 ms primera carga y 27 ms segunda; 893 casos totales y 20 visibles. En la segunda carga: conteo 3 ms, identificadores 3 ms, datos 15 ms. Planes: espera de memoria 0 ms, concesion de 1504 KB para identificadores y 1024 KB para datos, sin derrames a disco. Estas mediciones corresponden al handler sin filtros, no al tiempo completo de navegador ni a todos los filtros posibles. Falta la comprobacion interactiva en `App-search-fix`.
+Medicion real despues: handler 347 ms primera carga y 27 ms segunda; 893 casos totales y 20 visibles. En la segunda carga: conteo 3 ms, identificadores 3 ms, datos 15 ms. Planes: espera de memoria 0 ms, concesion de 1504 KB para identificadores y 1024 KB para datos, sin derrames a disco. Estas mediciones corresponden al handler sin filtros, no al tiempo completo de navegador ni a todos los filtros posibles. El responsable confirmo despues que Busquedas quedo solucionado y funciona en el ensayo.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-search-fix -TrustLocalSqlCertificate
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-backup-final
 ```
 
 El modo `profile` ejecuta el handler real sin filtros, pagina 1 de 20 filas, dos veces sobre `BitacoraEvidencias_Pruebas`. Informa conteo, identificadores y datos por separado y vuelve a ejecutar cada consulta con `STATISTICS XML` para resumir compilacion, ejecucion, memoria, esperas y derrames a disco. No imprime ni guarda SQL, planes completos, parametros, datos personales o credenciales. Consume los resultados en memoria y no cambia registros ni esquema; solo activa estadisticas en su propia sesion. Rechaza `-Production`.
@@ -29,7 +29,7 @@ Usar la misma consola con la llave de proteccion existente en el entorno y crede
 
 El ejecutable admite conexion integrada Windows solo para `profile` mediante la variable de proceso `BITACORA_MIGRATION_SQL_CONNECTION`; el wrapper conserva el ingreso local de usuario/contrasena SQL. Importacion, verificacion y actualizacion mantienen su requisito de autenticacion SQL.
 
-Validacion final: 83 pruebas ejecutadas, 77 aprobadas y los mismos seis fallos previos de almacenamiento/preparacion SQLite. Las nuevas pruebas comprueban orden ascendente/descendente, desempates y resultados vacios con la consulta dividida, ocultamiento de texto/parametros del plan y rechazo de produccion. Diez ejecuciones de wrappers con credenciales ficticias aprobadas. Diagnostico real SQL de solo lectura completado.
+Validacion de esa etapa (historica): 83 pruebas ejecutadas, 77 aprobadas y los mismos seis fallos previos de almacenamiento/preparacion SQLite. Las nuevas pruebas comprueban orden ascendente/descendente, desempates y resultados vacios con la consulta dividida, ocultamiento de texto/parametros del plan y rechazo de produccion. Diez ejecuciones de wrappers con credenciales ficticias aprobadas. Diagnostico real SQL de solo lectura completado.
 
 ## Revision de modulos
 
@@ -57,6 +57,8 @@ Se mantienen los enlaces de primera/ultima pagina y salto directo; por ello se c
 
 ## Indices SQL
 
+El procedimiento siguiente corresponde a una base sin PagingIndexes; no es necesario repetirlo si el historial ya esta actualizado. Los totales de pruebas de cada etapa no son el total vigente: consultar [TESTING.md](TESTING.md).
+
 La migracion `PagingIndexes` contiene exclusivamente ocho operaciones CreateIndex: fecha/numero de oficio, oficio/estado de auditoria, estatus/fecha de creacion de caso, fecha de creacion de caso, fecha de verificacion de caso, fecha/identificador de bitacora, usuario/identificador y caso/fecha/identificador de evidencia. Se conserva el indice anterior de relacion de evidencia para que la actualizacion sea estrictamente aditiva.
 
 El importador inicial de una base vacia crea el modelo completo y registra ambas migraciones. Para la base de ensayo ya importada se usa `upgrade`, que exige el historial inicial existente y solo permite esta migracion aditiva. No crea bases, reimporta ni modifica filas de negocio.
@@ -71,7 +73,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/migration/Invoke
 3. Solo si termina correctamente, arrancar los binarios nuevos:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-pagination-fix -TrustLocalSqlCertificate
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-backup-final
 ```
 
 4. Recargar con Ctrl+F5 y comprobar filtros, orden, primera/ultima pagina, paginas sucesivas sin duplicados, seleccion de auditoria y galeria. No ejecutar import sobre una base con datos.
