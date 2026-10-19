@@ -13,9 +13,9 @@ Revision documental: 19/10/2026. El cierre de controles de SQLite en febrero/may
 | ACL | Staging y credenciales privados preparados; ciclo real de backup con la identidad de las tareas aprobado. Revalidar al cambiar cuenta/rutas. |
 | Secretos | Custodia recuperable de llave, certificado y credenciales; recrear DPAPI al trasladar cuenta/equipo. |
 | Automatizacion | SQL habilitadas tras el corte; SQLite deshabilitadas. Backup real con cierre/reinicio resultado 0. Verificar siguientes ejecuciones programadas. |
-| Recuperacion | Completar CHECKDB de la copia restaurada al liberar RAM (dos timeouts RESOURCE_SEMAPHORE) y ensayo integral de usuarios, datos cifrados y fotos en copia. |
+| Recuperacion | CHECKDB del BAK productivo restaurado y cinco conteos aprobados; dos timeouts previos por memoria quedan como antecedente. Completar ensayo integral de usuarios, datos cifrados y fotos en copia. |
 | Arranque productivo | SQL activo en IP/5067; ingreso/consultas aceptados, acceso manual actualizado y reinicio tras backup con la misma llave. SQLite conservada y detenida. |
-| Capacidad | Monitor del corte: 20.15 GB libres frente a umbral 25 GB antes del segundo ZIP. RAM de 8 GB con unos 700 MB libres: SQL reporta memoria baja. |
+| Capacidad | Monitor del corte: 20.15 GB libres frente a umbral 25 GB antes del segundo ZIP. Revisar presion de RAM: habia unos 700 MB libres de 8 GB; al completar CHECKDB habia unos 1,050 MB y SQL ya no reportaba memoria baja. |
 | Publicacion | Revisar documentos internos/historial antes de compartir; no subir evidencias operativas. |
 
 ## Evidencia ya disponible

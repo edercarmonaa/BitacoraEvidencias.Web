@@ -2,7 +2,7 @@
 
 Aplicacion ASP.NET Core Razor Pages para gestionar oficios, casos de correccion, evidencias fotograficas, auditoria y reportes en una red local.
 
-**0.2.0 usa SQL Server Express 2025 y esta activa en produccion, puerto 5067, con ingreso/consultas confirmados y tareas SQL habilitadas.** Sigue pendiente CHECKDB de la copia restaurada por falta de RAM y la aceptacion detallada documentada. SQLite 0.1.0 esta detenida y conservada; su codigo permanece congelado en `v0.1.0` y `archive/sqlite-0.1`. Las nuevas funcionalidades se desarrollan en `feature/sqlserver-0.2`. Git conserva codigo; datos, fotografias y secretos requieren respaldos externos.
+**0.2.0 usa SQL Server Express 2025 y esta activa en produccion, puerto 5067, con ingreso/consultas confirmados y tareas SQL habilitadas. CHECKDB de la copia restaurada y los conteos del corte aprobaron.** La aceptacion detallada y los limites de recuperacion estan documentados. SQLite 0.1.0 esta detenida y conservada; su codigo permanece congelado en `v0.1.0` y `archive/sqlite-0.1`. Las nuevas funcionalidades se desarrollan en `feature/sqlserver-0.2`. Git conserva codigo; datos, fotografias y secretos requieren respaldos externos.
 
 Consulta el [registro del corte](docs/CORTE-PRODUCTIVO-0.2.0.md), el [indice documental](docs/INDEX.md) y el [estado de aceptacion](docs/ESTADO-0.2.0.md) antes de ejecutar procedimientos. No repetir import: la base SQL productiva ya contiene el corte final.
 

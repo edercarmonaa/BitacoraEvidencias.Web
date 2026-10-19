@@ -1,6 +1,6 @@
 # Acuerdos y cambio de SQLite 0.1.0 a SQL Server 0.2.0
 
-Actualizado: 19/10/2026. [SQL productivo activo](CORTE-PRODUCTIVO-0.2.0.md): respaldo final SQLite creado, SQL importado/verificado, servicio https://192.168.1.95:5067 confirmado por el responsable y tareas SQL habilitadas tras un ciclo real de backup/reinicio aprobado. Queda pendiente CHECKDB de la copia restaurada por falta de RAM. No repetir import ni usar el corte de ensayo como origen. La secuencia siguiente queda como referencia del procedimiento.
+Actualizado: 19/10/2026. [SQL productivo activo](CORTE-PRODUCTIVO-0.2.0.md): respaldo final SQLite creado, SQL importado/verificado, servicio https://192.168.1.95:5067 confirmado por el responsable y tareas SQL habilitadas tras un ciclo real de backup/reinicio aprobado. CHECKDB del BAK productivo restaurado y cinco conteos del corte aprobaron. No repetir import ni usar el corte de ensayo como origen. La secuencia siguiente queda como referencia del procedimiento.
 
 ## Acuerdos
 

@@ -47,7 +47,7 @@ Requiere Node 22.20+/24 y npm compatibles con esa herramienta. Para aceptacion v
 
 ## Pruebas reales registradas
 
-Los resultados siguientes corresponden al ensayo previo. Para produccion ver el [registro del corte](CORTE-PRODUCTIVO-0.2.0.md): import/verify y ciclo real de backup/reinicio aprobados, ingreso/consultas confirmados; CHECKDB del nuevo BAK restaurado pendiente por falta de RAM.
+Los resultados siguientes corresponden al ensayo previo. Para produccion ver el [registro del corte](CORTE-PRODUCTIVO-0.2.0.md): import/verify y ciclo real de backup/reinicio aprobados, ingreso/consultas confirmados; CHECKDB completo del nuevo BAK restaurado con MAXDOP=1 y cinco conteos del corte aprobados. Las copias temporales propias se eliminaron sin intervenir produccion.
 
 - Import/verify iniciales: cinco tablas y todos sus campos coincidentes con la copia SQLite antes de escrituras.
 - Busquedas: handler sin filtros bajo de unos 25 s a 347 ms inicial/27 ms repeticion; responsable confirmo funcionamiento. Ver [PERFORMANCE-0.2.0.md](PERFORMANCE-0.2.0.md).

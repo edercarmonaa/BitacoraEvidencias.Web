@@ -4,6 +4,7 @@
 
 ### 0.2.0 - SQL Server (desplegada; recuperacion integral pendiente)
 
+- Cerrado el pendiente de integridad SQL del corte: BAK del ZIP productivo restaurado en base temporal, CHECKDB completo con MAXDOP=1 aprobado y cinco conteos coincidentes; copia temporal eliminada sin intervenir produccion ni cambiar configuracion global de SQL.
 - Auditoria: filtro numeroOficio opcional en la pagina principal y Oficios pendientes; se evita el Required implicito de MVC al entrar sin filtro. Pruebas de metadatos MVC y carga sin filtro nulo/vacio/espacios.
 - Corte productivo iniciado el 19/10/2026: respaldo final SQLite, importacion/verificacion SQL y arranque en IP del equipo/5067; detalle y aceptacion pendientes en docs/CORTE-PRODUCTIVO-0.2.0.md. Lanzador instalado con configuracion DPAPI y cuenta de respaldos separada autorizada; diagnostico de BACKUP/VERIFYONLY/HEADERONLY diferenciado.
 - Pruebas de almacenamiento aisladas de la clave real y ampliadas a rutas antiguas/protegidas, lectura historica y reversiones. Bootstrap SQLite probado mediante compatibilidad explicita y rechazo sin ella, sin alterar migraciones congeladas. Suite completa Debug: 132 aprobadas, cero fallos/omitidas.

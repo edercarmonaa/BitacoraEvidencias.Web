@@ -1,6 +1,6 @@
 # Corte productivo de 0.2.0
 
-19/10/2026. **SQL activo y aceptado funcionalmente; tareas SQL habilitadas.** El responsable autorizo la ventana sin usuarios y confirmo `https://192.168.1.95:5067`. El certificado existente cubre esa IP y vence el 28/07/2029. Sigue pendiente completar CHECKDB de la copia restaurada por presion de memoria del equipo; no declarar recuperacion integral certificada.
+19/10/2026. **SQL activo y aceptado funcionalmente; tareas SQL habilitadas y CHECKDB de la copia restaurada aprobado.** El responsable autorizo la ventana sin usuarios y confirmo `https://192.168.1.95:5067`. El certificado existente cubre esa IP y vence el 28/07/2029. La comprobacion SQL no sustituye la aceptacion de recuperacion integral de la aplicacion.
 
 ## Evidencia del corte
 
@@ -29,12 +29,17 @@ Monitor: disponibilidad, SQL y respaldo reciente OK; alerta real de capacidad, 2
 
 19/10: Auditoria y Oficios pendientes aceptan numeroOficio ausente/vacio, evitando el Required implicito de MVC. Cambio edc2a10, suite completa 137 aprobadas; nuevo release SQL publicado y HTTPS 200 despues del reinicio ordenado. Release SQL anterior conservado; no se aplicaron migraciones ni cambios de datos/secretos. La comprobacion visual del filtro corregido queda a cargo del responsable al recargar.
 
+## Integridad del respaldo SQL: pendiente cerrado
+
+19/10/2026: se extrajo nuevamente el BAK del ZIP productivo `BitacoraSqlBackup_BitacoraEvidencias_20261019_135819_4f035e7276854b21acb09ccedc4af7f9.zip` y se restauro con CHECKSUM y archivos nuevos en una base temporal unica. **DBCC CHECKDB con NO_INFOMSGS, ALL_ERRORMSGS y MAXDOP=1 termino correctamente**, sin opciones de reparacion ni PHYSICAL_ONLY/NOINDEX. Coincidieron los conteos del corte: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,909 eventos de auditoria. La base temporal se elimino despues de comprobar su marcador de propiedad; no se modifico ni detuvo produccion.
+
+Los dos intentos anteriores (normal y MAXDOP=1) no habian terminado por RESOURCE_SEMAPHORE y timeout; se conservan como antecedentes, no como resultado actual. Al retomar la prueba, Windows tenia aproximadamente 1,050 MB disponibles, SQL ya no reportaba memoria fisica baja y su concesion de consultas disponia de unos 576 MB. No se cambiaron parametros globales del servidor para completar la comprobacion.
+
 ## Limites pendientes
 
-- El BAK del primer ZIP productivo se restauro en base temporal nueva. CHECKDB no termino en dos intentos (normal y MAXDOP=1): espera RESOURCE_SEMAPHORE y timeout; no se obtuvo un resultado de integridad. Se eliminaron solo las bases temporales con marcador de propiedad comprobado. SQL reporto unos 700 MB libres de 8 GB, memoria fisica baja y unos 5.62 MB disponibles para concesiones de consultas. No se cambiaron parametros globales de SQL ni se cerraron programas del usuario; se apagaron servidores de compilacion propios. El responsable ofrecio liberar RAM y avisar para completar esta prueba. No confundir VERIFYONLY aprobado con CHECKDB aprobado.
 - Conservar alerta de espacio y revisar capacidad sin borrar respaldos automaticamente.
 - Completar aceptacion visual especifica de validaciones/confirmaciones de formularios y recuperacion integral en copia. El acceso productivo y las consultas ya fueron confirmados.
 - Custodiar secretos por un mecanismo recuperable externo. Los archivos DPAPI preparados sirven para la misma identidad Windows y equipo; no sustituyen un respaldo portable para otro equipo.
-- No crear v0.2.0 como cierre de todas las comprobaciones mientras esta pendiente la revision de integridad; la version declarada de la aplicacion desplegada es 0.2.0.
+- La revision de integridad SQL ya aprobo. La version declarada de la aplicacion es 0.2.0; la etiqueta v0.2.0 y la publicacion remota no se han creado como parte de esta comprobacion.
 
 Las rutas exactas operativas y el avance tecnico se guardan localmente en `tmp/production-cutover-state.json` y `tmp/production-deployment-state.json`, excluidos de Git. No ejecutar import otra vez: SQL ya contiene el corte verificado. No volver a SQLite sin revisar primero si SQL admitio nuevas escrituras.

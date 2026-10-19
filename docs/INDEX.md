@@ -1,6 +1,6 @@
 # Indice de documentacion
 
-Revision: 19/10/2026. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md), puerto 5067, ingreso/consultas confirmados y tareas SQL habilitadas. SQLite esta detenida y conservada. Queda pendiente CHECKDB de la copia restaurada por falta de RAM, ademas de los limites documentados de aceptacion/recuperacion.
+Revision: 19/10/2026. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md), puerto 5067, ingreso/consultas confirmados y tareas SQL habilitadas. SQLite esta detenida y conservada. CHECKDB del respaldo productivo restaurado y cinco conteos del corte aprobaron; consultar los limites restantes de aceptacion/recuperacion.
 
 ## Guias vigentes de SQL Server
 

@@ -1,6 +1,6 @@
 # Recuperacion y traslado SQL Server 0.2.0
 
-Guia preparada el 19/10/2026. En el ensayo previo se probo restauracion SQL y DBCC CHECKDB sin incidencias. En el [corte productivo](CORTE-PRODUCTIVO-0.2.0.md), el nuevo BAK se restauro en copia temporal, pero CHECKDB no termino por espera de memoria: esa comprobacion sigue pendiente, al igual que recuperacion integral y traslado a otro equipo. No ejecutar sobre una base existente para probarla.
+Guia preparada el 19/10/2026. En el ensayo previo se probo restauracion SQL y DBCC CHECKDB sin incidencias. En el [corte productivo](CORTE-PRODUCTIVO-0.2.0.md), CHECKDB del nuevo BAK restaurado aprobo con MAXDOP=1 y los cinco conteos coincidieron tras resolver la presion de memoria que impidio los primeros intentos. Recuperacion integral de la aplicacion y traslado a otro equipo siguen pendientes. No ejecutar sobre una base existente para probarla.
 
 ## Material necesario
 

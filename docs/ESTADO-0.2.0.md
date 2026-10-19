@@ -1,6 +1,6 @@
 # Estado de aceptacion de 0.2.0
 
-Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md): SQLite detenida, respaldo final creado, SQL importado/verificado, ingreso/consultas aceptados y tareas SQL habilitadas. CHECKDB de la copia restaurada sigue pendiente por presion de RAM; no se ha creado v0.2.0. Las evidencias de ensayo siguientes se distinguen del corte actual en ese registro.
+Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md): SQLite detenida, respaldo final creado, SQL importado/verificado, ingreso/consultas aceptados y tareas SQL habilitadas. CHECKDB del BAK productivo restaurado aprobo, junto con los cinco conteos del corte. No se ha creado v0.2.0. Las evidencias de ensayo siguientes se distinguen del corte actual en ese registro.
 
 ## Conservacion y entorno
 
@@ -30,7 +30,7 @@ Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.
 
 1. Aceptar visualmente formularios, confirmaciones y edicion de historicos incompletos, incluidos flujos HTMX.
 2. Completar revision de dependencias. Las seis fallas anteriores se atendieron adaptando las pruebas y la suite completa aprobo 132 casos. Ambos recorridos SQL sinteticos aprobaron anteriormente 47 comprobaciones, con un SKIP de timeout cada uno.
-3. Completar CHECKDB de la copia restaurada al liberar RAM y recuperacion integral en copia: usuarios/roles, datos cifrados, originales, miniaturas y escrituras controladas. El BAK del corte se restauro, pero la comprobacion de integridad no termino por RESOURCE_SEMAPHORE; no declararla aprobada.
+3. Completar recuperacion integral en copia: usuarios/roles, datos cifrados, originales, miniaturas y escrituras controladas. Restauracion del BAK del corte, CHECKDB completo con MAXDOP=1 y cinco conteos ya aprobaron; el bloqueo previo por memoria quedo resuelto para esa prueba.
 4. Revisar capacidad de RAM/disco y custodiar secretos mediante un mecanismo externo recuperable; DPAPI solo permite la misma identidad/equipo. No borrar respaldos automaticamente ni modificar limites para ocultar alertas.
 
 El monitor del corte encontro 20.15 GB libres en C frente al umbral de 25 GB; los respaldos posteriores tambien consumen espacio. Las tareas requieren sesion Windows abierta; se confirmo que permanecera abierta a las 14:00. Credenciales SQL de aplicacion/operaciones y backup DPAPI, permisos de staging, arranque instalado, acceso manual y ciclo real de reinicio ya quedaron preparados y probados; ver el registro del corte.
