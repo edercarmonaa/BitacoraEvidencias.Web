@@ -18,7 +18,7 @@ public class OficiosPendientesModel(AppDbContext dbContext) : PageModel
     public int PageSize { get; set; } = DefaultPageSize;
 
     [BindProperty(SupportsGet = true, Name = "numeroOficio")]
-    public string NumeroOficioFiltro { get; set; } = string.Empty;
+    public string? NumeroOficioFiltro { get; set; }
 
     public List<OficioPendienteRow> Items { get; private set; } = [];
     public int TotalRows { get; private set; }

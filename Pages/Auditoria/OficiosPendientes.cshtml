@@ -22,9 +22,10 @@
 
 @{
     var routeValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-    if (Model.HasNumeroOficioFiltro)
+    var numeroOficioFiltro = Model.NumeroOficioFiltro;
+    if (!string.IsNullOrWhiteSpace(numeroOficioFiltro))
     {
-        routeValues["numeroOficio"] = Model.NumeroOficioFiltro;
+        routeValues["numeroOficio"] = numeroOficioFiltro;
     }
 
     var pager = new BitacoraEvidencias.Web.Pages.Shared.PaginationViewModel

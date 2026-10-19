@@ -8,7 +8,7 @@ Resultados a 19/10/2026. Una comprobacion automatica, una restauracion SQL y la 
 dotnet test tests/BitacoraEvidencias.Web.Tests/BitacoraEvidencias.Web.Tests.csproj -c Release
 ```
 
-Ultima suite completa (Debug, 19/10/2026): **132 aprobadas, cero fallos y cero omitidas**, ejecutada con `dotnet test tests/BitacoraEvidencias.Web.Tests/BitacoraEvidencias.Web.Tests.csproj --no-restore`. La ejecucion anterior de 115 pruebas (109 aprobadas/seis fallos) queda como evidencia historica.
+Ultima suite completa (Debug, 19/10/2026): **137 aprobadas, cero fallos y cero omitidas**, ejecutada con `dotnet test tests/BitacoraEvidencias.Web.Tests/BitacoraEvidencias.Web.Tests.csproj --no-restore`. Incluye cinco regresiones nuevas del filtro opcional de Auditoria: metadatos MVC en ambas paginas y carga sin filtro nulo/vacio/espacios. Las ocho pruebas dirigidas de Auditoria aprobaron. La suite anterior de 132 casos y la de 115 (109 aprobados/seis fallos) quedan como evidencia historica.
 
 Se adaptaron los fixtures de fotografias para usar una variable de clave unica por instancia, con clave sintetica y limpieza al terminar, sin leer ni sustituir la clave real. Las operaciones de lectura, rutas, eliminacion, reordenamiento y reversion se ejecutan con nombres antiguos y protegidos; se comprueba ademas lectura de archivos antiguos y cambio de ruta antigua con proteccion habilitada.
 

@@ -22,7 +22,7 @@ public class AuditoriaModel(
     public string? SelectedEvidenceKey { get; set; }
 
     [BindProperty(SupportsGet = true, Name = "numeroOficio")]
-    public string NumeroOficioFiltro { get; set; } = string.Empty;
+    public string? NumeroOficioFiltro { get; set; }
 
     [BindProperty]
     public NoCoincidenteInputModel NoCoincidente { get; set; } = new();

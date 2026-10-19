@@ -6,12 +6,54 @@ using BitacoraEvidencias.Web.Tests.Testing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace BitacoraEvidencias.Web.Tests.Pages;
 
 public class AuditoriaModelTests
 {
+    [Theory]
+    [InlineData(typeof(AuditoriaModel))]
+    [InlineData(typeof(BitacoraEvidencias.Web.Pages.Auditoria.OficiosPendientesModel))]
+    public void OfficeFilter_MvcMetadata_DoesNotRequireAValue(Type pageType)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMvcCore().AddDataAnnotations();
+        using var provider = services.BuildServiceProvider();
+        var metadata = provider.GetRequiredService<IModelMetadataProvider>()
+            .GetMetadataForProperty(pageType, nameof(AuditoriaModel.NumeroOficioFiltro));
+
+        // MVC infers Required from non-nullable reference types, even without [Required].
+        Assert.False(metadata.IsRequired);
+        Assert.False(metadata.IsBindingRequired);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task EmptyOfficeFilter_LoadsUnfilteredPreviewAndPendingList(string? filter)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var page = fixture.Page();
+        page.NumeroOficioFiltro = filter;
+        await page.OnGetAsync(default);
+        Assert.False(page.HasNumeroOficioFiltro);
+        Assert.Equal(12, page.TotalOficiosPendientes);
+        Assert.Equal(5, page.VisibleOficios.Count);
+
+        var pending = new BitacoraEvidencias.Web.Pages.Auditoria.OficiosPendientesModel(fixture.Context)
+        {
+            NumeroOficioFiltro = filter
+        };
+        await pending.OnGetAsync(default);
+        Assert.False(pending.HasNumeroOficioFiltro);
+        Assert.Equal(12, pending.TotalRows);
+    }
+
     [Fact]
     public async Task Preview_IsBoundedButCountsAllEligibleOffices()
     {
