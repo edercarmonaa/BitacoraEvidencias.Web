@@ -4,6 +4,7 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Pruebas de almacenamiento aisladas de la clave real y ampliadas a rutas antiguas/protegidas, lectura historica y reversiones. Bootstrap SQLite probado mediante compatibilidad explicita y rechazo sin ella, sin alterar migraciones congeladas. Suite completa Debug: 132 aprobadas, cero fallos/omitidas.
 - Revision de scripts: bloqueo previo de preparacion/reset/stamp/publicacion SQLite en la rama SQL; reconocimiento del binario SQLite instalado previo a la numeracion y retiro de taskkill por nombre del arranque manual.
 - Publicador SQL independiente y lanzador productivo con validacion sin arranque, credenciales locales y entorno restaurado; sin activar el cambio productivo.
 - Smokes actualizados a campos obligatorios, fechas de Mexico y carpetas HMAC; objetivos locales no productivos, escrituras explicitas, TLS estricto por defecto, archivos curl privados y salida con error ante FAIL. Ambos recorridos SQL sinteticos: 47 PASS y un SKIP cada uno.

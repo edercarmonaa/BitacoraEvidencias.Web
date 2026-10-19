@@ -81,5 +81,5 @@ Referencias: [BACKUP de SQL Server](https://learn.microsoft.com/en-us/sql/t-sql/
 - BAK extraido de ese ZIP y restaurado en una base temporal nueva: `DBCC CHECKDB` sin incidencias. Conteos identicos: 6 usuarios, 824 oficios, 893 casos, 1,828 evidencias y 1,943 entradas de auditoria. Estos valores corresponden a la copia de pruebas, que ya tiene escrituras del ensayo.
 - Base temporal eliminada al terminar. Produccion y base de ensayo conservadas.
 - Cierre ordenado y reinicio comprobados en una instancia aislada; un fallo provocado de respaldo devolvio error y aun asi recupero el login HTTP 200. Carpeta de evidencias incorrecta rechazada antes de detener la instancia.
-- 39 comprobaciones PowerShell y seis pruebas del estado de reinicio aprobadas. Suite general: seis fallos anteriores de pruebas SQLite/almacenamiento; no se consideran resueltos por este cambio.
+- 39 comprobaciones PowerShell y seis pruebas del estado de reinicio aprobadas. Tras adaptar por separado las pruebas SQLite/almacenamiento, la suite general Debug aprobo 132 casos sin fallos ni omitidas; ver [TESTING.md](TESTING.md) para alcance.
 - No se registro ni activo la tarea SQL, no se modifico la tarea SQLite y no se migro produccion. Falta preparar localmente la credencial SQL protegida, ensayar con ella y activar durante el cambio productivo.

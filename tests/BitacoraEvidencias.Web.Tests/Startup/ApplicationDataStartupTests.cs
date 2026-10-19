@@ -18,12 +18,16 @@ namespace BitacoraEvidencias.Web.Tests.Startup;
 public class ApplicationDataStartupTests
 {
     [Fact]
-    public void InitializeApplicationData_PrepareMode_CreatesBootstrapAdmin_WhenDatabaseIsEmpty()
+    public void InitializeApplicationData_LegacyCompatibility_CreatesBootstrapAdmin_WhenSchemaHasNoUsers()
     {
         using var fixture = ApplicationDataStartupFixture.Create(environmentName: "Development");
+        // SQLite's frozen migration snapshot is not the evolving 0.2.0 SQL model.
+        // Exercise bootstrap independently through the explicit legacy compatibility path.
+        fixture.EnsureCreated();
         var configuration = fixture.CreateConfiguration(new Dictionary<string, string?>
         {
-            ["Security:BootstrapAdminPassword"] = "AdminTemp123!"
+            ["Security:BootstrapAdminPassword"] = "AdminTemp123!",
+            ["Startup:AllowLegacySchemaWithoutMigrations"] = "true"
         });
 
         ApplicationDataStartup.InitializeApplicationData(
@@ -42,6 +46,22 @@ public class ApplicationDataStartupTests
         Assert.True(admin.MustChangePassword);
         Assert.Equal(SecurityDefaults.AdminRole, admin.Rol);
         Assert.True(PasswordHasher.VerifyPassword("AdminTemp123!", admin.PasswordHash, admin.PasswordSalt));
+    }
+
+    [Fact]
+    public void InitializeApplicationData_RejectsLegacySchemaWithoutExplicitCompatibility()
+    {
+        using var fixture = ApplicationDataStartupFixture.Create(environmentName: "Development");
+        fixture.EnsureCreated();
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ApplicationDataStartup.InitializeApplicationData(
+                fixture.App, fixture.CreateConfiguration(),
+                prepareApplicationData: true, resetApplicationData: false));
+
+        Assert.Contains("sin historial de migraciones", exception.Message, StringComparison.Ordinal);
+        using var scope = fixture.App.Services.CreateScope();
+        Assert.Empty(scope.ServiceProvider.GetRequiredService<AppDbContext>().UsuariosSistema);
     }
 
     [Fact]

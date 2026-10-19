@@ -19,7 +19,7 @@ Corte documental: **19/10/2026**. Describe las evidencias de esta sesion; no es 
 | Panel y navegacion | Corregidas consultas concurrentes del DbContext; el responsable confirmo funcionamiento del ensayo. |
 | Busquedas | Espera SQL reproducida y corregida; mediciones de handler 347/27 ms tras unos 25 s anteriores. El responsable confirmo solucion y funcionamiento. |
 | Formularios | Implementados y probados con reglas acordadas; 30 comprobaciones DOM. Falta aceptacion visual completa de esta mejora en navegador. |
-| Suite .NET | Ultima completa: 115 pruebas, 109 aprobadas/seis fallos previos. Despues pasaron seis pruebas dirigidas de estado de reinicio, incluida una nueva; no se repitio toda la suite. |
+| Suite .NET | Ultima completa Debug: 132 aprobadas, cero fallos/omitidas. Fixtures de almacenamiento aislados de la clave real, cobertura de rutas antiguas/protegidas y bootstrap SQLite separado de las migraciones congeladas. Ver TESTING.md para alcance y limites. |
 | Respaldo/restauracion | BAK/VERIFYONLY y ZIP SHA256 probados. Restauracion en base temporal y DBCC CHECKDB sin incidencias; cinco tablas con conteos iguales. No equivale a aceptar toda la aplicacion recuperada. |
 | Historicos | Exportadas 1,900 filas reales de ensayo sin retirarlas. Borrado transaccional/reversion comprobados con datos sinteticos en base temporal. |
 | Respaldo con historicos | 3,656 archivos de evidencias y 20 historicos/manifiestos incluidos y comparados. No se mezclan con la cifra inicial de 3,658 archivos totales extraidos. |
@@ -29,7 +29,7 @@ Corte documental: **19/10/2026**. Describe las evidencias de esta sesion; no es 
 ## Pendientes antes del cambio
 
 1. Aceptar visualmente formularios, confirmaciones y edicion de historicos incompletos, incluidos flujos HTMX.
-2. Investigar los seis fallos conocidos y repetir la suite completa. Los payloads smoke ya fueron actualizados y ambos recorridos SQL sinteticos aprobaron 47 comprobaciones, con un SKIP de timeout cada uno. Completar revision de dependencias antes de liberar.
+2. Completar revision de dependencias antes de liberar. Las seis fallas anteriores se atendieron adaptando las pruebas y la suite completa aprobo 132 casos. Ambos recorridos SQL sinteticos aprobaron anteriormente 47 comprobaciones, con un SKIP de timeout cada uno.
 3. Verificar conexion/permisos con el usuario SQL de operacion, separado de la cuenta administradora usada en ensayos. Resolver confianza TLS SQL/HTTPS del entorno final.
 4. Preparar localmente credenciales DPAPI de backup/operaciones, carpetas/permisos y ensayo con esas credenciales. No solicitar contrasenas en el chat.
 5. Completar recuperacion integral: usuarios/roles, datos cifrados, originales, miniaturas y escrituras controladas en copia restaurada; la prueba SQL ya realizada no cubre todo ese flujo.

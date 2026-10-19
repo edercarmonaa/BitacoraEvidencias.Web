@@ -7,7 +7,7 @@ Revision documental: 19/10/2026. El cierre de controles de SQLite en febrero/may
 | Control | Trabajo necesario |
 | --- | --- |
 | Aceptacion funcional | Formularios/confirmaciones, historicos incompletos y flujos HTMX en navegador. |
-| Pruebas | Investigar seis fallos previos y revisar dependencias. Payloads smoke actualizados y probados: 47 PASS/1 SKIP cada variante sobre SQL sintetico. |
+| Pruebas | Revisar dependencias. Suite completa Debug: 132 aprobadas, cero fallos/omitidas tras adaptar fixtures y alcance SQLite. Payloads smoke: 47 PASS/1 SKIP cada variante sobre SQL sintetico. |
 | Privilegios SQL | Comprobar cuenta de operacion y separar permisos de migracion/backup/archivo. |
 | TLS | Confianza SQL y HTTPS del despliegue final, sin confundir excepcion local con validacion completa. |
 | ACL | Comprobar evidencias/historicos, carpeta BAK y credenciales con la identidad real de las tareas. |

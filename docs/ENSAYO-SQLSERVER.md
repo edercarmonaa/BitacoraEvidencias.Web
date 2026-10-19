@@ -33,7 +33,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/validation/Test-
 
 Si el servicio no esta disponible, `-p:NuGetAudit=false` es una excepcion temporal explicita y no constituye una revision de vulnerabilidades. Resolver el acceso al servicio y revisar dependencias antes de liberar.
 
-La suite SQLite tenia seis fallos documentados antes de este cambio. Las pruebas nuevas `SqlServerMigrationTests` validan generacion del esquema SQL, separacion de migraciones, precision de fechas y comparacion de filas. No sustituyen las pruebas reales contra SQL Server ni la aceptacion de los flujos de la aplicacion.
+La suite tenia seis fallos documentados antes de este cambio; posteriormente se adaptaron los fixtures y el alcance de bootstrap SQLite y aprobaron 132 pruebas completas sin fallos. Ver [TESTING.md](TESTING.md) para los limites de esa adaptacion. `SqlServerMigrationTests` valida generacion del esquema SQL, separacion de migraciones, precision de fechas y comparacion de filas. No sustituye las pruebas reales contra SQL Server ni la aceptacion de los flujos de la aplicacion.
 
 ## Restaurar un respaldo para el ensayo
 

@@ -8,9 +8,13 @@ Resultados a 19/10/2026. Una comprobacion automatica, una restauracion SQL y la 
 dotnet test tests/BitacoraEvidencias.Web.Tests/BitacoraEvidencias.Web.Tests.csproj -c Release
 ```
 
-La ultima suite completa registrada ejecuto 115 pruebas: 109 aprobadas y seis fallos previos (cinco de fixtures/rutas de almacenamiento y uno de preparacion SQLite/modelo). Despues se agrego una prueba dirigida de configuracion de evidencias y pasaron las seis de BackupRuntimeSnapshotTests. No se volvio a ejecutar toda la suite tras esa adicion: no presentar 116 como total completo aprobado.
+Ultima suite completa (Debug, 19/10/2026): **132 aprobadas, cero fallos y cero omitidas**, ejecutada con `dotnet test tests/BitacoraEvidencias.Web.Tests/BitacoraEvidencias.Web.Tests.csproj --no-restore`. La ejecucion anterior de 115 pruebas (109 aprobadas/seis fallos) queda como evidencia historica.
 
-SQLite en pruebas de servicios no significa que Program.cs permita seleccionar ese proveedor en 0.2.0. El contexto operativo es SQL. Investigar los seis fallos y repetir la suite antes de aceptar la liberacion; no quedan resueltos por actualizar documentos.
+Se adaptaron los fixtures de fotografias para usar una variable de clave unica por instancia, con clave sintetica y limpieza al terminar, sin leer ni sustituir la clave real. Las operaciones de lectura, rutas, eliminacion, reordenamiento y reversion se ejecutan con nombres antiguos y protegidos; se comprueba ademas lectura de archivos antiguos y cambio de ruta antigua con proteccion habilitada.
+
+La prueba de creacion del administrador SQLite ahora prepara el esquema de prueba con EnsureCreated y habilita expresamente la compatibilidad legacy. Otra prueba exige rechazar ese flujo sin autorizacion de compatibilidad y conservar vacia la tabla de usuarios. Esto separa el bootstrap de las migraciones SQLite congeladas: no actualiza su snapshot, no suprime PendingModelChangesWarning ni acredita crear una base nueva mediante esas migraciones. SqlServerMigrationTests mantiene la comprobacion independiente de esquema SQL y ausencia de cambios pendientes en su modelo.
+
+SQLite en pruebas de servicios no significa que Program.cs permita seleccionar ese proveedor en 0.2.0. El contexto operativo es SQL. Siguen pendientes la aceptacion visual, recuperacion integral y revision de dependencias; una suite aprobada no autoriza el cambio productivo.
 
 ## Scripts
 
