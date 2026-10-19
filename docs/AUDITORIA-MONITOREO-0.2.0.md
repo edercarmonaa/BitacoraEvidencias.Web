@@ -4,7 +4,7 @@ Instancia `.\Auditoria`, base productiva `BitacoraEvidencias`, ensayo `BitacoraE
 
 ## Politica confirmada
 
-Monitoreo **09:15**, archivado **09:20**, respaldo **14:00**, hora de Mexico. Mantener **30 dias en SQL** y el resto en archivos historicos, sin eliminacion automatica de historicos. Las tareas SQL se preparan deshabilitadas; las SQLite siguen funcionando hasta migrar produccion. Las nuevas tareas requieren sesion Windows abierta (puede estar bloqueada).
+Monitoreo **09:15**, archivado **09:20**, respaldo **14:00**, hora de Mexico. Mantener **30 dias en SQL** y el resto en archivos historicos, sin eliminacion automatica de historicos. En el [corte productivo](CORTE-PRODUCTIVO-0.2.0.md), las tareas SQLite quedaron deshabilitadas y las SQL habilitadas. El ciclo real de backup/reinicio aprobo con resultado 0; siguientes ejecuciones el 20/10/2026. Requieren sesion Windows abierta (puede estar bloqueada).
 
 ## Credencial
 
@@ -61,6 +61,6 @@ Durante el cambio: respaldo con historicos anteriores, permisos/credenciales y e
 
 31 comprobaciones de operaciones y 39 de respaldo aprobadas. Definiciones de tareas comprobadas con simulaciones locales, sin registrarlas. Monitor probado con Login real aislado y respaldo completo; se redujo el umbral de disco solo en esa prueba, pues C tiene aproximadamente 23 GB libres y el umbral normal de 25 GB genera ALERT.
 
-Exportados 1,900 registros reales de ensayo en diez lotes sin retirar ninguno. Respaldo completo de ensayo con 3,656 archivos de evidencias y 20 historicos/manifiestos, comparados por SHA256. Tareas productivas y datos de produccion intactos.
+En la revision previa al corte se exportaron 1,900 registros reales de ensayo en diez lotes sin retirar ninguno. El respaldo de ensayo incluyo 3,656 evidencias y 20 historicos/manifiestos. Esa etapa no modifico produccion; el posterior cambio y sus tareas activas estan documentados en el registro del corte.
 
 Referencia: [transacciones SQL Server](https://learn.microsoft.com/en-us/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide) y [UPDLOCK](https://learn.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql-table).

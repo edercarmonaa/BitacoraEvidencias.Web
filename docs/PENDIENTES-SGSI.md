@@ -8,14 +8,14 @@ Revision documental: 19/10/2026. El cierre de controles de SQLite en febrero/may
 | --- | --- |
 | Aceptacion funcional | Formularios/confirmaciones, historicos incompletos y flujos HTMX en navegador. |
 | Pruebas | Revisar dependencias. Suite completa Debug: 132 aprobadas, cero fallos/omitidas tras adaptar fixtures y alcance SQLite. Payloads smoke: 47 PASS/1 SKIP cada variante sobre SQL sintetico. |
-| Privilegios SQL | Comprobar cuenta de operacion y separar permisos de migracion/backup/archivo. |
+| Privilegios SQL | Cuenta de operacion probada; BitacoraRespaldo tiene BACKUP DATABASE y CREATE ANY DATABASE expresamente autorizados, sin sysadmin. Revisar posteriormente el minimo privilegio de operacion, que conserva su db_owner preparado para migracion. |
 | TLS | Confianza SQL y HTTPS del despliegue final, sin confundir excepcion local con validacion completa. |
-| ACL | Comprobar evidencias/historicos, carpeta BAK y credenciales con la identidad real de las tareas. |
+| ACL | Staging y credenciales privados preparados; ciclo real de backup con la identidad de las tareas aprobado. Revalidar al cambiar cuenta/rutas. |
 | Secretos | Custodia recuperable de llave, certificado y credenciales; recrear DPAPI al trasladar cuenta/equipo. |
-| Automatizacion | Preparar credenciales y registrar tareas SQL deshabilitadas; activar solo en el corte. |
-| Recuperacion | Completar ensayo integral de usuarios, datos cifrados y fotos con copia restaurada. |
-| Arranque productivo | Lanzador SQL independiente preparado; ensayar cuenta/permisos finales y cambio de acceso directo manteniendo SQLite disponible. |
-| Capacidad | Revisar espacio: ultima medicion unos 23 GB libres frente a umbral de 25 GB. |
+| Automatizacion | SQL habilitadas tras el corte; SQLite deshabilitadas. Backup real con cierre/reinicio resultado 0. Verificar siguientes ejecuciones programadas. |
+| Recuperacion | Completar CHECKDB de la copia restaurada al liberar RAM (dos timeouts RESOURCE_SEMAPHORE) y ensayo integral de usuarios, datos cifrados y fotos en copia. |
+| Arranque productivo | SQL activo en IP/5067; ingreso/consultas aceptados, acceso manual actualizado y reinicio tras backup con la misma llave. SQLite conservada y detenida. |
+| Capacidad | Monitor del corte: 20.15 GB libres frente a umbral 25 GB antes del segundo ZIP. RAM de 8 GB con unos 700 MB libres: SQL reporta memoria baja. |
 | Publicacion | Revisar documentos internos/historial antes de compartir; no subir evidencias operativas. |
 
 ## Evidencia ya disponible

@@ -112,8 +112,10 @@ try {
     $phase = 'BACKUP DATABASE'
     $backup = New-BitacoraBackupCommand -Connection $connection -Operation Backup -DatabaseName $DatabaseName -BackupPath $nativePath -TimeoutSeconds $SqlTimeoutSeconds
     try { [void]$backup.ExecuteNonQuery() } finally { $backup.Dispose() }
+    $phase = 'RESTORE VERIFYONLY'
     $verify = New-BitacoraBackupCommand -Connection $connection -Operation Verify -DatabaseName $DatabaseName -BackupPath $nativePath -TimeoutSeconds $SqlTimeoutSeconds
     try { [void]$verify.ExecuteNonQuery() } finally { $verify.Dispose() }
+    $phase = 'RESTORE HEADERONLY'
     $headerCommand = New-BitacoraBackupCommand -Connection $connection -Operation Header -DatabaseName $DatabaseName -BackupPath $nativePath
     try {
         $header = $headerCommand.ExecuteReader()

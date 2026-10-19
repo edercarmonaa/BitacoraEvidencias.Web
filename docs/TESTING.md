@@ -32,7 +32,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/validation/Test-
 
 No registra tareas reales. Los test generan artefactos bajo tmp, ignorado por Git. Run-StartupValidation.ps1 valida el flujo SQLite anterior; no usarlo como prueba del arranque SQL.
 
-Test-ScriptAlignment.ps1 comprueba sintaxis de los scripts, rechazo previo de reset/publicacion SQLite, objetivos smoke, carpetas HMAC, imagen sintetica, privacidad de staging, TLS explicito y lanzador SQL con procesos simulados. Pasaron 69 comprobaciones en el entorno con binarios compilados, sin conectar a SQL ni iniciar aplicaciones.
+Test-ScriptAlignment.ps1 comprueba sintaxis de los scripts, rechazo previo de reset/publicacion SQLite, objetivos smoke, carpetas HMAC, imagen sintetica, privacidad de staging, TLS explicito y lanzador SQL con procesos simulados. Ultima ejecucion: 70 comprobaciones, incluyendo sintaxis del lanzador instalado, sin conectar a SQL ni iniciar aplicaciones. Se repitieron las 39 comprobaciones de backup tras separar las etiquetas de diagnostico BACKUP/VERIFYONLY/HEADERONLY.
 
 ## Formularios
 
@@ -46,6 +46,8 @@ node scripts/validation/Test-FormFeedback.cjs
 Requiere Node 22.20+/24 y npm compatibles con esa herramienta. Para aceptacion visual seguir [VALIDACIONES-0.2.0.md](VALIDACIONES-0.2.0.md): blur, toast, historicos incompletos, fechas, CCT antiguas, HTMX y confirmaciones aceptar/cancelar.
 
 ## Pruebas reales registradas
+
+Los resultados siguientes corresponden al ensayo previo. Para produccion ver el [registro del corte](CORTE-PRODUCTIVO-0.2.0.md): import/verify y ciclo real de backup/reinicio aprobados, ingreso/consultas confirmados; CHECKDB del nuevo BAK restaurado pendiente por falta de RAM.
 
 - Import/verify iniciales: cinco tablas y todos sus campos coincidentes con la copia SQLite antes de escrituras.
 - Busquedas: handler sin filtros bajo de unos 25 s a 347 ms inicial/27 ms repeticion; responsable confirmo funcionamiento. Ver [PERFORMANCE-0.2.0.md](PERFORMANCE-0.2.0.md).

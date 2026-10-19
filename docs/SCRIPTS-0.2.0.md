@@ -1,6 +1,6 @@
 # Scripts alineados a 0.2.0
 
-Revision 19/10/2026. No se migro produccion ni se activaron tareas SQL. Los scripts nuevos de publicacion/arranque productivo estan preparados; falta ensayarlos con la configuracion final durante el cambio aprobado.
+Revision 19/10/2026. La revision inicial fue anterior al [corte productivo en curso](CORTE-PRODUCTIVO-0.2.0.md); consultar ese registro para importacion, tareas y arranque actuales.
 
 Se ajusto la exclusion de Storage para limitarla a la carpeta de datos de la raiz: tambien estaba ocultando scripts/storage en Windows. El helper de almacenamiento queda ahora versionado y bloqueado en la rama SQL; las referencias congeladas v0.1.0 no se modifican.
 
@@ -12,6 +12,7 @@ Se ajusto la exclusion de Storage para limitarla a la carpeta de datos de la rai
 | Ensayo SQL | Publish-BitacoraSqlServer.ps1 / Start-BitacoraSqlServer.ps1: carpetas nuevas, base de pruebas y puerto 5068. |
 | Publicacion SQL independiente | Publish-BitacoraSqlRelease.ps1: release nuevo en deploy-sql, sin reemplazar current SQLite, activar, iniciar ni limpiar releases anteriores. NoRestore opcional despues de restaurar dependencias. |
 | Arranque SQL productivo | Start-BitacoraSqlProduction.ps1: ApplicationFolder obligatorio, base BitacoraEvidencias, TLS, credencial local/DPAPI y secretos externos. Puerto 5067 ocupado bloquea arranque. ValidateOnly no conecta a SQL ni valida el certificado; solo comprueba binarios/rutas/variables/puerto. |
+| Arranque SQL instalado | Start-BitacoraSqlInstalled.ps1: lee manifiesto externo y configuracion SecureString DPAPI con la misma cuenta Windows, carga temporalmente llave/certificado e invoca el lanzador productivo. Restaura el entorno al terminar; no genera secretos ni modifica SQLite. ValidateOnly conserva el alcance limitado del lanzador. |
 | Backup SQL | Backup-Bitacora.ps1, SqlBackupSupport, Invoke-BitacoraScheduledSqlBackup, Initialize-BitacoraSqlBackupDirectory, Save-BitacoraSqlBackupCredential y Register-BitacoraSqlBackupTask. Ver [backup](BACKUP-OPERACION.md). |
 | Auditoria/monitor SQL | Archive-AuditLog.ps1, Monitor-Bitacora.ps1, SqlOperationsSupport y Register-BitacoraSqlOperationsTasks. Ver [operaciones](AUDITORIA-MONITOREO-0.2.0.md). |
 | SQLite conservado | Backup-BitacoraSqlite, Archive-AuditLogSqlite y Monitor-BitacoraSqlite, sin cambios en su contenido original. |
@@ -45,6 +46,6 @@ El arranque real sin ValidateOnly se reserva para el cambio aprobado. La aplicac
 
 ## Evidencia
 
-69 comprobaciones locales de compatibilidad (con binarios compilados), diez escenarios de wrappers SQL y suites de backup/operaciones aprobados. Publicacion SQL real a una carpeta tmp y ValidateOnly comprobados, sin iniciar produccion. Binario SQLite instalado reconocido por version/dependencias sin ejecutarlo.
+70 comprobaciones locales de compatibilidad (con binarios compilados), diez escenarios de wrappers SQL y suites de backup/operaciones aprobados. La publicacion inicial y ValidateOnly se comprobaron sin iniciar produccion; el posterior corte, arranque instalado DPAPI y ciclo real de respaldo/reinicio figuran en el registro productivo. Binario SQLite instalado reconocido por version/dependencias y conservado.
 
 Ambos smokes ejecutados en base SQL nueva con datos sinteticos: **47 PASS, 0 FAIL, 1 SKIP cada uno**. Proceso aislado cerrado y base temporal propia eliminada. No se modificaron registros de las bases productiva ni de ensayo existentes. Estos resultados no sustituyen aceptacion visual ni ensayo final con cuenta/permisos SQL productivos.

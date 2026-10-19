@@ -1,13 +1,13 @@
 # Acuerdos y cambio de SQLite 0.1.0 a SQL Server 0.2.0
 
-Actualizado: 19/10/2026. Estado y evidencias: [ESTADO-0.2.0.md](ESTADO-0.2.0.md). El ensayo SQL esta importado/verificado; Busquedas y funcionamiento fueron confirmados por el responsable. Formularios y aceptacion operativa final siguen pendientes. Produccion no se ha migrado.
+Actualizado: 19/10/2026. [SQL productivo activo](CORTE-PRODUCTIVO-0.2.0.md): respaldo final SQLite creado, SQL importado/verificado, servicio https://192.168.1.95:5067 confirmado por el responsable y tareas SQL habilitadas tras un ciclo real de backup/reinicio aprobado. Queda pendiente CHECKDB de la copia restaurada por falta de RAM. No repetir import ni usar el corte de ensayo como origen. La secuencia siguiente queda como referencia del procedimiento.
 
 ## Acuerdos
 
 - SQLite 0.1.0 queda congelada sin funcionalidades nuevas, en v0.1.0 y archive/sqlite-0.1. Se integraron los seis commits documentales pendientes antes de fijarla; esa integracion ya no es un pendiente.
 - Nuevas funcionalidades solo en 0.2.0 SQL Server Express 2025, rama feature/sqlserver-0.2. Ambas versiones coexisten en el historial, sin sincronizacion automatica de bases.
 - Mismo equipo/cuenta Windows; SQL Express ya instalado, instancia .\Auditoria, autenticacion SQL usuario/contrasena.
-- Bases existentes: BitacoraEvidencias y BitacoraEvidencias_Pruebas. La primera fue confirmada vacia en la preparacion; la segunda ya contiene datos del ensayo. No eliminar/recrear bases ni usuarios.
+- Bases existentes: BitacoraEvidencias ya contiene el corte productivo verificado; BitacoraEvidencias_Pruebas conserva datos del ensayo. No eliminar/recrear bases ni usuarios, ni repetir import.
 - Produccion C:\BitacoraEvidencias / 5067; ensayo C:\BitacoraEvidencias_Pruebas / 5068 con copias de evidencias.
 - Secretos/configuracion en variables externas. Credenciales solicitadas localmente; nunca en chat, argumentos visibles ni Git.
 - Se conserva toda la informacion: identificadores/relaciones, hashes/sales/contrasenas existentes, roles, cuentas, cifrado y llave, fotografias, miniaturas e historicos de auditoria.
@@ -31,7 +31,7 @@ Procedimiento reproducible: [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md). No repet
 5. Respaldar SQLite/evidencias con el procedimiento 0.1.0 conservado y guardar ademas AuditArchive (historicos ya retirados de SQLite), binarios, configuracion, certificados y secretos por mecanismos protegidos. La llave se custodia por separado, no dentro del ZIP. Verificar recuperacion.
 6. Extraer una copia nueva de ese corte fuera de C:\BitacoraEvidencias y pasar explicitamente SourceDatabase/SourceEvidence. Las herramientas rechazan usar el origen productivo directamente.
 
-## Cambio productivo pendiente
+## Secuencia del cambio productivo (referencia)
 
 1. Verificar nuevamente que la base existente BitacoraEvidencias esta vacia y los permisos efectivos son correctos. Si contiene datos, detenerse; no limpiarla automaticamente.
 2. Ejecutar preflight de la copia final; despues import con Production sobre esa misma copia y verificar antes de pruebas de escritura. No reutilizar Input antiguo como si fuera el corte final.

@@ -1,6 +1,6 @@
 # Publicacion y despliegue SQL Server 0.2.0
 
-Estado 19/10/2026: publicaciones y lanzador de ensayo disponibles; cambio productivo pendiente. No usar `Publish-Bitacora.ps1`, `Start-BitacoraManual.cmd`, `Start-BitacoraPublished.ps1` ni `Start-BitacoraWithHttps.ps1` para desplegar SQL: esos procedimientos configuran SQLite.
+Estado 19/10/2026: [corte productivo en curso](CORTE-PRODUCTIVO-0.2.0.md), SQL importado/verificado y servicio iniciado en la IP confirmada y puerto 5067. El acceso manual instalado ya usa Start-BitacoraSqlInstalled.ps1 con manifiesto y configuracion DPAPI externos. No usar los scripts historicos `Publish-Bitacora.ps1`, `Start-BitacoraManual.cmd`, `Start-BitacoraPublished.ps1` ni `Start-BitacoraWithHttps.ps1` para desplegar SQL: configuran SQLite.
 
 ## Ensayo
 

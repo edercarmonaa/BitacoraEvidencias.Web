@@ -1,6 +1,6 @@
 # Respaldos SQL Server Express 0.2.0
 
-Horario acordado: **diariamente a las 14:00, hora de Mexico**, sin usuarios. La tarea SQLite actual permanece intacta hasta migrar produccion. El procedimiento anterior se conserva en [BACKUP-SQLITE-0.1.md](BACKUP-SQLITE-0.1.md) y `Backup-BitacoraSqlite.ps1`; la etiqueta `v0.1.0` tambien conserva el codigo original.
+Horario acordado: **diariamente a las 14:00, hora de Mexico**, sin usuarios. En el [corte productivo](CORTE-PRODUCTIVO-0.2.0.md), la tarea SQL quedo habilitada y aprobo un ciclo real de cierre/respaldo/reinicio con BitacoraRespaldo, credencial DPAPI separada y resultado 0. La tarea SQLite esta conservada y deshabilitada. Su procedimiento permanece en [BACKUP-SQLITE-0.1.md](BACKUP-SQLITE-0.1.md) y `Backup-BitacoraSqlite.ps1`; `v0.1.0` conserva el codigo original.
 
 ## Contenido y verificacion
 

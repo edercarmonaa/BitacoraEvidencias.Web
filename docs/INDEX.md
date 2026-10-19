@@ -1,12 +1,13 @@
 # Indice de documentacion
 
-Revision: 19/10/2026. Esta rama prepara SQL Server 0.2.0; SQLite 0.1.0 sigue conservada y productiva hasta aprobar la migracion. Los procedimientos actuales deben leerse con su alcance y requisitos.
+Revision: 19/10/2026. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md), puerto 5067, ingreso/consultas confirmados y tareas SQL habilitadas. SQLite esta detenida y conservada. Queda pendiente CHECKDB de la copia restaurada por falta de RAM, ademas de los limites documentados de aceptacion/recuperacion.
 
 ## Guias vigentes de SQL Server
 
 | Documento | Contenido |
 | --- | --- |
 | [Estado de 0.2.0](ESTADO-0.2.0.md) | Lo probado, lo aceptado por el responsable y los pendientes. |
+| [Corte productivo](CORTE-PRODUCTIVO-0.2.0.md) | Respaldo final, importacion/verificacion, arranque SQL y avance real de la ventana. |
 | [Scripts de 0.2.0](SCRIPTS-0.2.0.md) | Compatibilidad, bloqueos SQLite, release/arranque SQL y smokes actualizados. |
 | [Acuerdos de migracion](MIGRACION-0.2.0.md) | Conservacion de datos/secretos, corte productivo y recuperacion. |
 | [Preparacion](SETUP.md) | Configuracion externa, requisitos y copias. |
