@@ -1,6 +1,7 @@
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Security;
+using BitacoraEvidencias.Web.Validation;
 using BitacoraEvidencias.Web.Pages.Admin;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,11 +36,6 @@ public sealed class OficioImportApplicationService(
             };
         }
 
-        var existingNumbers = await dbContext.Oficios
-            .AsNoTracking()
-            .Select(x => x.NumeroOficio)
-            .ToListAsync(cancellationToken);
-
         var importedCount = 0;
         var failedRows = new List<ImportOficiosModel.OficioImportRow>();
 
@@ -47,7 +43,11 @@ public sealed class OficioImportApplicationService(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (existingNumbers.Contains(row.NumeroOficio, StringComparer.Ordinal))
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var existingNumbers = await dbContext.Oficios.AsNoTracking().Select(x => x.NumeroOficio).ToListAsync(cancellationToken);
+
+            if (existingNumbers.Contains(row.NumeroOficio, StringComparer.OrdinalIgnoreCase)
+                || FormRules.ValidateOfficeDate(row.FechaOficio).Count > 0)
             {
                 failedRows.Add(row);
                 continue;
@@ -70,6 +70,7 @@ public sealed class OficioImportApplicationService(
             try
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 existingNumbers.Add(row.NumeroOficio);
                 importedCount++;
             }

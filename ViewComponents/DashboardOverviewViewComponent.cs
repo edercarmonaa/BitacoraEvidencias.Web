@@ -8,11 +8,12 @@ public class DashboardOverviewViewComponent(AppDbContext dbContext) : ViewCompon
 {
     public async Task<IViewComponentResult> InvokeAsync(int take = 6)
     {
-        var totalOficiosTask = dbContext.Oficios.AsNoTracking().CountAsync();
-        var totalCasosTask = dbContext.CasosCorreccion.AsNoTracking().CountAsync();
-        var totalEvidenciasTask = dbContext.EvidenciasFoto.AsNoTracking().CountAsync();
+        // Queries share this scoped DbContext and must complete before starting the next.
+        var totalOficios = await dbContext.Oficios.AsNoTracking().CountAsync();
+        var totalCasos = await dbContext.CasosCorreccion.AsNoTracking().CountAsync();
+        var totalEvidencias = await dbContext.EvidenciasFoto.AsNoTracking().CountAsync();
 
-        var oficiosRecientesTask = dbContext.Oficios
+        var oficiosRecientes = await dbContext.Oficios
             .AsNoTracking()
             .OrderByDescending(x => x.FechaOficio)
             .ThenByDescending(x => x.Id)
@@ -27,7 +28,7 @@ public class DashboardOverviewViewComponent(AppDbContext dbContext) : ViewCompon
             .Take(take)
             .ToListAsync();
 
-        var casosPendientesTask = dbContext.CasosCorreccion
+        var casosPendientes = await dbContext.CasosCorreccion
             .AsNoTracking()
             .Where(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty))
             .OrderByDescending(x => x.Oficio!.FechaOficio)
@@ -44,7 +45,6 @@ public class DashboardOverviewViewComponent(AppDbContext dbContext) : ViewCompon
             .Take(take)
             .ToListAsync();
 
-        await Task.WhenAll(totalOficiosTask, totalCasosTask, totalEvidenciasTask, oficiosRecientesTask, casosPendientesTask);
 
         var model = new DashboardOverviewViewModel
         {
@@ -54,24 +54,24 @@ public class DashboardOverviewViewComponent(AppDbContext dbContext) : ViewCompon
                 new DashboardStatCardModel
                 {
                     Title = "Oficios",
-                    Value = totalOficiosTask.Result,
+                    Value = totalOficios,
                     AccentClass = "border-start border-4 border-brand-guinda"
                 },
                 new DashboardStatCardModel
                 {
                     Title = "Casos",
-                    Value = totalCasosTask.Result,
+                    Value = totalCasos,
                     AccentClass = "border-start border-4 border-brand-arena"
                 },
                 new DashboardStatCardModel
                 {
                     Title = "Evidencias",
-                    Value = totalEvidenciasTask.Result,
+                    Value = totalEvidencias,
                     AccentClass = "border-start border-4 border-brand-guinda-dark"
                 }
             ],
-            OficiosRecientes = oficiosRecientesTask.Result,
-            CasosPendientes = casosPendientesTask.Result
+            OficiosRecientes = oficiosRecientes,
+            CasosPendientes = casosPendientes
         };
 
         return View(model);

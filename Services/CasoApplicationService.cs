@@ -1,6 +1,7 @@
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Security;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitacoraEvidencias.Web.Services;
@@ -60,13 +61,10 @@ public sealed class CasoApplicationService(
             return new CasoUpdateResult { NotFound = true };
         }
 
-        var validationErrors = new List<ApplicationValidationError>();
+        var validationErrors = FormRules.ValidateCase(new(request.Curp, request.NombreCompleto, request.Cct,
+            request.PeriodoInicio, request.PeriodoFin, request.FechaVerificacion), caso.Oficio.FechaOficio,
+            CaseFormValues.From(caso)).ToList();
         var nivelEducativo = request.NivelEducativo.Trim();
-
-        if (request.PeriodoInicio.HasValue && request.PeriodoFin.HasValue && request.PeriodoFin.Value < request.PeriodoInicio.Value)
-        {
-            validationErrors.Add(new(nameof(CasoUpdateRequest.PeriodoFin), "El periodo fin no puede ser menor al periodo inicio."));
-        }
 
         if (await dbContext.CasosCorreccion
                 .AsNoTracking()
@@ -91,9 +89,11 @@ public sealed class CasoApplicationService(
             };
         }
 
-        var normalizedCurp = NormalizeOptional(request.Curp);
+        var normalizedCurp = string.Equals(caso.Curp?.Trim(), request.Curp?.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? caso.Curp : FormRules.NormalizeCode(request.Curp);
         var normalizedNombreCompleto = NormalizeOptional(request.NombreCompleto);
-        var normalizedCct = NormalizeOptional(request.Cct);
+        var normalizedCct = string.Equals(caso.Cct?.Trim(), request.Cct?.Trim(), StringComparison.OrdinalIgnoreCase)
+            ? caso.Cct : FormRules.NormalizeCode(request.Cct);
         var normalizedValidador = NormalizeOptional(request.Validador);
         var normalizedFolio = NormalizeOptional(request.Folio);
         var normalizedEvidenciaUrl = NormalizeOptional(request.EvidenciaUrl);

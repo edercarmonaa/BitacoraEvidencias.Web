@@ -1,325 +1,114 @@
-﻿param(
-    [string]$MonitorRoot = "C:\BitacoraEvidencias\Monitoreo",
-    [string]$AppUrl = "https://127.0.0.1:5067/Login",
-    [string]$DataRoot = "C:\BitacoraEvidencias\Data",
-    [string]$EvidenceRoot = "C:\BitacoraEvidencias\Evidencias",
-    [string]$DatabasePath = "C:\BitacoraEvidencias\Data\bitacora-evidencias.db",
-    [double]$MinFreeDiskGb = 25,
-    [double]$MaxEvidenceGb = 50,
-    [double]$MaxDatabaseGb = 5,
-    [int]$BackupMaxAgeHours = 24,
-    [int]$CriticalEventHours = 24,
-    [int]$AppRequestTimeoutSec = 15
+param(
+    [ValidateSet('SqlServer','Sqlite')][string]$Provider = 'SqlServer',
+    [string]$MonitorRoot = '', [string]$AppUrl = '', [string]$BackupRoot = '',
+    [string]$DataRoot = 'C:\BitacoraEvidencias\Data', [string]$EvidenceRoot = '',
+    [string]$DatabasePath = 'C:\BitacoraEvidencias\Data\bitacora-evidencias.db',
+    [ValidateSet('BitacoraEvidencias','BitacoraEvidencias_Pruebas')][string]$DatabaseName = 'BitacoraEvidencias',
+    [ValidateRange(0,100000)][double]$MinFreeDiskGb = 25,
+    [ValidateRange(0.001,100000)][double]$MaxEvidenceGb = 50,
+    [ValidateRange(0.001,100000)][double]$MaxDatabaseGb = 5,
+    [ValidateRange(1,8760)][int]$BackupMaxAgeHours = 26,
+    [ValidateRange(1,8760)][int]$CriticalEventHours = 24,
+    [ValidateRange(1,300)][int]$AppRequestTimeoutSec = 15,
+    [string]$SqlCredentialFile = $env:BITACORA_OPERATIONS_SQL_CREDENTIAL_FILE,
+    [Management.Automation.PSCredential]$SqlCredential,
+    [switch]$UseWindowsAuthentication, [switch]$TrustLocalSqlCertificate, [switch]$NonInteractive
 )
-
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
-
-function Resolve-BackupRoot {
-    $processBackupRoot = [Environment]::GetEnvironmentVariable("BITACORA_BACKUP_ROOT", "Process")
-    if (-not [string]::IsNullOrWhiteSpace($processBackupRoot)) {
-        return @{
-            Path = $processBackupRoot
-            Source = "Environment:Process"
-        }
-    }
-
-    $userBackupRoot = [Environment]::GetEnvironmentVariable("BITACORA_BACKUP_ROOT", "User")
-    if (-not [string]::IsNullOrWhiteSpace($userBackupRoot)) {
-        return @{
-            Path = $userBackupRoot
-            Source = "Environment:User"
-        }
-    }
-
-    $machineBackupRoot = [Environment]::GetEnvironmentVariable("BITACORA_BACKUP_ROOT", "Machine")
-    if (-not [string]::IsNullOrWhiteSpace($machineBackupRoot)) {
-        return @{
-            Path = $machineBackupRoot
-            Source = "Environment:Machine"
-        }
-    }
-
-    return @{
-        Path = "C:\BitacoraEvidencias\BackupsBitacora"
-        Source = "Default"
-    }
+$ErrorActionPreference = 'Stop'
+if ($Provider -eq 'Sqlite') {
+    if (-not $MonitorRoot) { $MonitorRoot = 'C:\BitacoraEvidencias\Monitoreo' }
+    if (-not $AppUrl) { $AppUrl = 'https://127.0.0.1:5067/Login' }
+    if (-not $EvidenceRoot) { $EvidenceRoot = 'C:\BitacoraEvidencias\Evidencias' }
+    & (Join-Path $PSScriptRoot 'Monitor-BitacoraSqlite.ps1') -MonitorRoot $MonitorRoot -AppUrl $AppUrl -DataRoot $DataRoot -EvidenceRoot $EvidenceRoot -DatabasePath $DatabasePath -MinFreeDiskGb $MinFreeDiskGb -MaxEvidenceGb $MaxEvidenceGb -MaxDatabaseGb $MaxDatabaseGb -BackupMaxAgeHours $BackupMaxAgeHours -CriticalEventHours $CriticalEventHours -AppRequestTimeoutSec $AppRequestTimeoutSec
+    return
 }
-
-function Write-Log {
-    param([string]$Message)
-
-    $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | $Message"
-    Write-Host $line
-    Add-Content -Path $script:LogPath -Value $line
+. (Join-Path $PSScriptRoot '..\operations\SqlOperationsSupport.ps1')
+$trial = $DatabaseName -eq 'BitacoraEvidencias_Pruebas'
+$installation = if ($trial) { 'C:\BitacoraEvidencias_Pruebas' } else { 'C:\BitacoraEvidencias' }
+if (-not $MonitorRoot) { $MonitorRoot = Join-Path $installation 'Monitoreo' }
+if (-not $EvidenceRoot) { $EvidenceRoot = if ($trial) { Join-Path $installation 'Input\Evidencias' } else { Join-Path $installation 'Evidencias' } }
+if (-not $AppUrl) { $AppUrl = if ($trial) { 'https://127.0.0.1:5068/Login' } else { 'https://127.0.0.1:5067/Login' } }
+$uri = $null
+if (-not [uri]::TryCreate($AppUrl,[UriKind]::Absolute,[ref]$uri) -or $uri.Scheme -notin @('https','http') -or $uri.UserInfo -or $uri.Query -or $uri.Fragment) { throw 'Usa una URL de disponibilidad sin credenciales, parametros ni fragmento.' }
+$MonitorRoot = Assert-BitacoraBackupLocalPath $MonitorRoot
+$EvidenceRoot = Assert-BitacoraBackupLocalPath $EvidenceRoot
+if ($trial -and $MonitorRoot.StartsWith('C:\BitacoraEvidencias\',[StringComparison]::OrdinalIgnoreCase)) { throw 'El ensayo no escribe reportes productivos.' }
+if (-not $BackupRoot) {
+    foreach ($scope in @('Process','User','Machine')) { $BackupRoot = [Environment]::GetEnvironmentVariable('BITACORA_BACKUP_ROOT',$scope); if ($BackupRoot) { break } }
 }
-
-function Write-RunState {
-    param(
-        [string]$Status,
-        [string]$Step,
-        [string]$Details = ""
-    )
-
-    $state = [ordered]@{
-        status = $Status
-        step = $Step
-        details = $Details
-        updatedAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-        machineName = $env:COMPUTERNAME
-        userName = "$env:USERDOMAIN\$env:USERNAME"
-        processId = $PID
-        logPath = $script:LogPath
-        statusPath = $script:StatusPath
-    }
-
-    $state | ConvertTo-Json -Depth 4 | Set-Content -Path $script:RunStatePath -Encoding UTF8
+if (-not $BackupRoot) { $BackupRoot = 'C:\BitacoraEvidencias\BackupsBitacora' }
+$BackupRoot = Assert-BitacoraBackupLocalPath $BackupRoot
+$destination = Join-Path $MonitorRoot ('SqlServer\' + $DatabaseName)
+New-Item -ItemType Directory -Path (Join-Path $destination 'status') -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $destination 'logs') -Force | Out-Null
+$stamp = (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' + [guid]::NewGuid().ToString('N')
+$script:monitorLog = Join-Path $destination ('logs\Monitor_' + (Get-Date -Format 'yyyyMMdd') + '.log')
+$script:monitorChecks = [Collections.Generic.List[object]]::new()
+$summary = [ordered]@{ provider = 'SqlServer'; database = $DatabaseName; appUrl = $AppUrl; startedAtUtc = [datetime]::UtcNow.ToString('o'); overallStatus = 'RUNNING'; checks = @(); criticalEvents = @{} }
+Write-BitacoraOperationsJson (Join-Path $destination 'latest-run.json') $summary
+function Invoke-SqlMonitorCheck([string]$Name,[scriptblock]$Action) {
+    $watch = [Diagnostics.Stopwatch]::StartNew()
+    try { $result = & $Action; $status = $result.status; $details = $result.details }
+    catch { $status = 'ALERT'; $details = 'No se pudo comprobar. Revisar disponibilidad, permisos y configuracion; no se muestran datos del proveedor.' }
+    $watch.Stop()
+    $script:monitorChecks.Add([ordered]@{ name = $Name; status = $status; details = $details; durationMs = $watch.ElapsedMilliseconds })
+    $message = $Name + ' | ' + $status + ' | ' + $details
+    Write-Host $message
+    Add-Content -LiteralPath $script:monitorLog -Value ([datetime]::UtcNow.ToString('o') + ' | ' + $message)
 }
-
-function Invoke-MonitorStep {
-    param(
-        [string]$Name,
-        [scriptblock]$ScriptBlock
-    )
-
-    Write-RunState -Status "RUNNING" -Step $Name
-    Write-Log "STEP-START | $Name"
-    $watch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    try {
-        & $ScriptBlock
-    }
-    finally {
-        $watch.Stop()
-        Write-Log "STEP-END | $Name | DurationSeconds=$([Math]::Round($watch.Elapsed.TotalSeconds, 2))"
-        Write-RunState -Status "RUNNING" -Step "Completed: $Name" -Details "DurationSeconds=$([Math]::Round($watch.Elapsed.TotalSeconds, 2))"
-    }
-}
-
-function Get-DirectorySizeBytes {
-    param([string]$Path)
-
-    if (-not (Test-Path -LiteralPath $Path)) {
-        return 0L
-    }
-
-    $sum = (Get-ChildItem -LiteralPath $Path -Recurse -File -Force -ErrorAction Stop |
-        Measure-Object -Property Length -Sum).Sum
-
-    if ($null -eq $sum) {
-        return 0L
-    }
-
-    return [int64]$sum
-}
-
-function Convert-ToGb {
-    param([double]$Bytes)
-
-    return [Math]::Round($Bytes / 1GB, 2)
-}
-
-function Add-CheckResult {
-    param(
-        [string]$Name,
-        [string]$Status,
-        [string]$Details
-    )
-
-    $script:CheckResults.Add([ordered]@{
-        name = $Name
-        status = $Status
-        details = $Details
-    }) | Out-Null
-
-    Write-Log "$Name | $Status | $Details"
-}
-
-function Invoke-MonitorQuery {
-    param(
-        [string]$DatabasePath,
-        [int]$HoursBack
-    )
-
-    $toolDll = "C:\BitacoraEvidencias\tools\monitor\BitacoraMonitorQuery.dll"
-    if (-not (Test-Path -LiteralPath $toolDll)) {
-        throw "No existe la herramienta de consulta: $toolDll"
-    }
-
-    $output = & dotnet $toolDll $DatabasePath $HoursBack 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "La consulta de eventos criticos fallo: $($output -join ' ')"
-    }
-
-    $result = [ordered]@{}
-    foreach ($line in $output) {
-        if ([string]::IsNullOrWhiteSpace($line) -or $line -notmatch "=") {
-            continue
-        }
-
-        $parts = $line.Split("=", 2)
-        $name = $parts[0].Trim()
-        $value = 0
-        [void][int64]::TryParse($parts[1].Trim(), [ref]$value)
-        $result[$name] = $value
-    }
-
-    return $result
-}
-
-$backupRootInfo = Resolve-BackupRoot
-$backupRoot = $backupRootInfo.Path
-$backupRootSource = $backupRootInfo.Source
-
-$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$logDir = Join-Path $MonitorRoot "logs"
-$statusDir = Join-Path $MonitorRoot "status"
-$statusPath = Join-Path $statusDir "MonitorStatus_$timestamp.json"
-$latestStatusPath = Join-Path $MonitorRoot "latest-status.json"
-$runStatePath = Join-Path $MonitorRoot "latest-run.json"
-$script:LogPath = Join-Path $logDir "Monitor_$(Get-Date -Format 'yyyyMMdd').log"
-$script:StatusPath = $statusPath
-$script:RunStatePath = $runStatePath
-$script:CheckResults = [System.Collections.Generic.List[object]]::new()
-
-$summary = [ordered]@{
-    ranAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    machineName = $env:COMPUTERNAME
-    userName = "$env:USERDOMAIN\$env:USERNAME"
-    appUrl = $AppUrl
-    backupRoot = $backupRoot
-    backupRootSource = $backupRootSource
-    checks = @()
-    criticalEvents = [ordered]@{}
-}
-
+$connection = $null
 try {
-    New-Item -ItemType Directory -Path $MonitorRoot -Force | Out-Null
-    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-    New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-
-    Write-Log "Inicio de monitoreo."
-    Write-Log "AppUrl: $AppUrl"
-    Write-Log "BackupRoot: $backupRoot"
-    Write-Log "BackupRootSource: $backupRootSource"
-    Write-Log "ProcessId: $PID"
-    Write-RunState -Status "RUNNING" -Step "Inicio de monitoreo"
-
-    Invoke-MonitorStep -Name "AppAvailability" -ScriptBlock {
-        try {
-            $response = Invoke-WebRequest -Uri $AppUrl -Method Get -TimeoutSec $AppRequestTimeoutSec -UseBasicParsing
-            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
-                Add-CheckResult -Name "AppAvailability" -Status "OK" -Details "HTTP $($response.StatusCode)"
-            }
-            else {
-                Add-CheckResult -Name "AppAvailability" -Status "ALERT" -Details "HTTP $($response.StatusCode)"
-            }
-        }
-        catch {
-            Add-CheckResult -Name "AppAvailability" -Status "ALERT" -Details $_.Exception.Message
+    Invoke-SqlMonitorCheck 'AppAvailability' {
+        $response = Invoke-WebRequest -Uri $AppUrl -Method Get -TimeoutSec $AppRequestTimeoutSec -UseBasicParsing
+        @{ status = if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) { 'OK' } else { 'ALERT' }; details = 'HTTP ' + $response.StatusCode }
+    }
+    Invoke-SqlMonitorCheck 'SqlConnectivity' {
+        $script:connection = Open-BitacoraOperationsConnection -DatabaseName $DatabaseName -SqlCredentialFile $SqlCredentialFile -Credential $SqlCredential -UseWindowsAuthentication:$UseWindowsAuthentication -TrustLocalSqlCertificate:$TrustLocalSqlCertificate -NonInteractive:$NonInteractive
+        @{ status = 'OK'; details = 'Conexion cifrada y migracion SQL inicial comprobadas.' }
+    }
+    Invoke-SqlMonitorCheck 'RecentBackup' {
+        $backupDirectory = Join-Path $BackupRoot ('SqlServer\' + $DatabaseName)
+        $pattern = '^BitacoraSqlBackup_' + [regex]::Escape($DatabaseName) + '_[0-9]{8}_[0-9]{6}_[a-f0-9]{32}\.zip$'
+        $latest = Get-ChildItem -LiteralPath $backupDirectory -File -Filter '*.zip' | Where-Object { $_.Name -match $pattern -and -not ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+        if ($null -eq $latest -or $latest.LastWriteTimeUtc -lt [datetime]::UtcNow.AddHours(-$BackupMaxAgeHours)) { return @{ status = 'ALERT'; details = 'No hay respaldo SQL completo reciente para esta base.' } }
+        if (-not (Test-BitacoraSqlBackupPackage -Path $latest.FullName -DatabaseName $DatabaseName)) { return @{ status = 'ALERT'; details = 'ZIP reciente incompleto o manifiesto SQL no valido.' } }
+        @{ status = 'OK'; details = 'Respaldo SQL completo reciente; manifiesto y entradas presentes. No se recalculan hashes durante el monitoreo.' }
+    }
+    foreach ($volume in @('C',([IO.Path]::GetPathRoot($BackupRoot).Substring(0,1))) | Select-Object -Unique) {
+        Invoke-SqlMonitorCheck ('DiskFree' + $volume) {
+            $free = [math]::Round((Get-PSDrive -Name $volume).Free / 1GB,2)
+            @{ status = if ($free -ge $MinFreeDiskGb) { 'OK' } else { 'ALERT' }; details = "$free GB libres; umbral $MinFreeDiskGb GB." }
         }
     }
-
-    Invoke-MonitorStep -Name "RecentBackup" -ScriptBlock {
-        try {
-            $cutoff = (Get-Date).AddHours(-[Math]::Abs($BackupMaxAgeHours))
-            $recentZip = Get-ChildItem -LiteralPath $backupRoot -File -Filter "*.zip" -ErrorAction Stop |
-                Where-Object { $_.LastWriteTime -ge $cutoff } |
-                Sort-Object LastWriteTime -Descending |
-                Select-Object -First 1
-
-            if ($null -ne $recentZip) {
-                Add-CheckResult -Name "RecentBackup" -Status "OK" -Details "$($recentZip.Name) | $($recentZip.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss'))"
-            }
-            else {
-                Add-CheckResult -Name "RecentBackup" -Status "ALERT" -Details "No se encontro ZIP en las ultimas $BackupMaxAgeHours horas."
-            }
-        }
-        catch {
-            Add-CheckResult -Name "RecentBackup" -Status "ALERT" -Details $_.Exception.Message
-        }
+    Invoke-SqlMonitorCheck 'EvidenceSize' {
+        if (-not (Test-Path -LiteralPath $EvidenceRoot -PathType Container)) { throw 'Falta carpeta de evidencias.' }
+        $bytes = 0L; foreach ($file in Get-BitacoraBackupEvidenceFiles -Root $EvidenceRoot) { $bytes += $file.Length }
+        $gb = [math]::Round($bytes / 1GB,3)
+        @{ status = if ($bytes -le $MaxEvidenceGb * 1GB) { 'OK' } else { 'ALERT' }; details = "$gb GB; umbral $MaxEvidenceGb GB." }
     }
-
-    Invoke-MonitorStep -Name "DiskFreeC" -ScriptBlock {
-        try {
-            $drive = Get-PSDrive -Name C -ErrorAction Stop
-            $freeGb = Convert-ToGb -Bytes $drive.Free
-            if ($freeGb -ge $MinFreeDiskGb) {
-                Add-CheckResult -Name "DiskFreeC" -Status "OK" -Details "$freeGb GB libres."
-            }
-            else {
-                Add-CheckResult -Name "DiskFreeC" -Status "ALERT" -Details "$freeGb GB libres. Umbral: $MinFreeDiskGb GB."
-            }
-        }
-        catch {
-            Add-CheckResult -Name "DiskFreeC" -Status "ALERT" -Details $_.Exception.Message
-        }
+    Invoke-SqlMonitorCheck 'DatabaseSize' {
+        if ($null -eq $connection) { throw 'Conexion SQL no disponible.' }
+        $sizes = Invoke-BitacoraOperationsTable $connection 'SELECT COALESCE(SUM(CASE WHEN type=0 THEN CONVERT(bigint,size)*8192 ELSE 0 END),0) AS DataBytes, COALESCE(SUM(CASE WHEN type=1 THEN CONVERT(bigint,size)*8192 ELSE 0 END),0) AS LogBytes FROM sys.database_files;'
+        $dataGb = [math]::Round([double]$sizes.Rows[0].DataBytes / 1GB,3); $logGb = [math]::Round([double]$sizes.Rows[0].LogBytes / 1GB,3)
+        @{ status = if ([double]$sizes.Rows[0].DataBytes -le $MaxDatabaseGb * 1GB) { 'OK' } else { 'ALERT' }; details = "Datos SQL $dataGb GB; log $logGb GB; umbral de datos $MaxDatabaseGb GB." }
     }
-
-    Invoke-MonitorStep -Name "EvidenceSize" -ScriptBlock {
-        try {
-            $evidenceBytes = Get-DirectorySizeBytes -Path $EvidenceRoot
-            $evidenceGb = Convert-ToGb -Bytes $evidenceBytes
-            if ($evidenceGb -le $MaxEvidenceGb) {
-                Add-CheckResult -Name "EvidenceSize" -Status "OK" -Details "$evidenceGb GB. Umbral: $MaxEvidenceGb GB."
-            }
-            else {
-                Add-CheckResult -Name "EvidenceSize" -Status "ALERT" -Details "$evidenceGb GB. Umbral: $MaxEvidenceGb GB."
-            }
-        }
-        catch {
-            Add-CheckResult -Name "EvidenceSize" -Status "ALERT" -Details $_.Exception.Message
-        }
+    Invoke-SqlMonitorCheck 'CriticalEventsQuery' {
+        if ($null -eq $connection) { throw 'Conexion SQL no disponible.' }
+        $counts = [ordered]@{ LOGIN_FAIL = 0L; LOCKOUT = 0L; DELETE = 0L; DELETE_EVIDENCE = 0L }
+        $table = Invoke-BitacoraOperationsTable $connection "SELECT EventType, COUNT_BIG(*) AS Total FROM dbo.AuditLogs WHERE OccurredAtUtc >= @cutoff AND EventType IN ('LOGIN_FAIL','LOCKOUT','DELETE','DELETE_EVIDENCE') GROUP BY EventType;" @{ '@cutoff' = [datetime]::UtcNow.AddHours(-$CriticalEventHours) }
+        foreach ($row in $table.Rows) { $counts[[string]$row.EventType] = [long]$row.Total }
+        $summary.criticalEvents = $counts
+        @{ status = 'OK'; details = 'Conteos agregados de las ultimas ' + $CriticalEventHours + ' horas: ' + ($counts | ConvertTo-Json -Compress) }
     }
-
-    Invoke-MonitorStep -Name "DatabaseSize" -ScriptBlock {
-        try {
-            if (-not (Test-Path -LiteralPath $DatabasePath)) {
-                throw "No existe la base: $DatabasePath"
-            }
-
-            $dbFile = Get-Item -LiteralPath $DatabasePath -ErrorAction Stop
-            $dbGb = Convert-ToGb -Bytes $dbFile.Length
-            if ($dbGb -le $MaxDatabaseGb) {
-                Add-CheckResult -Name "DatabaseSize" -Status "OK" -Details "$dbGb GB. Umbral: $MaxDatabaseGb GB."
-            }
-            else {
-                Add-CheckResult -Name "DatabaseSize" -Status "ALERT" -Details "$dbGb GB. Umbral: $MaxDatabaseGb GB."
-            }
-        }
-        catch {
-            Add-CheckResult -Name "DatabaseSize" -Status "ALERT" -Details $_.Exception.Message
-        }
-    }
-
-    Invoke-MonitorStep -Name "CriticalEventsQuery" -ScriptBlock {
-        try {
-            $criticalEventCounts = Invoke-MonitorQuery -DatabasePath $DatabasePath -HoursBack $CriticalEventHours
-            $summary.criticalEvents = $criticalEventCounts
-            foreach ($name in $criticalEventCounts.Keys) {
-                Write-Log "CriticalEvents | $name=$($criticalEventCounts[$name])"
-            }
-            Add-CheckResult -Name "CriticalEventsQuery" -Status "OK" -Details "Consulta completada para ultimas $CriticalEventHours horas."
-        }
-        catch {
-            Add-CheckResult -Name "CriticalEventsQuery" -Status "ALERT" -Details $_.Exception.Message
-        }
-    }
-
-    $summary.checks = $script:CheckResults
-    $overallStatus = if ($script:CheckResults.Where({ $_.status -eq "ALERT" }).Count -gt 0) { "ALERT" } else { "OK" }
-    $summary.overallStatus = $overallStatus
-    $summary.completedAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    $summary | ConvertTo-Json -Depth 6 | Set-Content -Path $statusPath -Encoding UTF8
-    $summary | ConvertTo-Json -Depth 6 | Set-Content -Path $latestStatusPath -Encoding UTF8
-    Write-RunState -Status "COMPLETED" -Step "Monitoreo completado" -Details "OverallStatus=$overallStatus"
-
-    Write-Log "Monitoreo completado. OverallStatus=$overallStatus"
+    $summary.checks = $script:monitorChecks.ToArray()
+    $summary.overallStatus = if (@($script:monitorChecks | Where-Object status -eq 'ALERT').Count -gt 0) { 'ALERT' } else { 'OK' }
+} finally {
+    if ($null -ne $connection) { $connection.Dispose() }
+    $summary.completedAtUtc = [datetime]::UtcNow.ToString('o')
+    Write-BitacoraOperationsJson (Join-Path $destination ('status\MonitorStatus_' + $stamp + '.json')) $summary
+    Write-BitacoraOperationsJson (Join-Path $destination 'latest-status.json') $summary
+    Write-BitacoraOperationsJson (Join-Path $destination 'latest-run.json') $summary
+    Remove-Variable SqlCredential -ErrorAction SilentlyContinue
 }
-catch {
-    $errorMessage = $_.Exception.Message
-    Write-Log "ERROR: $errorMessage"
-    Write-RunState -Status "FAILED" -Step "Error general" -Details $errorMessage
-    throw
-}
-
+if ($summary.overallStatus -ne 'OK') { throw 'Monitoreo SQL termino con alertas. Consultar latest-status.json; no se modifico la aplicacion ni la base.' }

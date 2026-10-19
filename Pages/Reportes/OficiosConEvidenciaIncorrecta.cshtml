@@ -11,7 +11,7 @@
     </div>
     <a class="btn btn-outline-secondary"
        asp-page="/Reportes"
-       hx-get="@Url.Page("/Reportes")"
+       hx-sync="#app-main:replace" hx-get="@Url.Page("/Reportes")"
        hx-target="#app-main"
        hx-select="#app-main"
        hx-swap="outerHTML transition:true"
@@ -73,7 +73,7 @@
                             <a class="btn btn-sm btn-outline-primary"
                                asp-page="/Oficios/Details"
                                asp-route-id="@item.OficioId"
-                               hx-get="@Url.Page("/Oficios/Details", new { id = item.OficioId })"
+                               hx-sync="#app-main:replace" hx-get="@Url.Page("/Oficios/Details", new { id = item.OficioId })"
                                hx-target="#app-main"
                                hx-select="#app-main"
                                hx-swap="outerHTML transition:true"

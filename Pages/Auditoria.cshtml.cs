@@ -10,7 +10,8 @@ namespace BitacoraEvidencias.Web.Pages;
 
 public class AuditoriaModel(
     AppDbContext dbContext,
-    ICaseAuditService caseAuditService) : PageModel
+    ICaseAuditService caseAuditService,
+    ILogger<AuditoriaModel>? logger = null) : PageModel
 {
     private const int OfficePreviewLimit = 5;
 
@@ -21,7 +22,7 @@ public class AuditoriaModel(
     public string? SelectedEvidenceKey { get; set; }
 
     [BindProperty(SupportsGet = true, Name = "numeroOficio")]
-    public string NumeroOficioFiltro { get; set; } = string.Empty;
+    public string? NumeroOficioFiltro { get; set; }
 
     [BindProperty]
     public NoCoincidenteInputModel NoCoincidente { get; set; } = new();
@@ -122,6 +123,8 @@ public class AuditoriaModel(
 
     private async Task LoadPageAsync(CancellationToken cancellationToken)
     {
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        SelectedCase = null;
         NumeroOficioFiltro = NumeroOficioFiltro?.Trim() ?? string.Empty;
 
         var oficioQuery = dbContext.Oficios
@@ -138,7 +141,37 @@ public class AuditoriaModel(
             oficioQuery = oficioQuery.Where(x => EF.Functions.Like(x.NumeroOficio, $"%{NumeroOficioFiltro}%"));
         }
 
-        var oficioProjections = await oficioQuery
+        TotalOficiosPendientes = HasNumeroOficioFiltro
+            ? await oficioQuery.CountAsync(cancellationToken)
+            : TotalOficiosAuditables;
+
+        // Bound the parent set in SQL before projecting/decrypting any case details.
+        var orderedOficios = oficioQuery
+            .OrderByDescending(x => x.FechaOficio)
+            .ThenBy(x => x.NumeroOficio)
+            .ThenBy(x => x.Id);
+        IQueryable<Oficio> visibleOfficeQuery = orderedOficios.Take(OfficePreviewLimit);
+        if (SelectedCaseId.HasValue)
+        {
+            var selectedOfficeId = await dbContext.CasosCorreccion
+                .AsNoTracking()
+                .Where(c => c.Id == SelectedCaseId.Value && oficioQuery.Any(o => o.Id == c.OficioId))
+                .Select(c => (int?)c.OficioId)
+                .SingleOrDefaultAsync(cancellationToken);
+            if (!selectedOfficeId.HasValue)
+                SelectedCaseId = null;
+            else
+            {
+                var selectedId = selectedOfficeId.Value;
+                var otherOfficeIds = orderedOficios.Where(o => o.Id != selectedId)
+                    .Take(OfficePreviewLimit - 1).Select(o => o.Id);
+                visibleOfficeQuery = dbContext.Oficios.AsNoTracking()
+                    .Where(o => o.Id == selectedId || otherOfficeIds.Contains(o.Id));
+            }
+        }
+
+        var oficioProjections = await visibleOfficeQuery
+            .OrderByDescending(o => o.FechaOficio).ThenBy(o => o.NumeroOficio).ThenBy(o => o.Id)
             .Select(x => new OficioAuditProjection
             {
                 Id = x.Id,
@@ -232,8 +265,11 @@ public class AuditoriaModel(
                 : index == 0;
         }
 
-        TotalOficiosPendientes = Oficios.Count;
-        VisibleOficios = BuildVisibleOffices(Oficios, SelectedCaseId, OfficePreviewLimit);
+
+        VisibleOficios = Oficios;
+        logger?.LogInformation(
+            "Auditoria: carga de datos {ElapsedMs} ms; oficios cargados {LoadedOffices} de {MatchingOffices}.",
+            elapsed.ElapsedMilliseconds, Oficios.Count, TotalOficiosPendientes);
     }
 
     private async Task<SelectedCaseAuditView?> LoadSelectedCaseAsync(int caseId, CancellationToken cancellationToken)
@@ -347,40 +383,6 @@ public class AuditoriaModel(
         }
 
         return CatalogosAuditoriaCaso.Coincidente;
-    }
-
-    private static IReadOnlyList<OficioAuditGroup> BuildVisibleOffices(
-        IReadOnlyList<OficioAuditGroup> offices,
-        int? selectedCaseId,
-        int limit)
-    {
-        if (offices.Count <= limit)
-        {
-            return offices;
-        }
-
-        var visibleOfficeIds = offices
-            .Take(limit)
-            .Select(x => x.Id)
-            .ToHashSet();
-
-        if (selectedCaseId.HasValue)
-        {
-            var selectedOfficeId = offices
-                .Where(x => x.Casos.Any(c => c.Id == selectedCaseId.Value))
-                .Select(x => (int?)x.Id)
-                .FirstOrDefault();
-
-            if (selectedOfficeId.HasValue && !visibleOfficeIds.Contains(selectedOfficeId.Value))
-            {
-                visibleOfficeIds.Remove(offices[limit - 1].Id);
-                visibleOfficeIds.Add(selectedOfficeId.Value);
-            }
-        }
-
-        return offices
-            .Where(x => visibleOfficeIds.Contains(x.Id))
-            .ToList();
     }
 
     private sealed class OficioAuditProjection

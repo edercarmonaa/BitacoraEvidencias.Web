@@ -3,6 +3,7 @@ using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Security;
 using BitacoraEvidencias.Web.Services;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -23,29 +24,42 @@ public class CreateModel(
     {
     }
 
+    public async Task<JsonResult> OnGetValidateNumberAsync(string? numero, int id = 0)
+    {
+        var normalized = numero?.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 80)
+            return new JsonResult("Captura un numero de oficio de hasta 80 caracteres.");
+        var exists = await dbContext.Oficios.AsNoTracking()
+            .AnyAsync(x => x.Id != id && x.NumeroOficio.ToUpper() == normalized, HttpContext.RequestAborted);
+        return new JsonResult(exists ? (object)"Ya existe un oficio con ese numero." : true);
+    }
+
     public async Task<IActionResult> OnPostAsync()
     {
+        foreach (var error in FormRules.ValidateOfficeDate(Input.FechaOficio))
+            ModelState.AddModelError($"Input.{error.Key}", error.Message);
         if (!ModelState.IsValid)
         {
             return Page();
         }
 
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
         var numeroNormalizado = Input.NumeroOficio.Trim();
         var existingNumbers = await dbContext.Oficios
             .AsNoTracking()
             .Select(x => x.NumeroOficio)
             .ToListAsync();
 
-        if (existingNumbers.Contains(numeroNormalizado, StringComparer.Ordinal))
+        if (existingNumbers.Contains(numeroNormalizado, StringComparer.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError(nameof(Input.NumeroOficio), "Ya existe un oficio con ese numero.");
+            ModelState.AddModelError("Input.NumeroOficio", "Ya existe un oficio con ese numero.");
             return Page();
         }
 
         if (OficioStoragePath.TryFindFolderCollision(numeroNormalizado, existingNumbers, out var conflictingNumero))
         {
             ModelState.AddModelError(
-                nameof(Input.NumeroOficio),
+                "Input.NumeroOficio",
                 $"El numero de oficio colisiona con la carpeta de '{conflictingNumero}'. Usa un valor que produzca una carpeta distinta.");
             return Page();
         }
@@ -62,10 +76,11 @@ public class CreateModel(
         try
         {
             await dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation("Oficios.NumeroOficio"))
         {
-            ModelState.AddModelError(nameof(Input.NumeroOficio), "Ya existe un oficio con ese numero.");
+            ModelState.AddModelError("Input.NumeroOficio", "Ya existe un oficio con ese numero.");
             return Page();
         }
         catch (DbUpdateException)

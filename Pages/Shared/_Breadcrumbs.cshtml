@@ -147,7 +147,7 @@
                 @if (!isCurrent && !string.IsNullOrWhiteSpace(item.Url))
                 {
                     <a href="@item.Url"
-                       hx-get="@item.Url"
+                       hx-sync="#app-main:replace" hx-get="@item.Url"
                        hx-target="#app-main"
                        hx-select="#app-main"
                        hx-swap="outerHTML transition:true"

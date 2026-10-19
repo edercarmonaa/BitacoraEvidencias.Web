@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\BitacoraEvidencias.Web.csproj" />
+    <ProjectReference Include="..\..\tools\BitacoraMigration\BitacoraMigration.csproj" />
   </ItemGroup>
 
 </Project>

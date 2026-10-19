@@ -25,7 +25,6 @@ if (-not (Test-Path $inputPath)) {
 }
 
 $args = @(
-    "-c", $configPath,
     "-i", $inputPath,
     "-o", $outputPath
 )
@@ -45,3 +44,4 @@ Write-Host "  output: $outputPath"
 Write-Host ""
 
 & $tailwindExe @args
+if ($LASTEXITCODE -ne 0) { throw 'Tailwind termino con error; no considerar generado el CSS.' }

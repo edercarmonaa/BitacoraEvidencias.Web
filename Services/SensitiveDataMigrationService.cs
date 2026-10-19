@@ -161,6 +161,8 @@ public sealed class SensitiveDataMigrationService(
 
     private async Task EnsureProtectionSchemaAsync(CancellationToken cancellationToken)
     {
+        if (!dbContext.Database.IsSqlite())
+            throw new InvalidOperationException("La conversion de proteccion SQLite no se ejecuta sobre SQL Server.");
         var connection = dbContext.Database.GetDbConnection();
         if (connection.State != System.Data.ConnectionState.Open)
         {

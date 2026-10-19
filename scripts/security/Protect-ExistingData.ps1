@@ -9,6 +9,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\operations\ScriptCompatibility.ps1')
+Assert-BitacoraSqliteSource -ProjectFile $ProjectPath
 
 $keyName = "BITACORA_DATA_PROTECTION_KEY"
 $keyValue = [Environment]::GetEnvironmentVariable($keyName, "Process")
@@ -99,7 +101,7 @@ $env:ConnectionStrings__DefaultConnection = "Data Source=$databaseSource"
 $env:Storage__RootPath = $effectiveStorageRoot
 
 if ($CreateBackup) {
-    $backupScriptPath = Join-Path $projectDirectory "scripts\backup\Backup-Bitacora.ps1"
+    $backupScriptPath = Join-Path $projectDirectory "scripts\backup\Backup-BitacoraSqlite.ps1"
     if (-not (Test-Path $backupScriptPath)) {
         throw "No se encontro el script de respaldo: $backupScriptPath"
     }

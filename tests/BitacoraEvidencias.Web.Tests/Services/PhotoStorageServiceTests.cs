@@ -9,9 +9,43 @@ namespace BitacoraEvidencias.Web.Tests.Services;
 public class PhotoStorageServiceTests
 {
     [Fact]
-    public void TryOpenReadEvidence_ReturnsFalse_ForPathTraversal()
+    public void TryOpenReadEvidence_WithProtectionEnabled_ReadsExistingLegacyFile()
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage: true);
+        const string legacyPath = "OF-001/001/original/historical.jpg";
+        var absolutePath = fixture.GetLegacyAbsolutePath(legacyPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
+        File.WriteAllBytes(absolutePath, [7, 8, 9]);
+
+        Assert.True(fixture.Service.TryOpenReadEvidence(legacyPath, out var stream, out var contentType));
+        Assert.NotNull(stream);
+        Assert.Equal("image/jpeg", contentType);
+        using (stream)
+        using (var memory = new MemoryStream())
+        {
+            stream.CopyTo(memory);
+            Assert.Equal(new byte[] { 7, 8, 9 }, memory.ToArray());
+        }
+    }
+
+    [Fact]
+    public void RebaseRelativePathForOficio_WithProtectionEnabled_AcceptsLegacyPath()
+    {
+        using var fixture = PhotoStorageFixture.Create(protectedStorage: true);
+
+        var result = fixture.Service.RebaseRelativePathForOficio(
+            "OF-001/001/original/a.jpg", "OF-001", "OF-999");
+
+        Assert.StartsWith("of_", result);
+        Assert.Equal(fixture.RelativePath("OF-999/001/original/a.jpg"), result);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryOpenReadEvidence_ReturnsFalse_ForPathTraversal(bool protectedStorage)
+    {
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
 
         var result = fixture.Service.TryOpenReadEvidence("../outside.txt", out var stream, out var contentType);
 
@@ -20,11 +54,13 @@ public class PhotoStorageServiceTests
         Assert.Equal("application/octet-stream", contentType);
     }
 
-    [Fact]
-    public void TryOpenReadEvidence_ReturnsStreamAndContentType_ForValidFile()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryOpenReadEvidence_ReturnsStreamAndContentType_ForValidFile(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
-        var relativePath = "OF-001/001/original/test.jpg";
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
+        var relativePath = fixture.RelativePath("OF-001/001/original/test.jpg");
         var absolutePath = fixture.GetAbsolutePath(relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
         File.WriteAllBytes(absolutePath, [1, 2, 3, 4]);
@@ -43,12 +79,14 @@ public class PhotoStorageServiceTests
         }
     }
 
-    [Fact]
-    public void DeleteEvidenceFiles_RemovesFiles_AndCleansEmptyDirectories()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DeleteEvidenceFiles_RemovesFiles_AndCleansEmptyDirectories(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
-        var originalRelative = "OF-001/001/original/a.jpg";
-        var thumbnailRelative = "OF-001/001/thumb/a.jpg";
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
+        var originalRelative = fixture.RelativePath("OF-001/001/original/a.jpg");
+        var thumbnailRelative = fixture.RelativePath("OF-001/001/thumb/a.jpg");
 
         var originalAbsolute = fixture.GetAbsolutePath(originalRelative);
         var thumbnailAbsolute = fixture.GetAbsolutePath(thumbnailRelative);
@@ -66,45 +104,51 @@ public class PhotoStorageServiceTests
     }
 
     [Theory]
-    [InlineData("OF-001/001/original/a.jpg", "OF-001", "OF-999", "OF-999/001/original/a.jpg")]
-    [InlineData("OF-001/001/original/a.jpg", "OF-XYZ", "OF-999", "OF-001/001/original/a.jpg")]
+    [InlineData("OF-001/001/original/a.jpg", "OF-001", "OF-999", "OF-999/001/original/a.jpg", false)]
+    [InlineData("OF-001/001/original/a.jpg", "OF-001", "OF-999", "OF-999/001/original/a.jpg", true)]
+    [InlineData("OF-001/001/original/a.jpg", "OF-XYZ", "OF-999", "OF-001/001/original/a.jpg", false)]
+    [InlineData("OF-001/001/original/a.jpg", "OF-XYZ", "OF-999", "OF-001/001/original/a.jpg", true)]
     public void RebaseRelativePathForOficio_UpdatesOnlyMatchingPaths(
         string relativePath,
         string oldNumeroOficio,
         string newNumeroOficio,
-        string expected)
+        string expected, bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
 
-        var result = fixture.Service.RebaseRelativePathForOficio(relativePath, oldNumeroOficio, newNumeroOficio);
+        var result = fixture.Service.RebaseRelativePathForOficio(fixture.RelativePath(relativePath), oldNumeroOficio, newNumeroOficio);
 
-        Assert.Equal(expected, result);
+        Assert.Equal(fixture.RelativePath(expected), result);
     }
 
     [Theory]
-    [InlineData("OF-001/001/original/a.jpg", "OF-001", 1, 3, "OF-001/003/original/a.jpg")]
-    [InlineData("OF-001/002/original/a.jpg", "OF-001", 1, 3, "OF-001/002/original/a.jpg")]
+    [InlineData("OF-001/001/original/a.jpg", "OF-001", 1, 3, "OF-001/003/original/a.jpg", false)]
+    [InlineData("OF-001/001/original/a.jpg", "OF-001", 1, 3, "OF-001/003/original/a.jpg", true)]
+    [InlineData("OF-001/002/original/a.jpg", "OF-001", 1, 3, "OF-001/002/original/a.jpg", false)]
+    [InlineData("OF-001/002/original/a.jpg", "OF-001", 1, 3, "OF-001/002/original/a.jpg", true)]
     public void RebaseRelativePathForCase_UpdatesOnlyMatchingCaseFolder(
         string relativePath,
         string numeroOficio,
         int oldConsecutivo,
         int newConsecutivo,
-        string expected)
+        string expected, bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
 
-        var result = fixture.Service.RebaseRelativePathForCase(relativePath, numeroOficio, oldConsecutivo, newConsecutivo);
+        var result = fixture.Service.RebaseRelativePathForCase(fixture.RelativePath(relativePath), numeroOficio, oldConsecutivo, newConsecutivo);
 
-        Assert.Equal(expected, result);
+        Assert.Equal(fixture.RelativePath(expected), result);
     }
 
 
-    [Fact]
-    public void TryStageDeleteEvidenceFiles_StagesFiles_AndFinalizeDeletesThem()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteEvidenceFiles_StagesFiles_AndFinalizeDeletesThem(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
-        var originalRelative = "OF-001/001/original/a.jpg";
-        var thumbnailRelative = "OF-001/001/thumb/a.jpg";
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
+        var originalRelative = fixture.RelativePath("OF-001/001/original/a.jpg");
+        var thumbnailRelative = fixture.RelativePath("OF-001/001/thumb/a.jpg");
 
         var originalAbsolute = fixture.GetAbsolutePath(originalRelative);
         var thumbnailAbsolute = fixture.GetAbsolutePath(thumbnailRelative);
@@ -133,12 +177,14 @@ public class PhotoStorageServiceTests
         Assert.All(mutation.Files, item => Assert.False(File.Exists(item.StagedPath)));
     }
 
-    [Fact]
-    public void TryStageDeleteEvidenceFiles_CanRollbackAndRestoreOriginalFiles()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteEvidenceFiles_CanRollbackAndRestoreOriginalFiles(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
-        var originalRelative = "OF-001/001/original/a.jpg";
-        var thumbnailRelative = "OF-001/001/thumb/a.jpg";
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
+        var originalRelative = fixture.RelativePath("OF-001/001/original/a.jpg");
+        var thumbnailRelative = fixture.RelativePath("OF-001/001/thumb/a.jpg");
 
         var originalAbsolute = fixture.GetAbsolutePath(originalRelative);
         var thumbnailAbsolute = fixture.GetAbsolutePath(thumbnailRelative);
@@ -167,10 +213,12 @@ public class PhotoStorageServiceTests
         Assert.Equal(new byte[] { 20 }, File.ReadAllBytes(thumbnailAbsolute));
     }
 
-    [Fact]
-    public void TryStageDeleteOficioFolder_CanRollbackAndRestoreFolder()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteOficioFolder_CanRollbackAndRestoreFolder(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
         var oficioFile = fixture.GetAbsolutePath("OF-001/001/original/a.jpg");
         Directory.CreateDirectory(Path.GetDirectoryName(oficioFile)!);
         File.WriteAllBytes(oficioFile, [7]);
@@ -192,10 +240,12 @@ public class PhotoStorageServiceTests
         Assert.True(File.Exists(oficioFile));
     }
 
-    [Fact]
-    public void TryStageDeleteOficioFolder_FinalizeDeletesStagedFolder()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteOficioFolder_FinalizeDeletesStagedFolder(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
         var oficioFile = fixture.GetAbsolutePath("OF-001/001/original/a.jpg");
         Directory.CreateDirectory(Path.GetDirectoryName(oficioFile)!);
         File.WriteAllBytes(oficioFile, [7]);
@@ -217,17 +267,20 @@ public class PhotoStorageServiceTests
     private sealed class PhotoStorageFixture : IDisposable
     {
         private readonly string _root;
+        private readonly StorageProtectionFixture _protection;
 
-        private PhotoStorageFixture(string root, PhotoStorageService service)
+        private PhotoStorageFixture(string root, PhotoStorageService service, StorageProtectionFixture protection)
         {
             _root = root;
+            _protection = protection;
             Service = service;
         }
 
         public PhotoStorageService Service { get; }
 
-        public static PhotoStorageFixture Create()
+        public static PhotoStorageFixture Create(bool protectedStorage)
         {
+            var protection = new StorageProtectionFixture(protectedStorage);
             var contentRoot = Path.Combine(Path.GetTempPath(), "BitacoraEvidencias.Web.Tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(contentRoot);
 
@@ -252,17 +305,22 @@ public class PhotoStorageServiceTests
                 new PhotoStorageService(
                     environment,
                     options,
-                    new BitacoraEvidencias.Web.Security.SensitiveDataProtectionService(
-                        Options.Create(new BitacoraEvidencias.Web.Security.SensitiveDataProtectionOptions()))));
+                    protection.Service), protection);
         }
+
+        public string RelativePath(string legacyPath) => _protection.RelativePath(legacyPath);
+
+        public string GetLegacyAbsolutePath(string relativePath)
+            => Path.Combine(_root, "Storage", relativePath.Replace('/', Path.DirectorySeparatorChar));
 
         public string GetAbsolutePath(string relativePath)
         {
-            return Path.Combine(_root, "Storage", relativePath.Replace('/', Path.DirectorySeparatorChar));
+            return Path.Combine(_root, "Storage", RelativePath(relativePath).Replace('/', Path.DirectorySeparatorChar));
         }
 
         public void Dispose()
         {
+            _protection.Dispose();
             try
             {
                 if (Directory.Exists(_root))

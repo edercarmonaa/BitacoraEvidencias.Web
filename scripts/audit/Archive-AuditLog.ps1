@@ -1,128 +1,56 @@
 param(
-    [string]$ArchiveRoot = "C:\BitacoraEvidencias\AuditArchive",
-    [string]$DatabasePath = "C:\BitacoraEvidencias\Data\bitacora-evidencias.db",
-    [int]$RetentionDays = 30
+    [ValidateSet('SqlServer','Sqlite')][string]$Provider = 'SqlServer',
+    [string]$ArchiveRoot = '',
+    [string]$DatabasePath = 'C:\BitacoraEvidencias\Data\bitacora-evidencias.db',
+    [ValidateRange(1,36500)][int]$RetentionDays = 30,
+    [ValidateSet('BitacoraEvidencias','BitacoraEvidencias_Pruebas')][string]$DatabaseName = 'BitacoraEvidencias',
+    [ValidateSet('Preview','Export','Archive')][string]$Mode = 'Preview',
+    [ValidateRange(1,500)][int]$BatchSize = 200,
+    [string]$SqlCredentialFile = $env:BITACORA_OPERATIONS_SQL_CREDENTIAL_FILE,
+    [Management.Automation.PSCredential]$SqlCredential,
+    [switch]$UseWindowsAuthentication,
+    [switch]$TrustLocalSqlCertificate,
+    [switch]$NonInteractive
 )
-
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
-
-function Write-Log {
-    param([string]$Message)
-
-    $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') | $Message"
-    Write-Host $line
-    Add-Content -LiteralPath $script:LogPath -Value $line
+$ErrorActionPreference = 'Stop'
+if ($Provider -eq 'Sqlite') {
+    if (-not $ArchiveRoot) { $ArchiveRoot = 'C:\BitacoraEvidencias\AuditArchive' }
+    & (Join-Path $PSScriptRoot 'Archive-AuditLogSqlite.ps1') -ArchiveRoot $ArchiveRoot -DatabasePath $DatabasePath -RetentionDays $RetentionDays
+    return
 }
-
-function Write-RunState {
-    param(
-        [string]$Status,
-        [string]$Step,
-        [string]$Details = ""
-    )
-
-    $state = [ordered]@{
-        status = $Status
-        step = $Step
-        details = $Details
-        updatedAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-        machineName = $env:COMPUTERNAME
-        userName = "$env:USERDOMAIN\$env:USERNAME"
-        processId = $PID
-        logPath = $script:LogPath
-        statusPath = $script:StatusPath
-    }
-
-    $state | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $script:RunStatePath -Encoding UTF8
+. (Join-Path $PSScriptRoot '..\operations\SqlOperationsSupport.ps1')
+if (-not $ArchiveRoot) { $ArchiveRoot = if ($DatabaseName -eq 'BitacoraEvidencias_Pruebas') { 'C:\BitacoraEvidencias_Pruebas\AuditArchive' } else { 'C:\BitacoraEvidencias\AuditArchive' } }
+$ArchiveRoot = Assert-BitacoraBackupLocalPath $ArchiveRoot
+if ($DatabaseName -eq 'BitacoraEvidencias_Pruebas' -and $ArchiveRoot.StartsWith('C:\BitacoraEvidencias\',[StringComparison]::OrdinalIgnoreCase)) { throw 'El ensayo no escribe historicos productivos.' }
+$destination = Join-Path $ArchiveRoot ('SqlServer\' + $DatabaseName)
+if (-not (Test-Path -LiteralPath $destination)) {
+    New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($destination)) -Force | Out-Null
+    New-BitacoraBackupPrivateStaging -Path $destination
 }
-
-function Write-ArchiveStatus {
-    param(
-        [string]$Status,
-        [string]$Details,
-        [object[]]$ToolOutput = @()
-    )
-
-    $statusBody = [ordered]@{
-        status = $Status
-        details = $Details
-        ranAtLocal = $script:StartedAtLocal
-        updatedAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-        machineName = $env:COMPUTERNAME
-        userName = "$env:USERDOMAIN\$env:USERNAME"
-        archiveRoot = $ArchiveRoot
-        databasePath = $DatabasePath
-        retentionDays = $RetentionDays
-        logPath = $script:LogPath
-        toolOutput = $ToolOutput
-    }
-
-    $statusBody | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $script:StatusPath -Encoding UTF8
-}
-
-if ($RetentionDays -le 0) {
-    throw "RetentionDays debe ser un entero positivo."
-}
-
-$logsRoot = Join-Path $ArchiveRoot "logs"
-$script:LogPath = Join-Path $logsRoot "ArchiveAudit_$(Get-Date -Format 'yyyyMMdd').log"
-$script:RunStatePath = Join-Path $ArchiveRoot "latest-run.json"
-$script:StatusPath = Join-Path $ArchiveRoot "latest-status.json"
-$script:StartedAtLocal = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-
-New-Item -ItemType Directory -Path $ArchiveRoot -Force | Out-Null
-New-Item -ItemType Directory -Path $logsRoot -Force | Out-Null
-
-Write-Log "Inicio de archivado de AuditLog."
-Write-Log "ArchiveRoot: $ArchiveRoot"
-Write-Log "DatabasePath: $DatabasePath"
-Write-Log "RetentionDays: $RetentionDays"
-Write-Log "ProcessId: $PID"
-Write-RunState -Status "RUNNING" -Step "Inicio de archivado"
-
+New-Item -ItemType Directory -Path (Join-Path $destination 'logs') -Force | Out-Null
+$logPath = Join-Path $destination ('logs\ArchiveAudit_' + (Get-Date -Format 'yyyyMMdd') + '.log')
+$state = [ordered]@{ status = 'RUNNING'; provider = 'SqlServer'; database = $DatabaseName; mode = $Mode
+    retentionDays = $RetentionDays; startedAtUtc = [datetime]::UtcNow.ToString('o'); processId = $PID; result = $null }
+$runPath = Join-Path $destination 'latest-run.json'
+Write-BitacoraOperationsJson $runPath $state
+$connection = $null
 try {
-    if (-not (Test-Path -LiteralPath $DatabasePath)) {
-        throw "No existe la base SQLite en: $DatabasePath"
-    }
-
-    $toolDll = "C:\BitacoraEvidencias\tools\audit\BitacoraMonitorQuery.dll"
-    if (-not (Test-Path -LiteralPath $toolDll)) {
-        throw "No existe la herramienta de archivado: $toolDll"
-    }
-
-    Write-RunState -Status "RUNNING" -Step "Ejecutando herramienta de archivado"
-    Write-Log "STEP-START | ArchiveTool"
-    $watch = [System.Diagnostics.Stopwatch]::StartNew()
-    $output = & dotnet $toolDll archive $DatabasePath $ArchiveRoot $RetentionDays 2>&1
-    $exitCode = $LASTEXITCODE
-    $watch.Stop()
-    Write-Log "STEP-END | ArchiveTool | DurationSeconds=$([Math]::Round($watch.Elapsed.TotalSeconds, 2)) | ExitCode=$exitCode"
-
-    if ($exitCode -ne 0) {
-        foreach ($line in $output) {
-            if (-not [string]::IsNullOrWhiteSpace($line)) {
-                Write-Log "TOOL-ERROR | $line"
-            }
-        }
-
-        throw "La herramienta de archivado devolvio codigo $exitCode."
-    }
-
-    foreach ($line in $output) {
-        if (-not [string]::IsNullOrWhiteSpace($line)) {
-            Write-Log "TOOL | $line"
-        }
-    }
-
-    Write-ArchiveStatus -Status "COMPLETED" -Details "Archivado de AuditLog completado." -ToolOutput $output
-    Write-RunState -Status "COMPLETED" -Step "Archivado completado"
-    Write-Log "Archivado de AuditLog completado."
-}
-catch {
-    $errorMessage = $_.Exception.Message
-    Write-Log "ERROR: $errorMessage"
-    Write-ArchiveStatus -Status "FAILED" -Details $errorMessage
-    Write-RunState -Status "FAILED" -Step "Error general" -Details $errorMessage
-    throw
+    $connection = Open-BitacoraOperationsConnection -DatabaseName $DatabaseName -SqlCredentialFile $SqlCredentialFile -Credential $SqlCredential -UseWindowsAuthentication:$UseWindowsAuthentication -TrustLocalSqlCertificate:$TrustLocalSqlCertificate -NonInteractive:$NonInteractive
+    $result = Invoke-BitacoraAuditArchive -Connection $connection -Directory $destination -CutoffUtc ([datetime]::UtcNow.AddDays(-$RetentionDays)) -Mode $Mode -BatchSize $BatchSize
+    $state.status = 'COMPLETED'; $state.result = $result
+    $message = 'Auditoria SQL: modo=' + $Mode + '; elegibles=' + $result.eligibleRows + '; exportadas=' + $result.exportedRows + '; retiradas de SQL=' + $result.deletedRows + '; archivos=' + $result.files
+    Write-Host $message
+    Add-Content -LiteralPath $logPath -Value ([datetime]::UtcNow.ToString('o') + ' | ' + $message)
+} catch {
+    $state.status = 'FAILED'
+    Add-Content -LiteralPath $logPath -Value ([datetime]::UtcNow.ToString('o') + ' | FAILED: revisar conexion, permisos y archivos; no se imprimen mensajes del proveedor ni datos.')
+    throw 'Archivado SQL detenido. Revisar latest-status.json y los archivos publicados; los lotes ya confirmados se conservan y no se sobrescriben. No se muestran datos ni credenciales.'
+} finally {
+    if ($null -ne $connection) { $connection.Dispose() }
+    $state.completedAtUtc = [datetime]::UtcNow.ToString('o')
+    Write-BitacoraOperationsJson $runPath $state
+    Write-BitacoraOperationsJson (Join-Path $destination 'latest-status.json') $state
+    if ($Mode -eq 'Archive') { Write-BitacoraOperationsJson (Join-Path $destination 'latest-archive-status.json') $state }
+    Remove-Variable SqlCredential -ErrorAction SilentlyContinue
 }

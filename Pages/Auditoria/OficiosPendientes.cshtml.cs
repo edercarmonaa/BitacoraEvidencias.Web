@@ -18,7 +18,7 @@ public class OficiosPendientesModel(AppDbContext dbContext) : PageModel
     public int PageSize { get; set; } = DefaultPageSize;
 
     [BindProperty(SupportsGet = true, Name = "numeroOficio")]
-    public string NumeroOficioFiltro { get; set; } = string.Empty;
+    public string? NumeroOficioFiltro { get; set; }
 
     public List<OficioPendienteRow> Items { get; private set; } = [];
     public int TotalRows { get; private set; }
@@ -46,7 +46,7 @@ public class OficiosPendientesModel(AppDbContext dbContext) : PageModel
             query = query.Where(x => EF.Functions.Like(x.NumeroOficio, $"%{NumeroOficioFiltro}%"));
         }
 
-        TotalRows = await query.CountAsync(cancellationToken);
+        TotalRows = HasNumeroOficioFiltro ? await query.CountAsync(cancellationToken) : TotalOficiosAuditables;
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
@@ -54,6 +54,7 @@ public class OficiosPendientesModel(AppDbContext dbContext) : PageModel
         Items = await query
             .OrderByDescending(x => x.FechaOficio)
             .ThenBy(x => x.NumeroOficio)
+            .ThenBy(x => x.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new OficioPendienteRow

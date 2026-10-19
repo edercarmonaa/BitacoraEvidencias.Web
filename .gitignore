@@ -14,12 +14,12 @@ Data/*.db
 Data/*.db-*
 Data/*.sqlite
 Data/*.sqlite3
-Storage/
+/Storage/
 Evidencias/
 BackupsBitacora/
 AuditArchive/
 Monitoreo/
-deploy/
+/deploy/
 releases/
 
 # Logs and generated diagnostics
@@ -44,6 +44,7 @@ coverage/
 *.jks
 *.kdbx
 credentials.json
+*.credential.xml
 service-account.json
 firebase-adminsdk*.json
 google-services.json
@@ -90,3 +91,4 @@ docs/SGSI-*.md
 *.xls
 *.pdf
 tools/tailwindcss-windows-x64.exe
+.dotnet-tools/

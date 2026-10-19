@@ -21,7 +21,7 @@ public class PendientesEvidenciaModel(AppDbContext dbContext) : PageModel
     public int TotalPages { get; private set; } = 1;
     public int MaxAllowedPageSize => MaxPageSize;
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
         PageSize = Math.Clamp(PageSize <= 0 ? DefaultPageSize : PageSize, 1, MaxPageSize);
 
@@ -29,13 +29,14 @@ public class PendientesEvidenciaModel(AppDbContext dbContext) : PageModel
             .AsNoTracking()
             .Where(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty));
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
 
         Items = await query
             .OrderByDescending(x => x.CreadoEn)
+            .ThenByDescending(x => x.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new PendienteEvidenciaRow
@@ -48,7 +49,7 @@ public class PendientesEvidenciaModel(AppDbContext dbContext) : PageModel
                 TipoCorreccion = x.TipoCorreccion,
                 Estatus = x.Estatus
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public class PendienteEvidenciaRow

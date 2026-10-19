@@ -8,10 +8,12 @@ namespace BitacoraEvidencias.Web.Tests.Services;
 
 public class PhotoStorageServiceMutationTests
 {
-    [Fact]
-    public void TryStageDeleteAndReorderCaseFolders_CanRollbackAndRestoreOriginalStructure()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteAndReorderCaseFolders_CanRollbackAndRestoreOriginalStructure(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
         var case001File = fixture.GetAbsolutePath("OF-001/001/original/deleted.jpg");
         var case002File = fixture.GetAbsolutePath("OF-001/002/original/moved.jpg");
         Directory.CreateDirectory(Path.GetDirectoryName(case001File)!);
@@ -43,10 +45,12 @@ public class PhotoStorageServiceMutationTests
         Assert.Equal(new byte[] { 2 }, File.ReadAllBytes(case002File));
     }
 
-    [Fact]
-    public void TryStageDeleteAndReorderCaseFolders_FinalizeDeletesStagedDeletedCase()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TryStageDeleteAndReorderCaseFolders_FinalizeDeletesStagedDeletedCase(bool protectedStorage)
     {
-        using var fixture = PhotoStorageFixture.Create();
+        using var fixture = PhotoStorageFixture.Create(protectedStorage);
         var case001File = fixture.GetAbsolutePath("OF-001/001/original/deleted.jpg");
         var case002File = fixture.GetAbsolutePath("OF-001/002/original/moved.jpg");
         Directory.CreateDirectory(Path.GetDirectoryName(case001File)!);
@@ -79,17 +83,20 @@ public class PhotoStorageServiceMutationTests
     private sealed class PhotoStorageFixture : IDisposable
     {
         private readonly string _root;
+        private readonly StorageProtectionFixture _protection;
 
-        private PhotoStorageFixture(string root, PhotoStorageService service)
+        private PhotoStorageFixture(string root, PhotoStorageService service, StorageProtectionFixture protection)
         {
             _root = root;
+            _protection = protection;
             Service = service;
         }
 
         public PhotoStorageService Service { get; }
 
-        public static PhotoStorageFixture Create()
+        public static PhotoStorageFixture Create(bool protectedStorage)
         {
+            var protection = new StorageProtectionFixture(protectedStorage);
             var contentRoot = Path.Combine(Path.GetTempPath(), "BitacoraEvidencias.Web.Tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(contentRoot);
 
@@ -114,17 +121,19 @@ public class PhotoStorageServiceMutationTests
                 new PhotoStorageService(
                     environment,
                     options,
-                    new BitacoraEvidencias.Web.Security.SensitiveDataProtectionService(
-                        Options.Create(new BitacoraEvidencias.Web.Security.SensitiveDataProtectionOptions()))));
+                    protection.Service), protection);
         }
+
+        public string RelativePath(string legacyPath) => _protection.RelativePath(legacyPath);
 
         public string GetAbsolutePath(string relativePath)
         {
-            return Path.Combine(_root, "Storage", relativePath.Replace('/', Path.DirectorySeparatorChar));
+            return Path.Combine(_root, "Storage", RelativePath(relativePath).Replace('/', Path.DirectorySeparatorChar));
         }
 
         public void Dispose()
         {
+            _protection.Dispose();
             try
             {
                 if (Directory.Exists(_root))

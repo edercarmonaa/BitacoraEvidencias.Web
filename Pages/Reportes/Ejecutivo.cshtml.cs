@@ -171,6 +171,7 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
             .OrderByDescending(x => x.FechaVerificacion)
             .ThenBy(x => x.Oficio!.NumeroOficio)
             .ThenBy(x => x.Consecutivo)
+            .ThenBy(x => x.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new CasoPendienteRow

@@ -10,6 +10,11 @@ public static class DbUpdateExceptionExtensions
 
     public static bool IsUniqueConstraintViolation(this DbUpdateException exception, string? constraintFragment = null)
     {
+        if (exception.InnerException is Microsoft.Data.SqlClient.SqlException sqlException)
+            return sqlException.Number is 2601 or 2627 &&
+                   (string.IsNullOrWhiteSpace(constraintFragment) ||
+                    sqlException.Message.Contains(constraintFragment, StringComparison.OrdinalIgnoreCase));
+
         if (exception.InnerException is not SqliteException sqliteException)
         {
             return false;

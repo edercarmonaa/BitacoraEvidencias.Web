@@ -35,12 +35,12 @@ public class SqlModel(ISqlAdminService sqlAdminService) : PageModel
     {
         if (!AllowedLimits.Contains(Input.RowLimit))
         {
-            ModelState.AddModelError(nameof(Input.RowLimit), "Selecciona un limite valido.");
+            ModelState.AddModelError("Input.RowLimit", "Selecciona un limite valido.");
         }
 
         if (RequiresConfirmation(Input.Sql) && !Input.ConfirmWrite)
         {
-            ModelState.AddModelError(nameof(Input.ConfirmWrite), "Confirma que entiendes que la operacion modifica datos.");
+            ModelState.AddModelError("Input.ConfirmWrite", "Confirma que entiendes que la operacion modifica datos.");
         }
 
         if (!ModelState.IsValid)

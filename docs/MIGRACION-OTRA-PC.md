@@ -1,4 +1,6 @@
 # Migracion a Otra PC (Guia Rapida)
+
+> Guia historica SQLite 0.1.0: los comandos trabajan con archivos .db y lanzadores anteriores. Para SQL usar [RECUPERACION-SQLSERVER.md](RECUPERACION-SQLSERVER.md); no aplicar este traslado al proveedor SQL.
 Fecha: 2026-04-22
 
 ## Objetivo

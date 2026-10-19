@@ -1,80 +1,24 @@
-﻿# HTTPS LAN (Modo Estricto)
+# HTTPS y TLS SQL en 0.2.0
 
-Estado actual configurado:
-- Solo HTTPS en `https://<SERVER_IP>:5067`
-- Cookies seguras obligatorias
-- Redireccion HTTPS habilitada
-- Sin endpoint HTTP en arranque normal
+La aplicacion mantiene cookies seguras y redireccion HTTPS en appsettings. El perfil local actual usa https://127.0.0.1:5068 con Development; el lanzador de ensayo usa Production y certificado externo. Produccion SQLite conserva su arranque 5067 hasta el cambio aprobado.
 
-## 1) Configuracion de seguridad aplicada
-
-En `appsettings.json` y `appsettings.Development.json`:
-
-```json
-"Security": {
-  "RequireHttpsCookies": true,
-  "EnableHttpsRedirection": true
-}
-```
-
-## 2) Perfil de arranque local
-
-`Properties/launchSettings.json`:
-- Perfil unico `https-lan`
-- `applicationUrl`: `https://<SERVER_IP>:5067`
-
-## 3) Arranque recomendado en servidor (sin HTTP)
+## Ensayo con certificado existente
 
 ```powershell
-.\scripts\https\Start-BitacoraWithHttps.ps1 -ServerIp <SERVER_IP>
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-backup-final
 ```
 
-Notas:
-- Usa certificado desde variables `BITACORA_HTTPS_CERT_PATH` y `BITACORA_HTTPS_CERT_PASSWORD`.
-- Por defecto arranca con `ASPNETCORE_ENVIRONMENT=Production`.
-- Para pruebas puedes cambiar entorno:
+BITACORA_HTTPS_CERT_PATH y BITACORA_HTTPS_CERT_PASSWORD deben estar disponibles en el proceso. El certificado debe cubrir el nombre/direccion usados; ServerAddress permite indicar uno cubierto. No desactivar seguridad para ocultar un error del navegador.
 
-```powershell
-.\scripts\https\Start-BitacoraWithHttps.ps1 -ServerIp <SERVER_IP> -EnvironmentName Development
-```
+Los scripts Start-BitacoraWithHttps.ps1/Start-BitacoraPublished.ps1 anteriores tambien configuran SQLite; no son lanzadores SQL de esta rama. La generacion de certificados es una tarea distinta del cambio de proveedor: conservar el certificado actual salvo necesidad de renovacion revisada, y no confundirlo con la llave de cifrado de datos.
 
-## 4) Validaciones rapidas
+## Dos conexiones diferentes
 
-1. `https://<SERVER_IP>:5067/Login` abre sin alerta de certificado (si el CER esta confiado en cliente).
-2. `http://<SERVER_IP>:5067` no debe funcionar (sin listener HTTP).
-3. Login/logout operan correctamente.
-4. Bitacora sigue registrando eventos.
+| Conexion | Comprobacion |
+| --- | --- |
+| Navegador a Kestrel | Certificado HTTPS, nombre/SAN, vigencia y cadena confiable en cliente. |
+| Aplicacion/scripts a SQL | Encrypt=True y confianza/identidad del certificado SQL. |
 
-## 5) Diagnostico rapido si Chrome muestra "No seguro"
+TrustLocalSqlCertificate afecta solo a SQL local: omite su comprobacion de identidad pero mantiene cifrado. No modifica el certificado HTTPS ni debe interpretarse como confianza ya resuelta para produccion. El monitor mantiene la validacion HTTPS; los smokes tambien validan confianza por defecto y solo la omiten con TrustLocalHttpsCertificate explicito, que no sirve para certificarla.
 
-1. Abrir el visor del certificado desde el navegador.
-2. Revisar `Emitido a`:
-- Si dice `localhost`, el servidor esta entregando un certificado incorrecto.
-- Regenerar el certificado con la IP LAN exacta:
-
-```powershell
-.\scripts\https\New-LanCertificate.ps1 -ServerIp <SERVER_IP> -PersistToUserEnv
-```
-
-3. Reiniciar la app con:
-
-```powershell
-.\scripts\https\Start-BitacoraWithHttps.ps1 -ServerIp <SERVER_IP>
-```
-
-4. Reimportar en cada cliente el nuevo `C:\BitacoraEvidencias\certs\bitacora-lan.cer` en:
-- `Certificados (equipo local)`
-- `Entidades de certificacion raiz de confianza`
-
-5. Cerrar completamente Chrome y abrir de nuevo.
-
-Referencia de sintomas:
-- `NET::ERR_CERT_AUTHORITY_INVALID`: el cliente no confia en el `.cer` actual o sigue usando el anterior.
-- Certificado emitido a `localhost`: el `.pfx` activo no corresponde a la IP LAN configurada.
-
-## 6) Operacion diaria
-
-- Ejecutar siempre por script HTTPS.
-- Evitar `dotnet run` con perfiles HTTP heredados.
-- Si se renueva certificado, redistribuir `.cer` a clientes.
-
+Comprobar que HTTPS abre sin alertas, login/roles funcionan y no hay listener HTTP no previsto. Si cambia equipo/nombre/IP, revisar certificado y clientes antes de habilitar usuarios. Nunca publicar PFX, contrasena ni llave. Recuperacion: [RECUPERACION-SQLSERVER.md](RECUPERACION-SQLSERVER.md).

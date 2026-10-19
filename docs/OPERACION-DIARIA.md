@@ -1,6 +1,10 @@
-﻿# Operacion Diaria - Bitacora de Evidencias
+# Operacion Diaria - Bitacora de Evidencias
+
+> Documento historico SQLite 0.1.0. Para procedimientos vigentes SQL usar [OPERATIONS.md](OPERATIONS.md) y [ESTADO-0.2.0.md](ESTADO-0.2.0.md); no ejecutar los comandos SQLite con los binarios 0.2.0.
 
 ## 1) Datos base
+
+> SQL Server 0.2.0: consultar [AUDITORIA-MONITOREO-0.2.0.md](AUDITORIA-MONITOREO-0.2.0.md) y [BACKUP-OPERACION.md](BACKUP-OPERACION.md). Este procedimiento conserva la referencia SQLite; activar las tareas nuevas solo durante el cambio productivo.
 
 - URL oficial LAN: `https://<SERVER_IP>:5067`
 - Modo: HTTPS estricto (sin HTTP)
@@ -283,7 +287,7 @@ C:\BitacoraEvidencias\Iniciar Bitacora Manual.cmd
 - Validar:
 
 ```powershell
-[Environment]::GetEnvironmentVariable("BITACORA_DATA_PROTECTION_KEY", "Machine")
+-not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable("BITACORA_DATA_PROTECTION_KEY", "Machine"))
 ```
 
 - Reiniciar con:

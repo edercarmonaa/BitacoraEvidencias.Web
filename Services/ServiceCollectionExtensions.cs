@@ -10,6 +10,15 @@ public static class ServiceCollectionExtensions
 {
     public static void AddApplicationRazorPages(this IServiceCollection services)
     {
+        services.AddScoped<PageQueryTiming>();
+        services.AddScoped<QueryTimingInterceptor>();
+        services.AddScoped<ConnectionTimingInterceptor>();
+        services.AddScoped<PageQueryTimingFilter>();
+        services.Configure<Microsoft.AspNetCore.Mvc.MvcOptions>(options =>
+        {
+            options.Filters.AddService<PageQueryTimingFilter>();
+            Validation.SpanishValidationMessages.Configure(options);
+        });
         services.AddRazorPages(options =>
         {
             options.Conventions.AllowAnonymousToPage("/Login");

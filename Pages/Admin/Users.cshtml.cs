@@ -39,16 +39,16 @@ public class UsersModel(
     [TempData]
     public string? FlashError { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
-        await LoadUsersAsync();
+        await LoadUsersAsync(cancellationToken);
     }
 
     public async Task<IActionResult> OnPostCreateAsync()
     {
         if (!Roles.Contains(NewUser.Role))
         {
-            ModelState.AddModelError(nameof(NewUser.Role), "Rol no valido.");
+            ModelState.AddModelError("NewUser.Role", "Rol no valido.");
         }
 
         if (!ModelState.IsValid)
@@ -153,7 +153,7 @@ public class UsersModel(
         return int.TryParse(claim, out var id) ? id : null;
     }
 
-    private async Task LoadUsersAsync()
+    private async Task LoadUsersAsync(CancellationToken cancellationToken = default)
     {
         PageSize = NormalizePageSize(PageSize);
         PageNumber = PageNumber <= 0 ? 1 : PageNumber;
@@ -161,13 +161,14 @@ public class UsersModel(
         var query = dbContext.UsuariosSistema
             .AsNoTracking();
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
 
         Users = await query
             .OrderBy(x => x.Usuario)
+            .ThenBy(x => x.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new UserRow
@@ -183,7 +184,7 @@ public class UsersModel(
                 LastAccessUtc = x.UltimoAccesoUtc,
                 PasswordUpdatedAtUtc = x.PasswordUpdatedAtUtc
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     private int NormalizePageSize(int pageSize) =>

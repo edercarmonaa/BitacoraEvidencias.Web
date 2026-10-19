@@ -1,93 +1,32 @@
-# Deployment / Despliegue
+# Publicacion y despliegue SQL Server 0.2.0
 
-## English Summary
+Estado 19/10/2026: [corte productivo en curso](CORTE-PRODUCTIVO-0.2.0.md), SQL importado/verificado y servicio iniciado en la IP confirmada y puerto 5067. El acceso manual instalado ya usa Start-BitacoraSqlInstalled.ps1 con manifiesto y configuracion DPAPI externos. No usar los scripts historicos `Publish-Bitacora.ps1`, `Start-BitacoraManual.cmd`, `Start-BitacoraPublished.ps1` ni `Start-BitacoraWithHttps.ps1` para desplegar SQL: configuran SQLite.
 
-Deployment is designed for a controlled internal Windows environment. Public documentation uses placeholders and excludes real infrastructure values.
-
-## Deployment Model
-
-The application can be published with .NET and started with PowerShell scripts. Runtime data lives outside the repository:
-
-- Database directory.
-- Evidence storage directory.
-- Backup directory.
-- Certificates.
-- Operational logs.
-
-## Required Runtime Inputs
-
-Configure secrets outside Git:
+## Ensayo
 
 ```powershell
-BITACORA_DATA_PROTECTION_KEY
-BITACORA_HTTPS_CERT_PATH
-BITACORA_HTTPS_CERT_PASSWORD
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Publish-BitacoraSqlServer.ps1 -AppFolder App-ensayo-nuevo
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/deploy/Start-BitacoraSqlServer.ps1 -AppFolder App-ensayo-nuevo
 ```
 
-Use `<SERVER_IP>` as a placeholder in public documentation.
+El publicador rechaza carpetas existentes y rutas productivas; conserva binarios previos. El lanzador rechaza puerto 5067/ocupado y rutas productivas, solicita credenciales SQL, usa `BitacoraEvidencias_Pruebas` y copias de evidencias. Puerto predeterminado 5068. No sustituye el acceso directo SQLite ni cambia variables persistentes.
 
-## Publish
+La publicacion de ensayo mas reciente comprobada es `App-backup-final`: incluye busquedas, validaciones y control de respaldo local. Los ajustes PowerShell posteriores se ejecutan desde el repositorio; no se incorporan automaticamente a un directorio de binarios.
 
-The deployment script creates a published release and can optionally run a backup before replacing the active version.
+## Condiciones para produccion
 
-Example:
+1. Completar [aceptacion](ESTADO-0.2.0.md), resolver los fallos relevantes y comprobar el usuario SQL de operacion.
+2. Acordar mantenimiento sin escritores, incluyendo aplicaciones y tareas SQLite que modifiquen datos.
+3. Guardar respaldo final SQLite/evidencias y copias de historicos, binarios, configuracion, certificados y secretos con custodia separada de la llave. Ver [migracion](MIGRACION-0.2.0.md).
+4. Importar desde esa copia a la base productiva existente solo si esta vacia. No borrar bases, recrear usuarios ni usar la copia antigua de ensayo como corte final.
+5. Preparar una publicacion SQL independiente y su configuracion productiva, puerto 5067 y evidencias existentes. Publish-BitacoraSqlRelease.ps1 y Start-BitacoraSqlProduction.ps1 ya preparan un despliegue SQL independiente; falta ensayar el arranque con usuario/permisos finales y aceptar el cambio del acceso directo. Los scripts SqlServer sin ese sufijo siguen siendo exclusivos de ensayo. Ver [SCRIPTS-0.2.0.md](SCRIPTS-0.2.0.md).
+6. Validar login, roles, lectura de datos/imagenes, escrituras y respaldo antes de admitir usuarios.
+7. En el cambio aprobado, deshabilitar las tareas SQLite y registrar/habilitar las SQL con sus credenciales locales. No ejecutar ambos proveedores como servicio productivo simultaneo.
 
-```powershell
-.\scripts\deploy\Publish-Bitacora.ps1
-```
+## Continuidad
 
-## Manual Start
+Conservar la llave actual y los hashes/sales de cuentas; no generar un admin nuevo al migrar. Git no conserva datos ni secretos. Antes de admitir escrituras se puede recuperar el estado consistente SQLite. Despues de nuevas escrituras SQL, volver requiere transferencia/conciliacion, no arrancar sin mas la base anterior.
 
-The application is no longer registered for automatic startup at Windows logon. Start the published app manually with the versioned launcher:
+El ciclo de respaldo SQL detiene/reinicia la misma publicacion mediante control local de la misma cuenta Windows, sin endpoint HTTP. Requiere proceso independiente y mismo nivel de elevacion que la tarea. No administra IIS ni servicios Windows. Ver [BACKUP-OPERACION.md](BACKUP-OPERACION.md).
 
-```bat
-.\scripts\deploy\Start-BitacoraManual.cmd <SERVER_IP>
-```
-
-The manual launcher:
-
-- Starts the published executable from `C:\BitacoraEvidencias\deploy\current`.
-- Reuses the configured certificate and data-protection environment variables.
-- Waits for port `5067` and opens `https://<SERVER_IP>:5067/Login`.
-- Writes logs under `C:\BitacoraEvidencias\deploy\logs`.
-
-For technical diagnostics, the PowerShell runner can still be used:
-
-```powershell
-.\scripts\deploy\Start-BitacoraPublished.ps1 -ServerIp <SERVER_IP>
-```
-
-For development-style HTTPS startup from the project source:
-
-```powershell
-.\scripts\https\Start-BitacoraWithHttps.ps1 -ServerIp <SERVER_IP>
-```
-
-## Certificate Generation
-
-Certificate generation is handled by script, but generated files and passwords are local secrets.
-
-```powershell
-.\scripts\https\New-LanCertificate.ps1 -ServerIp <SERVER_IP> -PersistToUserEnv
-```
-
-Do not commit generated certificates.
-
-## Deployment Safety
-
-Before deployment:
-
-- Confirm backup freshness.
-- Confirm the data-protection key is available.
-- Confirm the certificate path/password are available.
-- Confirm storage permissions.
-- Confirm the database is not a public sample with real data.
-- Confirm no obsolete app startup task exists for `Bitacora Evidencias - Inicio de sesion`.
-
-## Production Hardening Ideas
-
-- Run under a dedicated service account.
-- Centralize logs and monitoring.
-- Externalize backups to protected storage.
-- Add health checks and alerting.
-- Consider server-grade database storage if concurrency grows.
+Recuperacion en otra maquina: [RECUPERACION-SQLSERVER.md](RECUPERACION-SQLSERVER.md). Procedimientos conservados de SQLite: [SQLITE-0.1.md](SQLITE-0.1.md).

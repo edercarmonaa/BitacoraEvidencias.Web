@@ -24,7 +24,7 @@ else {
 
 if ($Force -or -not (Test-Path $tailwindExe)) {
     Write-Host "Descargando Tailwind standalone..."
-    Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-windows-x64.exe" -OutFile $tailwindExe
+    Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.1/tailwindcss-windows-x64.exe" -OutFile $tailwindExe
 }
 else {
     Write-Host "Tailwind ya existe: $tailwindExe"

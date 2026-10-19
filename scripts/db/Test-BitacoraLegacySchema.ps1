@@ -5,6 +5,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\operations\ScriptCompatibility.ps1')
+Assert-BitacoraSqliteSource
 
 $projectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $projectFile = Join-Path $projectRoot "BitacoraEvidencias.Web.csproj"

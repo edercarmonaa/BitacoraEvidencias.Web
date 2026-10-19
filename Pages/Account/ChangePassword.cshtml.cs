@@ -62,7 +62,7 @@ public class ChangePasswordModel(
 
         if (!PasswordHasher.VerifyPassword(Input.CurrentPassword, user.PasswordHash, user.PasswordSalt))
         {
-            ModelState.AddModelError(nameof(Input.CurrentPassword), "La contraseña actual no es correcta.");
+            ModelState.AddModelError("Input.CurrentPassword", "La contraseña actual no es correcta.");
             return Page();
         }
 

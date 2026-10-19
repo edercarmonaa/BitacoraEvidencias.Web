@@ -1,6 +1,7 @@
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Security;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitacoraEvidencias.Web.Services;
@@ -39,6 +40,7 @@ public sealed class OficioApplicationService(
 {
     public async Task<OficioUpdateResult> UpdateAsync(OficioUpdateRequest request)
     {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
         var oficio = await dbContext.Oficios
             .Include(x => x.Casos)
             .ThenInclude(x => x.Evidencias)
@@ -49,7 +51,15 @@ public sealed class OficioApplicationService(
             return new OficioUpdateResult { NotFound = true };
         }
 
-        var numeroNormalizado = request.NumeroOficio.Trim();
+        var dateErrors = FormRules.ValidateOfficeDate(request.FechaOficio, oficio.FechaOficio,
+            oficio.Casos.Select(c => c.FechaVerificacion));
+        if (dateErrors.Count > 0) return new OficioUpdateResult { ValidationErrors = dateErrors };
+
+        var numeroNormalizado = request.NumeroOficio?.Trim() ?? "";
+        if (numeroNormalizado.Length == 0 && !string.IsNullOrWhiteSpace(oficio.NumeroOficio))
+            return new OficioUpdateResult { ValidationErrors = [new("NumeroOficio", "El numero de oficio es obligatorio.")] };
+        if (string.IsNullOrWhiteSpace(request.Asunto) && !string.IsNullOrWhiteSpace(oficio.Asunto))
+            return new OficioUpdateResult { ValidationErrors = [new("Asunto", "El asunto es obligatorio.")] };
         var numeroCambio = !string.Equals(oficio.NumeroOficio, numeroNormalizado, StringComparison.Ordinal);
         if (numeroCambio)
         {
@@ -59,7 +69,7 @@ public sealed class OficioApplicationService(
                 .Select(x => x.NumeroOficio)
                 .ToListAsync();
 
-            if (existingNumbers.Contains(numeroNormalizado, StringComparer.Ordinal))
+            if (existingNumbers.Contains(numeroNormalizado, StringComparer.OrdinalIgnoreCase))
             {
                 return new OficioUpdateResult
                 {
@@ -81,7 +91,7 @@ public sealed class OficioApplicationService(
             }
         }
 
-        var normalizedAsunto = request.Asunto.Trim();
+        var normalizedAsunto = request.Asunto?.Trim() ?? "";
         var normalizedNotas = string.IsNullOrWhiteSpace(request.Notas) ? null : request.Notas.Trim();
         var fechaOficio = request.FechaOficio.Date;
         var numeroAnterior = oficio.NumeroOficio;
@@ -134,6 +144,7 @@ public sealed class OficioApplicationService(
         try
         {
             await dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
         catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation("Oficios.NumeroOficio"))
         {

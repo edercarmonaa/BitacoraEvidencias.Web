@@ -17,6 +17,10 @@ public class DetailsModel(
 {
     public CasoCorreccion? Caso { get; private set; }
     public List<EvidenciaRow> Evidencias { get; private set; } = [];
+    [BindProperty(SupportsGet = true)] public int PageNumber { get; set; } = 1;
+    [BindProperty(SupportsGet = true)] public int PageSize { get; set; } = 20;
+    public int TotalRows { get; private set; }
+    public int TotalPages { get; private set; } = 1;
 
     public IReadOnlyList<string> TiposEvidencia => CatalogosCaso.TiposEvidencia;
 
@@ -33,12 +37,12 @@ public class DetailsModel(
     [TempData]
     public string? FlashError { get; set; }
 
-    public async Task<IActionResult> OnGetAsync(int id)
+    public async Task<IActionResult> OnGetAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await LoadPageAsync(id);
+        return await LoadPageAsync(id, cancellationToken);
     }
 
-    public async Task<IActionResult> OnPostUploadAsync(int id)
+    public async Task<IActionResult> OnPostUploadAsync(int id, CancellationToken cancellationToken = default)
     {
         var archivos = Input.Archivos ?? [];
         var archivosGuardados = new List<StoredPhotoInfo>();
@@ -54,7 +58,7 @@ public class DetailsModel(
 
         var caso = await dbContext.CasosCorreccion
             .Include(x => x.Oficio)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (caso is null || caso.Oficio is null)
         {
@@ -162,24 +166,29 @@ public class DetailsModel(
         return baseUrl + $"?v={evidenciaId}{thumbQuery}";
     }
 
-    private async Task<IActionResult> LoadPageAsync(int id)
+    private async Task<IActionResult> LoadPageAsync(int id, CancellationToken cancellationToken = default)
     {
         Caso = await dbContext.CasosCorreccion
             .AsNoTracking()
             .Include(x => x.Oficio)
             .Include(x => x.AuditorUsuario)
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (Caso is null || Caso.Oficio is null)
         {
             return NotFound();
         }
 
-        Evidencias = await dbContext.EvidenciasFoto
-            .AsNoTracking()
-            .Where(x => x.CasoCorreccionId == id)
+        var query = dbContext.EvidenciasFoto.AsNoTracking().Where(x => x.CasoCorreccionId == id);
+        PageSize = Math.Clamp(PageSize <= 0 ? 20 : PageSize, 1, 100);
+        TotalRows = await query.CountAsync(cancellationToken);
+        TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
+        PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
+        Evidencias = await query
             .OrderByDescending(x => x.FechaEvidencia)
             .ThenByDescending(x => x.Id)
+            .Skip((PageNumber - 1) * PageSize)
+            .Take(PageSize)
             .Select(x => new EvidenciaRow
             {
                 Id = x.Id,
@@ -187,7 +196,7 @@ public class DetailsModel(
                 FechaEvidencia = x.FechaEvidencia,
                 Notas = x.Notas
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (Input.FechaEvidencia == default)
         {

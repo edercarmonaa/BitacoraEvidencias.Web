@@ -6,94 +6,39 @@ namespace BitacoraEvidencias.Web.Services;
 
 public static class IncorrectAuditOfficeQueries
 {
-    public static async Task<List<IncorrectAuditOfficeRow>> LoadAsync(
-        AppDbContext dbContext,
-        CancellationToken cancellationToken = default)
-    {
-        var auditableOffices = await dbContext.Oficios
-            .AsNoTracking()
-            .Where(x =>
-                x.Casos.Any() &&
-                x.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)))
-            .Select(x => new IncorrectAuditOfficeCandidate
-            {
-                Id = x.Id,
-                NumeroOficio = x.NumeroOficio,
-                FechaOficio = x.FechaOficio,
-                Asunto = x.Asunto,
-                TotalCasos = x.Casos.Count,
-                Estados = x.Casos
-                    .Select(c => c.AuditoriaEstado)
-                    .ToList()
-            })
-            .ToListAsync(cancellationToken);
-
-        return auditableOffices
-            .Where(x => IsIncorrectAuditOffice(x.Estados))
-            .OrderByDescending(x => x.FechaOficio)
-            .ThenBy(x => x.NumeroOficio, StringComparer.Ordinal)
-            .Select(x => new IncorrectAuditOfficeRow
-            {
-                Id = x.Id,
-                NumeroOficio = x.NumeroOficio,
-                FechaOficio = x.FechaOficio,
-                Asunto = x.Asunto,
-                TotalCasos = x.TotalCasos
-            })
-            .ToList();
-    }
-
-    public static async Task<List<IncorrectAuditCaseRow>> LoadCasesAsync(
-        AppDbContext dbContext,
-        CancellationToken cancellationToken = default)
-    {
-        var cases = await dbContext.CasosCorreccion
-            .AsNoTracking()
-            .Where(x =>
-                x.AuditoriaEstado == CatalogosAuditoriaCaso.NoCoincidente &&
-                (x.Evidencias.Any() || (x.EvidenciaUrl != null && x.EvidenciaUrl != string.Empty)))
-            .Select(x => new IncorrectAuditCaseRow
-            {
-                CasoId = x.Id,
-                OficioId = x.OficioId,
-                NumeroOficio = x.Oficio!.NumeroOficio,
-                FechaOficio = x.Oficio.FechaOficio,
-                Consecutivo = x.Consecutivo,
-                Curp = x.Curp,
-                NivelEducativo = x.NivelEducativo,
-                TipoCorreccion = x.TipoCorreccion
-            })
-            .ToListAsync(cancellationToken);
-
-        return cases
-            .OrderByDescending(x => x.FechaOficio)
-            .ThenBy(x => x.NumeroOficio, StringComparer.Ordinal)
-            .ThenBy(x => x.Consecutivo)
-            .ToList();
-    }
-
-    private static bool IsIncorrectAuditOffice(IReadOnlyCollection<string> estados)
-    {
-        if (estados.Count == 0)
+    public static IOrderedQueryable<IncorrectAuditOfficeRow> Offices(AppDbContext context) => context.Oficios
+        .AsNoTracking()
+        .Where(o => o.Casos.Any() &&
+            o.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)) &&
+            o.Casos.All(c => c.AuditoriaEstado != null &&
+                (c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.Coincidente || c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.NoCoincidente)) &&
+            o.Casos.Any(c => c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.NoCoincidente))
+        .OrderByDescending(o => o.FechaOficio).ThenBy(o => o.NumeroOficio).ThenBy(o => o.Id)
+        .Select(o => new IncorrectAuditOfficeRow
         {
-            return false;
-        }
+            Id = o.Id, NumeroOficio = o.NumeroOficio, FechaOficio = o.FechaOficio,
+            Asunto = o.Asunto, TotalCasos = o.Casos.Count
+        })
+        .OrderByDescending(o => o.FechaOficio).ThenBy(o => o.NumeroOficio).ThenBy(o => o.Id);
 
-        return estados.All(estado => CatalogosAuditoriaCaso.NormalizarEstado(estado) != CatalogosAuditoriaCaso.Pendiente) &&
-               estados.Any(estado => CatalogosAuditoriaCaso.NormalizarEstado(estado) == CatalogosAuditoriaCaso.NoCoincidente);
-    }
+    public static IOrderedQueryable<IncorrectAuditCaseRow> Cases(AppDbContext context) => context.CasosCorreccion
+        .AsNoTracking()
+        .Where(c => c.AuditoriaEstado == CatalogosAuditoriaCaso.NoCoincidente &&
+            (c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)))
+        .Select(c => new IncorrectAuditCaseRow
+        {
+            CasoId = c.Id, OficioId = c.OficioId, NumeroOficio = c.Oficio!.NumeroOficio,
+            FechaOficio = c.Oficio.FechaOficio, Consecutivo = c.Consecutivo, Curp = c.Curp,
+            NivelEducativo = c.NivelEducativo, TipoCorreccion = c.TipoCorreccion
+        })
+        .OrderByDescending(c => c.FechaOficio).ThenBy(c => c.NumeroOficio).ThenBy(c => c.Consecutivo).ThenBy(c => c.CasoId);
 
-    private sealed class IncorrectAuditOfficeCandidate
-    {
-        public int Id { get; init; }
-        public string NumeroOficio { get; init; } = string.Empty;
-        public DateTime FechaOficio { get; init; }
-        public string Asunto { get; init; } = string.Empty;
-        public int TotalCasos { get; init; }
-        public List<string> Estados { get; init; } = [];
-    }
+    public static Task<List<IncorrectAuditOfficeRow>> LoadAsync(AppDbContext context, CancellationToken cancellationToken = default)
+        => Offices(context).ToListAsync(cancellationToken);
+
+    public static Task<List<IncorrectAuditCaseRow>> LoadCasesAsync(AppDbContext context, CancellationToken cancellationToken = default)
+        => Cases(context).ToListAsync(cancellationToken);
 }
-
 public sealed class IncorrectAuditOfficeRow
 {
     public int Id { get; init; }

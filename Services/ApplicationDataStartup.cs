@@ -265,12 +265,16 @@ public static class ApplicationDataStartup
         string? connectionString,
         string contentRootPath)
     {
-        ValidateSqliteDatabaseFileExists(connectionString, contentRootPath);
-
         if (!dbContext.Database.IsSqlite())
         {
+            if (!dbContext.Database.CanConnect() || dbContext.Database.GetPendingMigrations().Any())
+                throw new InvalidOperationException("La base SQL Server no esta preparada. Ejecuta y valida la migracion antes de iniciar.");
+            if (!dbContext.UsuariosSistema.AsNoTracking().Any())
+                throw new InvalidOperationException("La base SQL Server no contiene usuarios migrados.");
             return;
         }
+
+        ValidateSqliteDatabaseFileExists(connectionString, contentRootPath);
 
         EnsureSqliteCaseAuditSchema(dbContext);
 

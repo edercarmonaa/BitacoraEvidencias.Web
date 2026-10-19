@@ -1,5 +1,6 @@
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
+using BitacoraEvidencias.Web.Validation;
 using BitacoraEvidencias.Web.Pages.Admin;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -169,8 +170,8 @@ public sealed class CasoImportPreviewService(
 
             var oficioNumero = candidate.OficioNumero?.Trim() ?? string.Empty;
             var folio = ImportParsing.NormalizeOptional(candidate.Folio);
-            var cct = candidate.Cct?.Trim() ?? string.Empty;
-            var curp = candidate.Curp?.Trim() ?? string.Empty;
+            var cct = FormRules.NormalizeCode(candidate.Cct) ?? string.Empty;
+            var curp = FormRules.NormalizeCode(candidate.Curp) ?? string.Empty;
             var nombreCompleto = candidate.NombreCompleto?.Trim() ?? string.Empty;
             var tipoCorreccion = candidate.TipoCorreccion?.Trim() ?? string.Empty;
             var observaciones = ImportParsing.NormalizeOptional(candidate.Observaciones);
@@ -238,6 +239,11 @@ public sealed class CasoImportPreviewService(
             {
                 rowErrors.Add("FechaVerificacion no tiene un formato valido. Usa dd/MM/yyyy.");
             }
+            if (officeTarget is not null)
+                rowErrors.AddRange(FormRules.ValidateCase(new(curp, nombreCompleto, cct,
+                    hasPeriodoInicio ? periodoInicio : null, hasPeriodoFin ? periodoFin : null,
+                    fechaVerificacion == default ? null : fechaVerificacion), officeTarget.FechaOficio)
+                    .Select(error => error.Message).Where(message => !rowErrors.Contains(message)));
 
             var nivelEducativo = NormalizeCatalogValue(candidate.NivelRaw, CatalogosCaso.NivelesEducativos);
             if (nivelEducativo is null)
@@ -363,6 +369,7 @@ public sealed class CasoImportPreviewService(
             {
                 x.Id,
                 x.NumeroOficio,
+                x.FechaOficio,
                 ExistingLevels = x.Casos.Select(caso => caso.NivelEducativo).ToList(),
                 NextConsecutivo = x.Casos.Count + 1
             })
@@ -373,6 +380,7 @@ public sealed class CasoImportPreviewService(
             item => new OfficeImportTarget
             {
                 OficioId = item.Id,
+                FechaOficio = item.FechaOficio,
                 NextConsecutivo = item.NextConsecutivo,
                 ExistingLevels = new HashSet<string>(item.ExistingLevels, StringComparer.Ordinal)
             },
@@ -436,6 +444,7 @@ public sealed class CasoImportPreviewService(
     private sealed class OfficeImportTarget
     {
         public int OficioId { get; init; }
+        public DateTime FechaOficio { get; init; }
         public int NextConsecutivo { get; set; }
         public HashSet<string> ExistingLevels { get; init; } = new(StringComparer.Ordinal);
     }

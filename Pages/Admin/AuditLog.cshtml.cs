@@ -34,7 +34,7 @@ public class AuditLogModel(AppDbContext dbContext) : PageModel
     public bool HasPreviousPage => PageNumber > 1;
     public bool HasNextPage => PageNumber < TotalPages;
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
         var effectiveDays = Math.Clamp(Days <= 0 ? 7 : Days, 1, 90);
         Days = effectiveDays;
@@ -64,13 +64,14 @@ public class AuditLogModel(AppDbContext dbContext) : PageModel
             query = query.Where(x => x.Username != null && EF.Functions.Like(x.Username, $"%{usernameFilter}%"));
         }
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
 
         Items = await query
             .OrderByDescending(x => x.OccurredAtUtc)
+            .ThenByDescending(x => x.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new AuditLogRow
@@ -92,7 +93,7 @@ public class AuditLogModel(AppDbContext dbContext) : PageModel
                 Details = x.Details,
                 Success = x.Success
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
     }
 

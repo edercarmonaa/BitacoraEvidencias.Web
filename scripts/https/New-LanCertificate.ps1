@@ -3,7 +3,7 @@ param(
     [string]$ServerIp,
 
     [string]$OutputDir = "C:\BitacoraEvidencias\certs",
-    [int]$YearsValid = 3,
+    [ValidateRange(1,10)][int]$YearsValid = 3,
     [switch]$PersistToUserEnv
 )
 
@@ -14,14 +14,16 @@ if (-not ([System.Net.IPAddress]::TryParse($ServerIp, [ref]([System.Net.IPAddres
     throw "ServerIp no tiene formato de IP valido: $ServerIp"
 }
 
-New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
-
 $pfxPath = Join-Path $OutputDir "bitacora-lan.pfx"
 $cerPath = Join-Path $OutputDir "bitacora-lan.cer"
+$credentialPath = Join-Path $OutputDir 'bitacora-lan.credential.xml'
+if ((Test-Path -LiteralPath $pfxPath) -or (Test-Path -LiteralPath $cerPath) -or (Test-Path -LiteralPath $credentialPath)) { throw 'Ya existe material HTTPS en el destino. No se sobrescribe; usar una carpeta nueva para una renovacion revisada.' }
+New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
-$charset = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789".ToCharArray()
-$passwordChars = 1..24 | ForEach-Object { $charset | Get-Random }
-$plainPassword = -join $passwordChars
+$randomBytes = New-Object byte[] 32
+$random = [Security.Cryptography.RandomNumberGenerator]::Create()
+try { $random.GetBytes($randomBytes) } finally { $random.Dispose() }
+$plainPassword = [Convert]::ToBase64String($randomBytes)
 $securePassword = ConvertTo-SecureString -String $plainPassword -AsPlainText -Force
 
 $cert = New-SelfSignedCertificate `
@@ -37,6 +39,9 @@ $cert = New-SelfSignedCertificate `
 
 Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $securePassword | Out-Null
 Export-Certificate -Cert $cert -FilePath $cerPath | Out-Null
+[Management.Automation.PSCredential]::new('HTTPS',$securePassword) | Export-Clixml -LiteralPath $credentialPath -NoClobber
+$env:BITACORA_HTTPS_CERT_PATH = $pfxPath
+$env:BITACORA_HTTPS_CERT_PASSWORD = $plainPassword
 
 if ($PersistToUserEnv) {
     [Environment]::SetEnvironmentVariable("BITACORA_HTTPS_CERT_PATH", $pfxPath, "User")
@@ -48,11 +53,10 @@ Write-Host "Certificado generado:" -ForegroundColor Green
 Write-Host "  PFX: $pfxPath"
 Write-Host "  CER: $cerPath"
 Write-Host ""
-Write-Host "Variables de entorno para esta sesion:"
-Write-Host "  `$env:BITACORA_HTTPS_CERT_PATH = '$pfxPath'"
-Write-Host "  `$env:BITACORA_HTTPS_CERT_PASSWORD = '$plainPassword'"
+Write-Host "Variables HTTPS configuradas solo en esta sesion; no se imprime la contrasena. Custodiarla por el mecanismo externo autorizado."
+Write-Host "Credencial HTTPS protegida con DPAPI: $credentialPath (misma cuenta/equipo)."
 Write-Host ""
 Write-Host "Ejecuta luego:"
-Write-Host "  .\scripts\https\Start-BitacoraWithHttps.ps1 -ServerIp $ServerIp"
+Write-Host "  .\scripts\deploy\Start-BitacoraSqlServer.ps1 -ServerAddress $ServerIp -AppFolder App-backup-final"
 Write-Host ""
 Write-Host "Para que clientes confien en HTTPS, instala el .cer en 'Trusted Root Certification Authorities' en cada equipo cliente."

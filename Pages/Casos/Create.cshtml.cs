@@ -3,6 +3,7 @@ using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
 using BitacoraEvidencias.Web.Security;
 using BitacoraEvidencias.Web.Services;
+using BitacoraEvidencias.Web.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ public class CreateModel(
 
         Oficio = oficio;
         Input.OficioId = oficioId;
+        Input.NivelEducativo = NivelesEducativosDisponibles.FirstOrDefault(level => !oficio.Niveles.Contains(level)) ?? Input.NivelEducativo;
         Input.ReturnOficioId = returnOficioId;
         AuditoresDisponibles = await LoadAuditoresDisponiblesAsync();
         SiguienteConsecutivo = await GetSiguienteConsecutivoAsync(oficioId);
@@ -52,19 +54,18 @@ public class CreateModel(
         }
 
         var nivelEducativo = Input.NivelEducativo.Trim();
-        if (Input.PeriodoInicio.HasValue && Input.PeriodoFin.HasValue && Input.PeriodoFin.Value < Input.PeriodoInicio.Value)
-        {
-            ModelState.AddModelError(nameof(Input.PeriodoFin), "El periodo fin no puede ser menor al periodo inicio.");
-        }
+        foreach (var error in FormRules.ValidateCase(new(Input.Curp, Input.NombreCompleto, Input.Cct,
+            Input.PeriodoInicio, Input.PeriodoFin, Input.FechaVerificacion), Oficio.FechaOficio))
+            ModelState.AddModelError($"Input.{error.Key}", error.Message);
 
         if (await ExistsCaseForLevelAsync(Input.OficioId, nivelEducativo))
         {
-            ModelState.AddModelError(nameof(Input.NivelEducativo), $"Ya existe un caso de {nivelEducativo} para este oficio.");
+            ModelState.AddModelError("Input.NivelEducativo", $"Ya existe un caso de {nivelEducativo} para este oficio.");
         }
 
         if (Input.AuditorUsuarioId.HasValue && !await ActiveUserExistsAsync(Input.AuditorUsuarioId.Value))
         {
-            ModelState.AddModelError(nameof(Input.AuditorUsuarioId), "Selecciona un auditor activo valido.");
+            ModelState.AddModelError("Input.AuditorUsuarioId", "Selecciona un auditor activo valido.");
         }
 
         if (!ModelState.IsValid)
@@ -81,9 +82,9 @@ public class CreateModel(
             {
                 OficioId = Input.OficioId,
                 Consecutivo = siguiente,
-                Curp = NormalizeOptional(Input.Curp),
+                Curp = FormRules.NormalizeCode(Input.Curp),
                 NombreCompleto = NormalizeOptional(Input.NombreCompleto),
-                Cct = NormalizeOptional(Input.Cct),
+                Cct = FormRules.NormalizeCode(Input.Cct),
                 Validador = NormalizeOptional(Input.Validador),
                 AuditorUsuarioId = Input.AuditorUsuarioId,
                 NivelEducativo = nivelEducativo,
@@ -141,7 +142,7 @@ public class CreateModel(
             catch (DbUpdateException ex) when (ex.IsUniqueConstraintViolation("CasosCorreccion.OficioId, CasosCorreccion.NivelEducativo"))
             {
                 dbContext.Entry(caso).State = EntityState.Detached;
-                ModelState.AddModelError(nameof(Input.NivelEducativo), $"Ya existe un caso de {nivelEducativo} para este oficio.");
+                ModelState.AddModelError("Input.NivelEducativo", $"Ya existe un caso de {nivelEducativo} para este oficio.");
                 AuditoresDisponibles = await LoadAuditoresDisponiblesAsync();
                 SiguienteConsecutivo = await GetSiguienteConsecutivoAsync(Input.OficioId);
                 return Page();
@@ -170,7 +171,9 @@ public class CreateModel(
             .Select(x => new OficioResumen
             {
                 Id = x.Id,
-                NumeroOficio = x.NumeroOficio
+                NumeroOficio = x.NumeroOficio,
+                FechaOficio = x.FechaOficio,
+                Niveles = x.Casos.Select(c => c.NivelEducativo).ToList()
             })
             .FirstOrDefaultAsync();
     }
@@ -273,7 +276,7 @@ public class CreateModel(
         public DateTime? FechaVerificacion { get; set; }
 
         [Display(Name = "Evidencia (liga)")]
-        [Url(ErrorMessage = "Captura una URL valida (http/https).")]
+        [HttpUrl]
         [StringLength(1000)]
         public string? EvidenciaUrl { get; set; }
 
@@ -290,6 +293,8 @@ public class CreateModel(
     {
         public int Id { get; init; }
         public string NumeroOficio { get; init; } = string.Empty;
+        public DateTime FechaOficio { get; init; }
+        public IReadOnlyList<string> Niveles { get; init; } = [];
     }
 
     public class AuditorOption

@@ -14,7 +14,7 @@
 <form method="get"
       class="card mb-3"
       data-busy
-      hx-get="@Url.Page("/Admin/AuditLog")"
+      hx-sync="#app-main:replace" hx-get="@Url.Page("/Admin/AuditLog")"
       hx-indicator="#auditlog-loading"
       hx-target="#auditlog-results"
       hx-select="#auditlog-results"
@@ -48,7 +48,7 @@
                 <button type="submit" class="btn btn-primary">Filtrar</button>
                 <a asp-page="/Admin/AuditLog"
                    class="btn btn-outline-secondary"
-                   hx-get="@Url.Page("/Admin/AuditLog")"
+                   hx-sync="#app-main:replace" hx-get="@Url.Page("/Admin/AuditLog")"
                    hx-target="#app-main"
                    hx-select="#app-main"
                    hx-swap="outerHTML transition:true"

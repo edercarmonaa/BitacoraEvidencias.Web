@@ -23,6 +23,7 @@
             </div>
 
             <form method="post"
+                  data-confirm="Se eliminara este caso junto con sus evidencias. Esta accion no se puede deshacer."
                   data-busy
                   data-ui-loading
                   hx-post="@Url.Page("/Casos/Delete", new { id = Model.Caso.Id, returnOficioId = Model.ReturnOficioId, returnUrl = Model.ReturnUrl })"
@@ -42,7 +43,7 @@
                     {
                         <a class="btn btn-outline-secondary"
                            href="@returnUrl"
-                           hx-get="@returnUrl"
+                           hx-sync="#app-main:replace" hx-get="@returnUrl"
                            hx-target="#app-main"
                            hx-select="#app-main"
                            hx-swap="outerHTML transition:true"
@@ -53,7 +54,7 @@
                         <a class="btn btn-outline-secondary"
                            asp-page="/Oficios/Details"
                            asp-route-id="@Model.ReturnOficioId.Value"
-                           hx-get="@Url.Page("/Oficios/Details", new { id = Model.ReturnOficioId.Value })"
+                           hx-sync="#app-main:replace" hx-get="@Url.Page("/Oficios/Details", new { id = Model.ReturnOficioId.Value })"
                            hx-target="#app-main"
                            hx-select="#app-main"
                            hx-swap="outerHTML transition:true"

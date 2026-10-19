@@ -67,7 +67,7 @@ public class BusquedaModel(
     public bool IsSortedBy(string sortBy) => string.Equals(ActiveSortBy, sortBy, StringComparison.OrdinalIgnoreCase);
     public bool IsSortDescending => string.Equals(ActiveSortDirection, "desc", StringComparison.OrdinalIgnoreCase);
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken cancellationToken = default)
     {
         PageSize = Math.Clamp(PageSize <= 0 ? DefaultPageSize : PageSize, 1, MaxPageSize);
         ActiveSortBy = NormalizeSortBy(SortBy);
@@ -163,7 +163,7 @@ public class BusquedaModel(
             }
         }
 
-        TotalRows = await query.CountAsync();
+        TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
@@ -174,9 +174,22 @@ public class BusquedaModel(
             .ThenBy(x => x.Consecutivo)
             .ThenBy(x => x.Id);
 
-        Resultados = await orderedQuery
+        // Keep encrypted/wide display fields out of the pagination sort. Loading
+        // the bounded page in a second statement also prevents SQL Server from
+        // moving those fields back into the sort through query flattening.
+        var pageIds = await orderedQuery
             .Skip(skip)
             .Take(PageSize)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+        if (pageIds.Count == 0)
+        {
+            Resultados = [];
+            return;
+        }
+
+        var rows = await dbContext.CasosCorreccion.AsNoTracking()
+            .Where(x => pageIds.Contains(x.Id))
             .Select(x => new ResultadoRow
             {
                 CasoId = x.Id,
@@ -190,7 +203,9 @@ public class BusquedaModel(
                 TipoCorreccion = x.TipoCorreccion,
                 Estatus = x.Estatus
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
+        var positions = pageIds.Select((id, index) => (id, index)).ToDictionary(x => x.id, x => x.index);
+        Resultados = rows.OrderBy(x => positions[x.CasoId]).ToList();
     }
 
     public string GetSortIndicator(string sortBy)
