@@ -39,6 +39,7 @@ dotnet build tools/BitacoraMigration/BitacoraMigration.csproj -c Release
 | `BITACORA_BACKUP_ROOT` | Destino de respaldos. |
 | `BITACORA_BACKUP_SQL_STAGING`, `BITACORA_BACKUP_SQL_CREDENTIAL_FILE` | Intercambio del BAK y credencial DPAPI de respaldo. |
 | `BITACORA_OPERATIONS_SQL_CREDENTIAL_FILE` | Credencial DPAPI de auditoria/monitoreo. |
+| `BITACORA_APPLICATION_SQL_CREDENTIAL_FILE` | Credencial DPAPI opcional del lanzador SQL productivo independiente. |
 
 [.env.example](.env.example) contiene placeholders. Copiarlo a `.env` no carga las variables automaticamente; tampoco se carga `appsettings.Local.json` por defecto. No guardar secretos en archivos versionados ni regenerar la llave existente.
 
@@ -66,6 +67,8 @@ No ejecutar los scripts SQLite de inicializacion, stamp, publicacion o arranque 
 | Respaldo | 14:00 | Cierre ordenado, BAK/evidencias/historicos verificados y reinicio. |
 
 Los registradores preparan tareas SQL deshabilitadas; actualmente no estan registradas ni activadas. Las tareas SQLite siguen intactas hasta la migracion. Las nuevas tareas requieren sesion Windows abierta; puede estar bloqueada. Ver [operacion](docs/OPERATIONS.md), [respaldo](docs/BACKUP-OPERACION.md) y [auditoria/monitoreo](docs/AUDITORIA-MONITOREO-0.2.0.md).
+
+La [revision de scripts](docs/SCRIPTS-0.2.0.md) documenta el bloqueo previo de procedimientos SQLite, release/arranque SQL independientes y smokes actualizados con AllowWriteTests. No activa la migracion ni sustituye el acceso directo productivo.
 
 ## Pruebas
 

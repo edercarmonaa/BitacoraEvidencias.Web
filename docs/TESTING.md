@@ -28,6 +28,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/validation/Test-
 
 No registra tareas reales. Los test generan artefactos bajo tmp, ignorado por Git. Run-StartupValidation.ps1 valida el flujo SQLite anterior; no usarlo como prueba del arranque SQL.
 
+Test-ScriptAlignment.ps1 comprueba sintaxis de los scripts, rechazo previo de reset/publicacion SQLite, objetivos smoke, carpetas HMAC, imagen sintetica, privacidad de staging, TLS explicito y lanzador SQL con procesos simulados. Pasaron 69 comprobaciones en el entorno con binarios compilados, sin conectar a SQL ni iniciar aplicaciones.
+
 ## Formularios
 
 30 comprobaciones DOM aprobadas, sin navegador real. Herramienta de prueba separada, no dependencia de produccion:
@@ -49,6 +51,6 @@ Requiere Node 22.20+/24 y npm compatibles con esa herramienta. Para aceptacion v
 
 ## Smoke y aceptacion
 
-Usar [SMOKE-TEST-INTEGRAL.md](SMOKE-TEST-INTEGRAL.md) solo sobre copias. Los smokes pueden crear, cambiar y borrar datos e invalidan verify contra el origen. Suministrar la contrasena por BITACORA_SMOKE_ADMIN_PASSWORD de proceso, sin argumentos ni logs; usan una excepcion de confianza HTTPS para laboratorio y no demuestran confianza del certificado.
+Usar [SMOKE-TEST-INTEGRAL.md](SMOKE-TEST-INTEGRAL.md) solo sobre copias. Los smokes pueden crear, cambiar y borrar datos e invalidan verify contra el origen. Suministrar la contrasena por BITACORA_SMOKE_ADMIN_PASSWORD de proceso, sin argumentos ni logs; validan HTTPS por defecto; TrustLocalHttpsCertificate es una excepcion explicita de laboratorio y no demuestra confianza del certificado. Ambos recorridos SQL sinteticos actualizados pasaron 47 pruebas y un SKIP cada uno; ver [SCRIPTS-0.2.0.md](SCRIPTS-0.2.0.md).
 
 Los resultados antiguos de 2026-02/03 y los totales 66/76/83/110 corresponden a etapas anteriores, no al estado actual. El [estado de aceptacion](ESTADO-0.2.0.md) concentra los pendientes; ningun resultado parcial autoriza automaticamente el cambio productivo.

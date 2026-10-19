@@ -4,6 +4,11 @@
 
 ### 0.2.0 - SQL Server (en preparacion)
 
+- Revision de scripts: bloqueo previo de preparacion/reset/stamp/publicacion SQLite en la rama SQL; reconocimiento del binario SQLite instalado previo a la numeracion y retiro de taskkill por nombre del arranque manual.
+- Publicador SQL independiente y lanzador productivo con validacion sin arranque, credenciales locales y entorno restaurado; sin activar el cambio productivo.
+- Smokes actualizados a campos obligatorios, fechas de Mexico y carpetas HMAC; objetivos locales no productivos, escrituras explicitas, TLS estricto por defecto, archivos curl privados y salida con error ante FAIL. Ambos recorridos SQL sinteticos: 47 PASS y un SKIP cada uno.
+- Certificados sin sobrescritura ni contrasena en consola, credencial HTTPS DPAPI y Tailwind fijado a 4.2.1 como el CSS existente; compilacion v4 mediante @config e informe de fallos. Sin renovar certificados ni descargar assets durante la revision.
+
 - Documentacion revisada el 19/10/2026: indice, estado de aceptacion, configuracion/arranque SQL, recuperacion, seguridad, pruebas y referencias historicas SQLite. Se corrigen instrucciones de inicializacion incompatibles y pendientes ya resueltos; se mantiene pendiente el cambio productivo.
 
 - Auditoria/monitoreo adaptados a SQL Server con credenciales DPAPI y reportes separados por base; originales SQLite conservados. Archivado de mas de 30 dias en lotes verificados, sin sobrescritura y retirada transaccional por identificadores.

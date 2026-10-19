@@ -22,4 +22,4 @@ La version congelada y procedimientos originales se consultan en [SQLITE-0.1.md]
 
 ## Produccion SQL pendiente
 
-Falta implementar/ensayar el cambio del lanzador productivo y aprobar la migracion; [DEPLOYMENT.md](DEPLOYMENT.md) detalla sus condiciones. El backup SQL puede cerrar/reiniciar una instancia compatible que ya este activa, conservando configuracion en memoria; si estaba detenida no la inicia. No es un servicio Windows ni recupera automaticamente un reinicio del equipo.
+El lanzador Start-BitacoraSqlProduction.ps1 esta preparado y se probo su configuracion sin conectar/iniciar; falta ensayar la cuenta final, cambiar el acceso directo y aprobar la migracion; [DEPLOYMENT.md](DEPLOYMENT.md) detalla sus condiciones. El backup SQL puede cerrar/reiniciar una instancia compatible que ya este activa, conservando configuracion en memoria; si estaba detenida no la inicia. No es un servicio Windows ni recupera automaticamente un reinicio del equipo.

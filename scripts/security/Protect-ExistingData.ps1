@@ -9,6 +9,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\operations\ScriptCompatibility.ps1')
+Assert-BitacoraSqliteSource -ProjectFile $ProjectPath
 
 $keyName = "BITACORA_DATA_PROTECTION_KEY"
 $keyValue = [Environment]::GetEnvironmentVariable($keyName, "Process")

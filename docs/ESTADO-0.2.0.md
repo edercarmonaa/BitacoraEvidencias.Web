@@ -29,11 +29,11 @@ Corte documental: **19/10/2026**. Describe las evidencias de esta sesion; no es 
 ## Pendientes antes del cambio
 
 1. Aceptar visualmente formularios, confirmaciones y edicion de historicos incompletos, incluidos flujos HTMX.
-2. Investigar los seis fallos conocidos y repetir la suite completa. Actualizar/validar los payloads de los smokes historicos: faltan campos de caso ahora obligatorios. Completar revision de dependencias antes de liberar.
+2. Investigar los seis fallos conocidos y repetir la suite completa. Los payloads smoke ya fueron actualizados y ambos recorridos SQL sinteticos aprobaron 47 comprobaciones, con un SKIP de timeout cada uno. Completar revision de dependencias antes de liberar.
 3. Verificar conexion/permisos con el usuario SQL de operacion, separado de la cuenta administradora usada en ensayos. Resolver confianza TLS SQL/HTTPS del entorno final.
 4. Preparar localmente credenciales DPAPI de backup/operaciones, carpetas/permisos y ensayo con esas credenciales. No solicitar contrasenas en el chat.
 5. Completar recuperacion integral: usuarios/roles, datos cifrados, originales, miniaturas y escrituras controladas en copia restaurada; la prueba SQL ya realizada no cubre todo ese flujo.
-6. Implementar y ensayar publicacion/arranque productivos SQL, conservando el acceso directo/binarios/configuracion SQLite. Los lanzadores SQL actuales solo gestionan ensayo.
+6. Ensayar el arranque SQL con la cuenta/permisos finales y el cambio de acceso directo. Ya existen publicador de release y lanzador SQL independientes, probados con publicacion local y validacion sin conectar/iniciar. Conservar binarios/configuracion SQLite.
 7. Acordar mantenimiento/responsable, crear copia final reciente y consistente con historicos/secretos bajo custodia y validar destino SQL vacio antes de migrar.
 8. En el cambio aprobado, activar tareas SQL y desactivar SQLite. Verificar cierre/respaldo/reinicio y monitoreo con configuracion productiva antes de reabrir usuarios.
 

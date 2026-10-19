@@ -14,7 +14,7 @@ Data/*.db
 Data/*.db-*
 Data/*.sqlite
 Data/*.sqlite3
-Storage/
+/Storage/
 Evidencias/
 BackupsBitacora/
 AuditArchive/

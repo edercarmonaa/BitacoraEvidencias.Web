@@ -19,6 +19,6 @@ Los scripts Start-BitacoraWithHttps.ps1/Start-BitacoraPublished.ps1 anteriores t
 | Navegador a Kestrel | Certificado HTTPS, nombre/SAN, vigencia y cadena confiable en cliente. |
 | Aplicacion/scripts a SQL | Encrypt=True y confianza/identidad del certificado SQL. |
 
-TrustLocalSqlCertificate afecta solo a SQL local: omite su comprobacion de identidad pero mantiene cifrado. No modifica el certificado HTTPS ni debe interpretarse como confianza ya resuelta para produccion. El monitor mantiene la validacion HTTPS; los smokes de laboratorio son una excepcion documentada y no sirven para certificarla.
+TrustLocalSqlCertificate afecta solo a SQL local: omite su comprobacion de identidad pero mantiene cifrado. No modifica el certificado HTTPS ni debe interpretarse como confianza ya resuelta para produccion. El monitor mantiene la validacion HTTPS; los smokes tambien validan confianza por defecto y solo la omiten con TrustLocalHttpsCertificate explicito, que no sirve para certificarla.
 
 Comprobar que HTTPS abre sin alertas, login/roles funcionan y no hay listener HTTP no previsto. Si cambia equipo/nombre/IP, revisar certificado y clientes antes de habilitar usuarios. Nunca publicar PFX, contrasena ni llave. Recuperacion: [RECUPERACION-SQLSERVER.md](RECUPERACION-SQLSERVER.md).

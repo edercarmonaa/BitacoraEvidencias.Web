@@ -19,7 +19,7 @@ La publicacion de ensayo mas reciente comprobada es `App-backup-final`: incluye 
 2. Acordar mantenimiento sin escritores, incluyendo aplicaciones y tareas SQLite que modifiquen datos.
 3. Guardar respaldo final SQLite/evidencias y copias de historicos, binarios, configuracion, certificados y secretos con custodia separada de la llave. Ver [migracion](MIGRACION-0.2.0.md).
 4. Importar desde esa copia a la base productiva existente solo si esta vacia. No borrar bases, recrear usuarios ni usar la copia antigua de ensayo como corte final.
-5. Preparar una publicacion SQL independiente y su configuracion productiva, puerto 5067 y evidencias existentes. Falta implementar/ensayar el cambio del lanzador productivo; los dos scripts SQL actuales son exclusivos de ensayo.
+5. Preparar una publicacion SQL independiente y su configuracion productiva, puerto 5067 y evidencias existentes. Publish-BitacoraSqlRelease.ps1 y Start-BitacoraSqlProduction.ps1 ya preparan un despliegue SQL independiente; falta ensayar el arranque con usuario/permisos finales y aceptar el cambio del acceso directo. Los scripts SqlServer sin ese sufijo siguen siendo exclusivos de ensayo. Ver [SCRIPTS-0.2.0.md](SCRIPTS-0.2.0.md).
 6. Validar login, roles, lectura de datos/imagenes, escrituras y respaldo antes de admitir usuarios.
 7. En el cambio aprobado, deshabilitar las tareas SQLite y registrar/habilitar las SQL con sus credenciales locales. No ejecutar ambos proveedores como servicio productivo simultaneo.
 

@@ -7,6 +7,7 @@ Revision: 19/10/2026. Esta rama prepara SQL Server 0.2.0; SQLite 0.1.0 sigue con
 | Documento | Contenido |
 | --- | --- |
 | [Estado de 0.2.0](ESTADO-0.2.0.md) | Lo probado, lo aceptado por el responsable y los pendientes. |
+| [Scripts de 0.2.0](SCRIPTS-0.2.0.md) | Compatibilidad, bloqueos SQLite, release/arranque SQL y smokes actualizados. |
 | [Acuerdos de migracion](MIGRACION-0.2.0.md) | Conservacion de datos/secretos, corte productivo y recuperacion. |
 | [Preparacion](SETUP.md) | Configuracion externa, requisitos y copias. |
 | [Ensayo SQL](ENSAYO-SQLSERVER.md) | Preflight, import, verify, publicaciones y arranque. |

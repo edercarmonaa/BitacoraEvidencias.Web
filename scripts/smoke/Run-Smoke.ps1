@@ -1,15 +1,17 @@
-﻿param(
-    [string]$BaseUrl = 'https://127.0.0.1:5067',
+param(
+    [string]$BaseUrl = 'https://127.0.0.1:5068',
     [string]$AdminUser = 'admin',
     [string]$AdminPass = '',
-    [string]$StorageRoot = 'Storage'
+    [string]$StorageRoot = 'C:\BitacoraEvidencias_Pruebas\Input\Evidencias',
+    [switch]$AllowWriteTests,
+    [switch]$TrustLocalHttpsCertificate
 )
 
 Add-Type -AssemblyName System.Net.Http
 $ErrorActionPreference = 'Stop'
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
 
 . (Join-Path $PSScriptRoot 'Smoke.Common.ps1')
+Assert-SmokeTarget -BaseUrl $BaseUrl -StorageRoot $StorageRoot -AllowWriteTests:$AllowWriteTests
 
 $AdminPass = Resolve-SmokeAdminPassword -AdminPass $AdminPass
 
@@ -35,14 +37,16 @@ function New-ClientContext {
     $handler = New-Object System.Net.Http.HttpClientHandler
     $handler.CookieContainer = New-Object System.Net.CookieContainer
     $handler.AllowAutoRedirect = $false
-    try {
-        $handler.ServerCertificateCustomValidationCallback = { return $true }
-    } catch {
-        # ignore on older runtime
+    if ($TrustLocalHttpsCertificate) {
+        if (-not ('BitacoraSmokeTls' -as [type])) {
+            Add-Type -ReferencedAssemblies System.Net.Http -TypeDefinition 'public static class BitacoraSmokeTls { public static readonly System.Func<System.Net.Http.HttpRequestMessage,System.Security.Cryptography.X509Certificates.X509Certificate2,System.Security.Cryptography.X509Certificates.X509Chain,System.Net.Security.SslPolicyErrors,bool> Accept = (a,b,c,d) => true; }'
+        }
+        $handler.ServerCertificateCustomValidationCallback = [BitacoraSmokeTls]::Accept
     }
 
     $client = New-Object System.Net.Http.HttpClient($handler)
     $client.BaseAddress = [Uri]$BaseUrl
+    $client.Timeout = [TimeSpan]::FromSeconds(60)
     return [pscustomobject]@{
         Client = $client
         Handler = $handler
@@ -455,7 +459,7 @@ if ($null -ne $adminCtx) {
             throw 'Oficios/Create token not found.'
         }
 
-        $today = (Get-Date).ToString('yyyy-MM-dd')
+        $today = Get-SmokeBusinessDate
         $ofCreateForm = @{
             '__RequestVerificationToken' = $ofToken
             'Input.NumeroOficio' = $smokeOficioNumber
@@ -522,12 +526,16 @@ if ($null -ne $adminCtx) {
         $caseCreateForm = @{
             '__RequestVerificationToken' = $caseToken
             'Input.OficioId' = [string]$smokeOficioId
-            'Input.Curp' = 'SMOK900101HDFABC01'
+            'Input.Curp' = 'XEXX900101HNEBCD09'
             'Input.NombreCompleto' = 'USUARIO SMOKE'
             'Input.Cct' = '30ABC0001X'
             'Input.TipoCorreccion' = 'CORRECCION DE CURP'
             'Input.Folio' = 'SMOKE-FOLIO-1'
             'Input.Estatus' = 'Pendiente'
+            'Input.NivelEducativo' = 'Primaria'
+            'Input.PeriodoInicio' = '2020'
+            'Input.PeriodoFin' = '2021'
+            'Input.FechaVerificacion' = $today
             'Input.Observaciones' = 'SMOKE CASE'
         }
         $caseCreateContent = New-FormContent $caseCreateForm
@@ -562,7 +570,7 @@ if ($null -ne $adminCtx) {
             $uploadPath = "/Casos/Details/$smokeCaseId?handler=Upload"
         }
 
-        $pngBytes = [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a6kAAAAASUVORK5CYII=')
+        $pngBytes = (New-SmokeImageBytes)
 
         $multipart = New-Object System.Net.Http.MultipartFormDataContent
         $multipart.Add([System.Net.Http.StringContent]::new($uploadToken), '__RequestVerificationToken')
@@ -627,7 +635,7 @@ if ($null -ne $adminCtx) {
             throw 'Cannot continue evidence view/delete checks.'
         }
 
-        $storageFolder = Join-Path $StorageRoot (Join-Path $smokeOficioNumber '001\original')
+        $storageFolder = Join-Path (Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber) '001\original'
         if (Test-Path $storageFolder) {
             $evidenceFile = Get-ChildItem -Path $storageFolder -Filter *.jpg -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
             if ($null -ne $evidenceFile) {
@@ -662,7 +670,8 @@ if ($null -ne $adminCtx) {
         # Direct URL static access should fail
         if ($smokeEvidenceFilePath) {
             $fname = [System.IO.Path]::GetFileName($smokeEvidenceFilePath)
-            $staticPath = "/media/$smokeOficioNumber/001/original/$fname"
+            $protectedFolder = Split-Path (Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber) -Leaf
+            $staticPath = "/media/$protectedFolder/001/original/$fname"
             $staticResp = $adminCtx.Client.GetAsync($staticPath).GetAwaiter().GetResult()
             if ([int]$staticResp.StatusCode -ne 200) {
                 Add-Result 'C' 'Direct static URL to evidence blocked' 'PASS' "HTTP $([int]$staticResp.StatusCode) $staticPath"
@@ -723,7 +732,7 @@ if ($null -ne $adminCtx) {
             Add-Result 'C' 'Delete oficio' 'FAIL' "HTTP $([int]$ofDelPost.StatusCode)"
         }
 
-        $ofFolder = Join-Path $StorageRoot $smokeOficioNumber
+        $ofFolder = Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber
         if (-not (Test-Path $ofFolder)) {
             Add-Result 'C' 'Oficio folder removed from disk' 'PASS' $ofFolder
         } else {
@@ -843,4 +852,5 @@ $reportPath = Write-SmokeReport -Results $results
 
 $results | Format-Table -AutoSize
 Write-Output "REPORT_PATH=$reportPath"
+if (@($results | Where-Object Status -eq 'FAIL').Count -gt 0) { throw 'Smoke con fallos. Revisar reporte privado.' }
 

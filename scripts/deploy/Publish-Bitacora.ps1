@@ -11,6 +11,8 @@
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot '..\operations\ScriptCompatibility.ps1')
+Assert-BitacoraSqliteSource
 
 function Convert-ToBooleanParameter {
     param(

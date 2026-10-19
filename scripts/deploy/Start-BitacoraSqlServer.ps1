@@ -54,7 +54,7 @@ try {
     }
     Write-Host "Ensayo: https://${ServerAddress}:$HttpsPort/Login ; base BitacoraEvidencias_Pruebas. Ctrl+C para detener."
     Push-Location $publish
-    try { & dotnet $app } finally { Pop-Location }
+    try { & dotnet $app; if ($LASTEXITCODE -ne 0) { throw 'El proceso SQL termino con error. Revisar el log de la aplicacion.' } } finally { Pop-Location }
 } finally {
     foreach ($name in $previous.Keys) { [Environment]::SetEnvironmentVariable($name,$previous[$name],'Process') }
     Remove-Variable credential,password,connection,settings -ErrorAction SilentlyContinue

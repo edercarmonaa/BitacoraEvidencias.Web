@@ -7,7 +7,7 @@ Solo sobre copias de ensayo, con respaldo y permiso para crear/cambiar/borrar da
 1. Arrancar una publicacion SQL reciente en 5068, base BitacoraEvidencias_Pruebas y evidencias de copia; no usar los lanzadores SQLite ni puerto productivo.
 2. Comprobar llave/certificado externos sin imprimir sus valores, conectividad, migraciones y usuarios migrados.
 3. Disponer de cuentas Admin/Capturista existentes de ensayo y datos/imagenes sinteticos. No hay contrasena bootstrap predeterminada ni creacion automatica de usuarios SQL.
-4. Revisar los scripts smoke antes de usarlos con las nuevas reglas: sus payloads historicos no constituyen aceptacion automatica de formularios 0.2.0.
+4. Revisar los scripts smoke antes de usarlos con las nuevas reglas: sus payloads ya incluyen las nuevas reglas obligatorias y pasaron el ensayo SQL sintetico; no sustituyen aceptacion visual de formularios.
 
 ## Comprobaciones manuales
 
@@ -29,10 +29,10 @@ Los scripts admiten BITACORA_SMOKE_ADMIN_PASSWORD. Introducirla localmente, mant
 
 ```powershell
 # Requiere la variable de proceso ya suministrada por el mecanismo local seguro.
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/smoke/Run-Smoke.ps1 -BaseUrl https://127.0.0.1:5068 -StorageRoot C:\BitacoraEvidencias_Pruebas\Input\Evidencias
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/smoke/Run-Smoke.ps1 -BaseUrl https://127.0.0.1:5068 -StorageRoot C:\BitacoraEvidencias_Pruebas\Input\Evidencias -AllowWriteTests
 ```
 
-Los smokes existentes aceptan el certificado HTTPS de laboratorio sin validar confianza; no prueban su seguridad ni sustituyen el navegador con certificado confiable. No prometer que todos sus payloads estan actualizados hasta revisar/ejecutar el ensayo correspondiente.
+HTTPS se valida por defecto. La excepcion explicita TrustLocalHttpsCertificate permite laboratorio sin comprobar confianza y no prueba seguridad del certificado. Ambos smokes pasaron 47 comprobaciones con un SKIP de timeout cada uno, en una base SQL sintetica aislada; ver [SCRIPTS-0.2.0.md](SCRIPTS-0.2.0.md).
 
 ## Evidencia de aceptacion
 

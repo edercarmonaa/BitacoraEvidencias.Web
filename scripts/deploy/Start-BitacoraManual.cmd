@@ -29,7 +29,7 @@ if not exist "%APP_EXE%" (
 netstat -ano | findstr /R /C:":%HTTPS_PORT% .*LISTENING" >nul
 if %ERRORLEVEL% EQU 0 goto abrir
 
-taskkill /IM BitacoraEvidencias.Web.exe /F >nul 2>nul
+rem Conservar otras instancias/versiones; no matar procesos por nombre.
 
 set "ASPNETCORE_URLS=https://%SERVER_IP%:%HTTPS_PORT%"
 set "ASPNETCORE_ENVIRONMENT=Production"

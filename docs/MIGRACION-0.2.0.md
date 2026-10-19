@@ -25,7 +25,7 @@ Procedimiento reproducible: [ENSAYO-SQLSERVER.md](ENSAYO-SQLSERVER.md). No repet
 ## Conservacion y preparacion final
 
 1. Resolver/aceptar pendientes del [estado](ESTADO-0.2.0.md), comprobar usuario SQL de operacion y confianza de certificados.
-2. Preparar publicacion/lanzador productivo SQL, credenciales DPAPI y permisos. Los scripts SQL actuales de publicacion/arranque son de ensayo; no reemplazan el lanzador productivo.
+2. Preparar publicacion/lanzador productivo SQL, credenciales DPAPI y permisos. Los scripts SqlServer actuales siguen siendo de ensayo; los nuevos SqlRelease/SqlProduction preparan un despliegue independiente, sin reemplazar el acceso directo ni activar produccion. Ver [SCRIPTS-0.2.0.md](SCRIPTS-0.2.0.md).
 3. Acordar mantenimiento y responsable de aceptar el resultado; no deducir que produccion esta detenida de una inspeccion anterior.
 4. Detener todos los escritores, incluidas tareas SQLite de archivado, y generar corte final consistente.
 5. Respaldar SQLite/evidencias con el procedimiento 0.1.0 conservado y guardar ademas AuditArchive (historicos ya retirados de SQLite), binarios, configuracion, certificados y secretos por mecanismos protegidos. La llave se custodia por separado, no dentro del ZIP. Verificar recuperacion.

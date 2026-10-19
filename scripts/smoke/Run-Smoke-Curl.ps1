@@ -1,15 +1,19 @@
-﻿param(
-    [string]$BaseUrl = 'https://127.0.0.1:5067',
+param(
+    [string]$BaseUrl = 'https://127.0.0.1:5068',
     [string]$AdminUser = 'admin',
     [string]$AdminPass = '',
-    [string]$StorageRoot = 'Storage'
+    [string]$StorageRoot = 'C:\BitacoraEvidencias_Pruebas\Input\Evidencias',
+    [switch]$AllowWriteTests,
+    [switch]$TrustLocalHttpsCertificate
 )
 
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'Smoke.Common.ps1')
+Assert-SmokeTarget -BaseUrl $BaseUrl -StorageRoot $StorageRoot -AllowWriteTests:$AllowWriteTests
 
 $AdminPass = Resolve-SmokeAdminPassword -AdminPass $AdminPass
+$script:smokePrivateRoot = New-SmokePrivateRoot
 
 $results = New-Object System.Collections.Generic.List[object]
 
@@ -19,7 +23,7 @@ function Add-Result {
 }
 
 function New-CookieFile {
-    $p = Join-Path $env:TEMP ("smoke-cookies-" + [guid]::NewGuid().ToString('N') + '.txt')
+    $p = Join-Path $script:smokePrivateRoot ("smoke-cookies-" + [guid]::NewGuid().ToString('N') + '.txt')
     New-Item -Path $p -ItemType File -Force | Out-Null
     return $p
 }
@@ -55,25 +59,29 @@ function Invoke-Curl {
         [string[]]$MultipartFields
     )
 
-    $headersPath = Join-Path $env:TEMP ("smoke-h-" + [guid]::NewGuid().ToString('N') + '.txt')
-    $bodyPath = Join-Path $env:TEMP ("smoke-b-" + [guid]::NewGuid().ToString('N') + '.txt')
+    $headersPath = Join-Path $script:smokePrivateRoot ("smoke-h-" + [guid]::NewGuid().ToString('N') + '.txt')
+    $bodyPath = Join-Path $script:smokePrivateRoot ("smoke-b-" + [guid]::NewGuid().ToString('N') + '.txt')
 
-    $args = @('-k','-sS','-D',$headersPath,'-o',$bodyPath,'-c',$CookieFile,'-b',$CookieFile)
+    $args = @('-sS','--connect-timeout','10','--max-time','60','-D',$headersPath,'-o',$bodyPath,'-c',$CookieFile,'-b',$CookieFile)
 
+    if ($TrustLocalHttpsCertificate) { $args += '-k' }
+    $formPath = $null
     if ($Method -eq 'POST') {
         $args += @('-X','POST')
         if ($MultipartFields -and $MultipartFields.Count -gt 0) {
             foreach ($f in $MultipartFields) { $args += @('-F', $f) }
         } elseif ($FormFields) {
             $encoded = ConvertTo-FormEncoded $FormFields
-            $args += @('--data-raw', $encoded)
+            $formPath = Join-Path $script:smokePrivateRoot ([guid]::NewGuid().ToString('N') + '.form')
+            [IO.File]::WriteAllText($formPath,$encoded,[Text.UTF8Encoding]::new($false))
+            $args += @('--data-binary', ('@' + $formPath))
         }
     }
 
     $url = if ($Path.StartsWith('http')) { $Path } else { "$BaseUrl$Path" }
     $args += $url
 
-    & curl.exe @args | Out-Null
+    try { & curl.exe @args | Out-Null } finally { if ($null -ne $formPath -and (Test-Path -LiteralPath $formPath)) { Remove-Item -LiteralPath $formPath -Force } }
     $exit = $LASTEXITCODE
     if ($exit -ne 0) {
         throw "curl failed (exit=$exit) for $Method $url"
@@ -100,17 +108,19 @@ function Invoke-CurlMultipartDirect {
         [string[]]$MultipartFields
     )
 
-    $headersPath = Join-Path $env:TEMP ("smoke-mh-" + [guid]::NewGuid().ToString('N') + '.txt')
-    $bodyPath = Join-Path $env:TEMP ("smoke-mb-" + [guid]::NewGuid().ToString('N') + '.txt')
+    $headersPath = Join-Path $script:smokePrivateRoot ("smoke-mh-" + [guid]::NewGuid().ToString('N') + '.txt')
+    $bodyPath = Join-Path $script:smokePrivateRoot ("smoke-mb-" + [guid]::NewGuid().ToString('N') + '.txt')
     $url = if ($Path.StartsWith('http')) { $Path } else { "$BaseUrl$Path" }
 
-    $args = @('-k','-sS','-D',$headersPath,'-o',$bodyPath,'-c',$CookieFile,'-b',$CookieFile,'-X','POST')
+    $args = @('-sS','--connect-timeout','10','--max-time','60','-D',$headersPath,'-o',$bodyPath,'-c',$CookieFile,'-b',$CookieFile,'-X','POST')
+    if ($TrustLocalHttpsCertificate) { $args += '-k' }
+    $formPath = $null
     foreach ($f in $MultipartFields) {
         $args += @('-F', $f)
     }
     $args += $url
 
-    & curl.exe @args | Out-Null
+    try { & curl.exe @args | Out-Null } finally { if ($null -ne $formPath -and (Test-Path -LiteralPath $formPath)) { Remove-Item -LiteralPath $formPath -Force } }
     $exit = $LASTEXITCODE
     if ($exit -ne 0) {
         throw "curl multipart failed (exit=$exit) for $url"
@@ -146,7 +156,7 @@ $smokeOficioId = $null
 $smokeCaseId = $null
 $smokeEvidenceId = $null
 $smokeEvidenceFilePath = $null
-$today = (Get-Date).ToString('yyyy-MM-dd')
+$today = Get-SmokeBusinessDate
 
 try {
     # A1 anonymous redirect
@@ -447,12 +457,16 @@ try {
     $caseCreatePost = Invoke-Curl -Method 'POST' -Path "/Casos/Create?oficioId=$smokeOficioId" -CookieFile $adminCookie -FormFields @{
         '__RequestVerificationToken' = $caseToken
         'Input.OficioId' = [string]$smokeOficioId
-        'Input.Curp' = 'SMOK900101HDFABC01'
+        'Input.Curp' = 'XEXX900101HNEBCD09'
         'Input.NombreCompleto' = 'USUARIO SMOKE'
         'Input.Cct' = '30ABC0001X'
         'Input.TipoCorreccion' = 'CORRECCION DE CURP'
         'Input.Folio' = 'SMOKE-FOLIO-1'
         'Input.Estatus' = 'Pendiente'
+        'Input.NivelEducativo' = 'Primaria'
+        'Input.PeriodoInicio' = '2020'
+        'Input.PeriodoFin' = '2021'
+        'Input.FechaVerificacion' = $today
         'Input.Observaciones' = 'SMOKE CASE'
     }
 
@@ -477,8 +491,8 @@ try {
     $uploadPath = Get-SmokeHandlerPathFromHtml -Html $caseDetailsGet.Body -HandlerName 'Upload'
     if ([string]::IsNullOrWhiteSpace($uploadPath)) { $uploadPath = "/Casos/Details/$smokeCaseId?handler=Upload" }
 
-    $pngFile = Join-Path $env:TEMP ('smoke-' + [guid]::NewGuid().ToString('N') + '.png')
-    [IO.File]::WriteAllBytes($pngFile, [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/a6kAAAAASUVORK5CYII='))
+    $pngFile = Join-Path $script:smokePrivateRoot ('smoke-' + [guid]::NewGuid().ToString('N') + '.png')
+    [IO.File]::WriteAllBytes($pngFile, (New-SmokeImageBytes))
 
     $uploadPost = Invoke-CurlMultipartDirect -Path $uploadPath -CookieFile $adminCookie -MultipartFields @(
         "__RequestVerificationToken=$uploadToken",
@@ -525,7 +539,7 @@ try {
     }
 
     # disk file check
-    $storageFolder = Join-Path $StorageRoot (Join-Path $smokeOficioNumber '001\original')
+    $storageFolder = Join-Path (Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber) '001\original'
     if (Test-Path $storageFolder) {
         $f = Get-ChildItem -Path $storageFolder -Filter *.jpg -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($f) {
@@ -555,7 +569,7 @@ try {
 
     if ($smokeEvidenceFilePath) {
         $fname = [IO.Path]::GetFileName($smokeEvidenceFilePath)
-        $staticUrl = "/media/$smokeOficioNumber/001/original/$fname"
+        $staticUrl = ("/media/" + (Split-Path (Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber) -Leaf) + "/001/original/$fname")
         $staticResp = Invoke-Curl -Method 'GET' -Path $staticUrl -CookieFile $adminCookie
         if ($staticResp.Code -ne 200) {
             Add-Result 'C' 'Direct static URL blocked' 'PASS' "HTTP $($staticResp.Code) $staticUrl"
@@ -610,7 +624,7 @@ try {
         Add-Result 'C' 'Delete oficio' 'FAIL' "HTTP $($ofDelPost.Code)"
     }
 
-    $ofFolder = Join-Path $StorageRoot $smokeOficioNumber
+    $ofFolder = Get-SmokeOficioFolder $StorageRoot $smokeOficioNumber
     if (-not (Test-Path $ofFolder)) {
         Add-Result 'C' 'Oficio folder removed from disk' 'PASS' $ofFolder
     } else {
@@ -684,6 +698,7 @@ catch {
 }
 finally {
     Remove-Item -Path $adminCookie,$anonCookie,$smokeCookie,$roleRevocationCookie -Force -ErrorAction SilentlyContinue
+    Remove-SmokePrivateRoot $script:smokePrivateRoot
 }
 
 Add-Result 'F' '30-min idle timeout runtime test' 'SKIP' 'Not executed automatically (requires waiting >30 minutes). Config remains 30 min.'
@@ -692,5 +707,6 @@ $reportPath = Write-SmokeReport -Results $results
 
 $results | Format-Table -AutoSize
 Write-Output "REPORT_PATH=$reportPath"
+if (@($results | Where-Object Status -eq 'FAIL').Count -gt 0) { throw 'Smoke con fallos. Revisar reporte privado.' }
 
 

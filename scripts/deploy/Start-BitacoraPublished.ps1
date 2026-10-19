@@ -41,6 +41,9 @@ if (-not (Test-Path $appDll)) {
     throw "No se encontro app publicada en: $appDll. Ejecuta primero Publish-Bitacora.ps1."
 }
 
+. (Join-Path $PSScriptRoot '..\operations\ScriptCompatibility.ps1')
+Assert-BitacoraPublishedVersion -ApplicationDll $appDll -Provider Sqlite
+
 if (-not (Test-Path $DataDbPath)) {
     throw "No se encontro la base de datos en: $DataDbPath. Ejecuta .\scripts\db\Initialize-BitacoraDatabase.ps1 para prepararla de forma explicita."
 }

@@ -7,14 +7,14 @@ Revision documental: 19/10/2026. El cierre de controles de SQLite en febrero/may
 | Control | Trabajo necesario |
 | --- | --- |
 | Aceptacion funcional | Formularios/confirmaciones, historicos incompletos y flujos HTMX en navegador. |
-| Pruebas | Investigar seis fallos previos, adaptar payloads de smokes a campos obligatorios y repetir validaciones; revisar dependencias. |
+| Pruebas | Investigar seis fallos previos y revisar dependencias. Payloads smoke actualizados y probados: 47 PASS/1 SKIP cada variante sobre SQL sintetico. |
 | Privilegios SQL | Comprobar cuenta de operacion y separar permisos de migracion/backup/archivo. |
 | TLS | Confianza SQL y HTTPS del despliegue final, sin confundir excepcion local con validacion completa. |
 | ACL | Comprobar evidencias/historicos, carpeta BAK y credenciales con la identidad real de las tareas. |
 | Secretos | Custodia recuperable de llave, certificado y credenciales; recrear DPAPI al trasladar cuenta/equipo. |
 | Automatizacion | Preparar credenciales y registrar tareas SQL deshabilitadas; activar solo en el corte. |
 | Recuperacion | Completar ensayo integral de usuarios, datos cifrados y fotos con copia restaurada. |
-| Arranque productivo | Implementar y ensayar lanzador SQL manteniendo SQLite disponible para recuperacion. |
+| Arranque productivo | Lanzador SQL independiente preparado; ensayar cuenta/permisos finales y cambio de acceso directo manteniendo SQLite disponible. |
 | Capacidad | Revisar espacio: ultima medicion unos 23 GB libres frente a umbral de 25 GB. |
 | Publicacion | Revisar documentos internos/historial antes de compartir; no subir evidencias operativas. |
 
