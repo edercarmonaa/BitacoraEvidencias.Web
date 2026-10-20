@@ -9,7 +9,7 @@ public static class IncorrectAuditOfficeQueries
     public static IOrderedQueryable<IncorrectAuditOfficeRow> Offices(AppDbContext context) => context.Oficios
         .AsNoTracking()
         .Where(o => o.Casos.Any() &&
-            o.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)) &&
+            o.Casos.All(c => c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl.Length > 0)) &&
             o.Casos.All(c => c.AuditoriaEstado != null &&
                 (c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.Coincidente || c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.NoCoincidente)) &&
             o.Casos.Any(c => c.AuditoriaEstado.Trim() == CatalogosAuditoriaCaso.NoCoincidente))
@@ -24,7 +24,7 @@ public static class IncorrectAuditOfficeQueries
     public static IOrderedQueryable<IncorrectAuditCaseRow> Cases(AppDbContext context) => context.CasosCorreccion
         .AsNoTracking()
         .Where(c => c.AuditoriaEstado == CatalogosAuditoriaCaso.NoCoincidente &&
-            (c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl != string.Empty)))
+            (c.Evidencias.Any() || (c.EvidenciaUrl != null && c.EvidenciaUrl.Length > 0)))
         .Select(c => new IncorrectAuditCaseRow
         {
             CasoId = c.Id, OficioId = c.OficioId, NumeroOficio = c.Oficio!.NumeroOficio,

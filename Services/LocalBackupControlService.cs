@@ -66,7 +66,7 @@ public sealed record BackupRuntimeSnapshot(int Version, int ProcessId, string Ex
             throw new InvalidOperationException("El control de respaldo requiere el host independiente de la aplicacion.");
         if (databaseName is not ("BitacoraEvidencias" or "BitacoraEvidencias_Pruebas"))
             throw new InvalidOperationException("Base de aplicacion desconocida.");
-        string[] prefixes = ["ASPNETCORE_", "DOTNET_", "ConnectionStrings__", "Storage__", "Security__", "Startup__", "Logging__", "AuditArchive__", "BITACORA_"];
+        string[] prefixes = ["ASPNETCORE_", "DOTNET_", "ConnectionStrings__", "Storage__", "Security__", "Startup__", "Logging__", "AuditArchive__", "Reports__", "BITACORA_"];
         var filtered = environment.Where(pair => prefixes.Any(prefix => pair.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
             .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
         var evidenceRoot = Path.GetFullPath(Path.IsPathRooted(storageRoot) ? storageRoot : Path.Combine(contentRoot, storageRoot));

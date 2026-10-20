@@ -15,6 +15,8 @@ var stampLegacyBaselineOnly = builder.Configuration.GetValue<bool>("Startup:Stam
 
 builder.Services.AddApplicationRazorPages();
 builder.Services.AddHostedService<LocalBackupControlService>();
+builder.Services.AddHostedService<ReportSummaryWorker>();
+builder.Services.AddScoped<ReportReadService>();
 builder.Services.AddApplicationAuthentication(requireHttpsCookies);
 builder.Services.AddApplicationAuthorization();
 builder.Services.AddSensitiveDataProtection(builder.Configuration);

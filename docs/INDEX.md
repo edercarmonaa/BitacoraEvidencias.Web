@@ -6,6 +6,7 @@ Revision: 19/10/2026. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md), pue
 
 | Documento | Contenido |
 | --- | --- |
+| [Reportes incrementales](REPORTES-INCREMENTALES.md) | Desarrollo posterior a 0.2.0: resúmenes SQL, ensayo, verificación y activación explícita. No desplegado. |
 | [Estado de 0.2.0](ESTADO-0.2.0.md) | Lo probado, lo aceptado por el responsable y los pendientes. |
 | [Corte productivo](CORTE-PRODUCTIVO-0.2.0.md) | Respaldo final, importacion/verificacion, arranque SQL y avance real de la ventana. |
 | [Scripts de 0.2.0](SCRIPTS-0.2.0.md) | Compatibilidad, bloqueos SQLite, release/arranque SQL y smokes actualizados. |

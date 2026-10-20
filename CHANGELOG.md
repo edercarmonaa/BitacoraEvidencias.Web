@@ -2,6 +2,14 @@
 
 ## [Sin publicar]
 
+### Reportes incrementales (en desarrollo; no desplegados)
+
+- Resumenes SQL por oficio/caso, cola transaccional de cambios y trabajador de un lote de 25 oficios por minuto; activacion externa deshabilitada por defecto.
+- Reporte general, ejecutivo y listado de tipos consumen el modelo de lectura; preservan fechas historicas, oficios distintos y la distincion entre fotografias y enlaces.
+- Migracion explicita y comandos reports-upgrade/reports-rebuild/reports-verify; sin modificar las migraciones SQLite ni ejecutar cambios de esquema al arrancar.
+- Prueba SQL aislada con datos sinteticos: equivalencia, inicializacion parcial, ediciones, eliminaciones, reintentos y rollback. Procedimiento y limites en docs/REPORTES-INCREMENTALES.md.
+- Corregidas las comprobaciones de enlaces de evidencia en Reportes: la comparacion con cadena vacia se convertia en NULL por el cifrado EF; se comprueba longitud sin descifrar. Suite final: 138 pruebas aprobadas, sin omisiones, incluida integracion SQL con llave sintetica.
+
 ### 0.2.0 - SQL Server (desplegada; recuperacion integral pendiente)
 
 - Cerrado el pendiente de integridad SQL del corte: BAK del ZIP productivo restaurado en base temporal, CHECKDB completo con MAXDOP=1 aprobado y cinco conteos coincidentes; copia temporal eliminada sin intervenir produccion ni cambiar configuracion global de SQL.

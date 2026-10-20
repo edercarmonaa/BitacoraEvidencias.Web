@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using BitacoraEvidencias.Web.Data;
 using BitacoraEvidencias.Web.Models;
+using BitacoraEvidencias.Web.Services;
 using BitacoraEvidencias.Web.ViewComponents;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,8 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BitacoraEvidencias.Web.Pages.Reportes;
 
-public class EjecutivoModel(AppDbContext dbContext) : PageModel
+public class EjecutivoModel(AppDbContext dbContext, ReportReadService? reports = null) : PageModel
 {
+    public DateTime? SummaryUpdatedAtUtc { get; private set; }
     private const int DefaultPageSize = 20;
     private const int MaxPageSize = 100;
 
@@ -49,21 +51,16 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
 
         var inicio = FechaInicio!.Value.Date;
         var finExclusivo = FechaFin!.Value.Date.AddDays(1);
-        var casosVerificados = dbContext.CasosCorreccion
-            .AsNoTracking()
+        reports ??= new ReportReadService(dbContext, new ConfigurationBuilder().Build());
+        await reports.InitializeAsync(cancellationToken);
+        SummaryUpdatedAtUtc = reports.UpdatedAtUtc;
+        var casosVerificados = reports.Cases
             .Where(x => x.FechaVerificacion.HasValue &&
                         x.FechaVerificacion.Value >= inicio &&
                         x.FechaVerificacion.Value < finExclusivo);
 
         TotalCasosVerificados = await casosVerificados.CountAsync(cancellationToken);
-        TotalOficiosVerificados = await dbContext.CasosCorreccion
-            .AsNoTracking()
-            .Where(x => x.FechaVerificacion.HasValue)
-            .GroupBy(x => x.OficioId)
-            .Select(group => new
-            {
-                PrimeraFechaVerificacion = group.Min(x => x.FechaVerificacion)
-            })
+        TotalOficiosVerificados = await reports.Offices
             .Where(x => x.PrimeraFechaVerificacion >= inicio &&
                         x.PrimeraFechaVerificacion < finExclusivo)
             .CountAsync(cancellationToken);
@@ -82,14 +79,7 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
             })
             .ToListAsync(cancellationToken);
 
-        var oficiosPorMes = await dbContext.CasosCorreccion
-            .AsNoTracking()
-            .Where(x => x.FechaVerificacion.HasValue)
-            .GroupBy(x => x.OficioId)
-            .Select(group => new
-            {
-                PrimeraFechaVerificacion = group.Min(x => x.FechaVerificacion)
-            })
+        var oficiosPorMes = await reports.Offices
             .Where(x => x.PrimeraFechaVerificacion >= inicio &&
                         x.PrimeraFechaVerificacion < finExclusivo)
             .GroupBy(x => new
@@ -107,15 +97,7 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
 
         ResumenMensual = BuildResumenMensual(inicio, finExclusivo, casosPorMes, oficiosPorMes);
 
-        OficiosPorAnioFechaOficio = await dbContext.Oficios
-            .AsNoTracking()
-            .Select(x => new
-            {
-                x.FechaOficio,
-                PrimeraFechaVerificacion = x.Casos
-                    .Where(c => c.FechaVerificacion.HasValue)
-                    .Min(c => c.FechaVerificacion)
-            })
+        OficiosPorAnioFechaOficio = await reports.Offices
             .Where(x => x.PrimeraFechaVerificacion >= inicio &&
                         x.PrimeraFechaVerificacion < finExclusivo)
             .GroupBy(x => x.FechaOficio.Year)
@@ -127,15 +109,9 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
             .OrderBy(x => x.Anio)
             .ToListAsync(cancellationToken);
 
-        var totalEvidenciasFoto = await dbContext.EvidenciasFoto
-            .AsNoTracking()
-            .CountAsync(x => x.CasoCorreccion != null &&
-                             x.CasoCorreccion.FechaVerificacion.HasValue &&
-                             x.CasoCorreccion.FechaVerificacion.Value >= inicio &&
-                             x.CasoCorreccion.FechaVerificacion.Value < finExclusivo,
-                cancellationToken);
+        var totalEvidenciasFoto = await casosVerificados.SumAsync(x => x.Fotos, cancellationToken);
         var totalEvidenciasUrl = await casosVerificados
-            .CountAsync(x => x.EvidenciaUrl != null && x.EvidenciaUrl != string.Empty, cancellationToken);
+            .CountAsync(x => x.TieneUrl, cancellationToken);
         TotalEvidencias = totalEvidenciasFoto + totalEvidenciasUrl;
 
         CasosPorNivel = await casosVerificados
@@ -149,11 +125,12 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
             .ToListAsync(cancellationToken);
 
         OficiosPorTipoCorreccion = await casosVerificados
+            .Select(x => new { x.TipoCorreccion, NumeroOficio = x.NumeroOficio.Trim() }).Distinct()
             .GroupBy(x => x.TipoCorreccion)
             .Select(group => new TipoCorreccionRow
             {
                 TipoCorreccion = group.Key,
-                TotalOficios = group.Select(x => x.Oficio!.NumeroOficio.Trim()).Distinct().Count()
+                TotalOficios = group.Count()
             })
             .OrderByDescending(x => x.TotalOficios)
             .ThenBy(x => x.TipoCorreccion)
@@ -167,23 +144,25 @@ public class EjecutivoModel(AppDbContext dbContext) : PageModel
         PageNumber = Math.Clamp(PageNumber <= 0 ? 1 : PageNumber, 1, TotalPages);
         var skip = (PageNumber - 1) * PageSize;
 
-        CasosPendientes = await pendientesQuery
-            .OrderByDescending(x => x.FechaVerificacion)
-            .ThenBy(x => x.Oficio!.NumeroOficio)
-            .ThenBy(x => x.Consecutivo)
-            .ThenBy(x => x.Id)
+        CasosPendientes = await (from x in pendientesQuery
+                                join actual in dbContext.CasosCorreccion.AsNoTracking() on x.Id equals actual.Id
+                                select new { Summary = x, actual.Curp })
+            .OrderByDescending(x => x.Summary.FechaVerificacion)
+            .ThenBy(x => x.Summary.NumeroOficio)
+            .ThenBy(x => x.Summary.Consecutivo)
+            .ThenBy(x => x.Summary.Id)
             .Skip(skip)
             .Take(PageSize)
             .Select(x => new CasoPendienteRow
             {
-                CasoId = x.Id,
-                NumeroOficio = x.Oficio!.NumeroOficio,
-                Consecutivo = x.Consecutivo,
+                CasoId = x.Summary.Id,
+                NumeroOficio = x.Summary.NumeroOficio,
+                Consecutivo = x.Summary.Consecutivo,
                 Curp = x.Curp,
-                NivelEducativo = x.NivelEducativo,
-                TipoCorreccion = x.TipoCorreccion,
-                Estatus = x.Estatus,
-                FechaVerificacion = x.FechaVerificacion
+                NivelEducativo = x.Summary.NivelEducativo,
+                TipoCorreccion = x.Summary.TipoCorreccion,
+                Estatus = x.Summary.Estatus,
+                FechaVerificacion = x.Summary.FechaVerificacion
             })
             .ToListAsync(cancellationToken);
 

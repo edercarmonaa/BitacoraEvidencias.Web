@@ -98,7 +98,7 @@ try {
         $previous = @{}
         try {
             foreach ($property in $snapshot.Environment.PSObject.Properties) {
-                if ($property.Name -notmatch '^(ASPNETCORE_|DOTNET_|ConnectionStrings__|Storage__|Security__|Startup__|Logging__|AuditArchive__|BITACORA_)') { throw 'Variable de reinicio no admitida.' }
+                if ($property.Name -notmatch '^(ASPNETCORE_|DOTNET_|ConnectionStrings__|Storage__|Security__|Startup__|Logging__|AuditArchive__|Reports__|BITACORA_)') { throw 'Variable de reinicio no admitida.' }
                 $previous[$property.Name] = [Environment]::GetEnvironmentVariable($property.Name,'Process')
                 [Environment]::SetEnvironmentVariable($property.Name,[string]$property.Value,'Process')
             }

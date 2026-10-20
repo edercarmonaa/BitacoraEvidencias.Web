@@ -18,6 +18,11 @@ public sealed class SqlServerAppDbContext : AppDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        // The report notification triggers run in the source transaction. OUTPUT
+        // without INTO is incompatible with enabled triggers on these tables.
+        modelBuilder.Entity<Models.Oficio>().ToTable(t => t.UseSqlOutputClause(false));
+        modelBuilder.Entity<Models.CasoCorreccion>().ToTable(t => t.UseSqlOutputClause(false));
+        modelBuilder.Entity<Models.EvidenciaFoto>().ToTable(t => t.UseSqlOutputClause(false));
         modelBuilder.Entity<Models.Oficio>()
             .HasIndex(o => new { o.FechaOficio, o.NumeroOficio, o.Id })
             .IsDescending(true, false, false).IncludeProperties(nameof(Models.Oficio.Asunto));

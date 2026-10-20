@@ -21,6 +21,11 @@ public static class MigrationRunner
 
     public static async Task RunAsync(string mode, string sourceFile, string storageRoot, bool production)
     {
+        if (mode.StartsWith("reports-", StringComparison.Ordinal))
+        {
+            await ReportMaintenance.RunAsync(mode, BuildConnection(production).ConnectionString);
+            return;
+        }
         if (mode == "profile")
         {
             Require(!production, "El diagnostico solo admite la base de pruebas.");
@@ -86,7 +91,10 @@ public static class MigrationRunner
                 }
                 using var history = new SqlCommand("CREATE TABLE [dbo].[__EFMigrationsHistory] ([MigrationId] nvarchar(150) NOT NULL PRIMARY KEY, [ProductVersion] nvarchar(32) NOT NULL);", destination, transaction);
                 await history.ExecuteNonQueryAsync();
-                var migrations = modelContext.Database.GetMigrations().ToArray();
+                // Import only the original schema. Reporting objects are installed by
+                // reports-upgrade after the source/destination comparison succeeds.
+                var migrations = modelContext.Database.GetMigrations()
+                    .Where(id => id.EndsWith("_InitialSqlServer") || id.EndsWith("_PagingIndexes")).ToArray();
                 Require(migrations.Length == 2 && migrations[0].EndsWith("_InitialSqlServer") && migrations[1].EndsWith("_PagingIndexes"), "El importador admite solo el esquema inicial y sus indices; revisar ante nuevas migraciones.");
                 foreach (var migration in migrations)
                 {
@@ -126,15 +134,17 @@ public static class MigrationRunner
         var known = context.Database.GetMigrations().ToArray();
         Require(applied.All(known.Contains), "El destino tiene migraciones desconocidas. Se cancela.");
         var pending = (await context.Database.GetPendingMigrationsAsync()).ToArray();
-        Require(pending.All(id => id.EndsWith("_PagingIndexes")), "Upgrade solo permite la migracion aditiva de indices.");
+        var indexMigrations = pending.Where(id => id.EndsWith("_PagingIndexes")).ToArray();
         var assembly = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsAssembly>(context);
-        foreach (var id in pending)
+        foreach (var id in indexMigrations)
         {
             var migration = assembly.CreateMigration(assembly.Migrations[id], context.Database.ProviderName!);
             Require(migration.UpOperations.All(operation => operation is Microsoft.EntityFrameworkCore.Migrations.Operations.CreateIndexOperation),
                 "La migracion contiene operaciones distintas de crear indices; requiere revision.");
         }
-        await context.Database.MigrateAsync();
+        if (indexMigrations.Length > 0)
+            await Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>(context)
+                .MigrateAsync(indexMigrations[^1]);
         Console.WriteLine("Esquema actualizado: indices de paginacion aplicados; no se reimportaron ni modificaron registros.");
     }
 

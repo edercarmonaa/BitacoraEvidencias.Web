@@ -33,7 +33,8 @@ public class SqlServerMigrationTests
         using var context = new SqlServerAppDbContext(new DbContextOptionsBuilder<SqlServerAppDbContext>()
             .UseSqlServer("Server=localhost;Database=DesignOnly;Integrated Security=true;Encrypt=true").Options);
         var migrations = context.Database.GetMigrations().ToArray();
-        Assert.Equal(2, migrations.Length);
+        Assert.Equal(3, migrations.Length);
+        Assert.EndsWith("_ReportSummaries", migrations[2]);
         Assert.EndsWith("_PagingIndexes", migrations[1]);
         Assert.EndsWith("_InitialSqlServer", migrations[0]);
         Assert.False(context.Database.HasPendingModelChanges());
