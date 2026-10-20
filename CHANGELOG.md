@@ -2,7 +2,10 @@
 
 ## [Sin publicar]
 
-### Reportes incrementales (en desarrollo; no desplegados)
+### Reportes incrementales (desplegados el 20/10/2026; sin nueva etiqueta)
+
+- Ensayo aceptado y despliegue productivo autorizado en IP/5067: respaldo completo verificado, 33 lotes de reconstruccion, comparacion de resumenes y huellas completas de las tablas originales aprobadas. Monitor posterior OK; publicacion anterior y secretos conservados.
+- Lanzador instalado: seleccion de resumenes persistida en el manifiesto activo, restauracion del entorno y compatibilidad con manifiestos anteriores sin la bandera. Acceso manual y tareas SQL actualizados a nuevos scripts, conservando horarios y credenciales.
 
 - Resumenes SQL por oficio/caso, cola transaccional de cambios y trabajador de un lote de 25 oficios por minuto; activacion externa deshabilitada por defecto.
 - Reporte general, ejecutivo y listado de tipos consumen el modelo de lectura; preservan fechas historicas, oficios distintos y la distincion entre fotografias y enlaces.

@@ -1,6 +1,20 @@
 # Resumenes incrementales de Reportes
 
-Estado: desplegado en ensayo el 20/10/2026, posterior a la publicacion de 0.2.0. No instalado ni habilitado en produccion. Las etiquetas publicadas y la rama SQLite se conservan.
+Estado: desplegado y habilitado en produccion el 20/10/2026, despues de la aceptacion del ensayo y de la ventana de mantenimiento autorizada. Las etiquetas publicadas y la rama SQLite se conservan.
+
+## Despliegue productivo del 20/10/2026
+
+- URL vigente: `https://192.168.1.95:5067/Login`. Login HTTP 200 con TLS valido; Reportes sin sesion devuelve HTTP 302 hacia autenticacion. La comprobacion visual del usuario en produccion queda pendiente.
+- Publicacion activa: `C:\BitacoraEvidencias\deploy-sql\releases\0.2.0_reports_20261020_fb3e703c65b2445cad878c85053ff57c`, commit de aplicacion `f962f387c8f4cb76df43469b701bba67b57e3cc7`. Los 291 archivos copiados coinciden por SHA256 con la publicacion aceptada en ensayo. No se movio ni creo una etiqueta de lanzamiento.
+- Nueva copia de scripts operativos: `C:\BitacoraEvidencias\deploy-sql\operations\0.2.0_reports_20261020_fb3e703c65b2445cad878c85053ff57c`. Incluye la correccion del lanzador instalado para leer `ReportSummariesEnabled` del manifiesto; ValidateOnly y el arranque real aprobaron. El manifiesto identifica la base de scripts `3ca1d5b` y la modificacion local de ese lanzador mediante SHA256.
+- `active.json` conserva la misma IP, puerto, evidencias y archivos DPAPI de configuracion/credencial; agrega `ReportSummariesEnabled=true`. El acceso manual y las tres tareas SQL apuntan a los nuevos scripts. Se conservaron credenciales, principal, horarios y estado habilitado: monitor 09:15, archivado 09:20 y respaldo 14:00 de Mexico. Proximo backup del dia: 20/10/2026 a las 14:00.
+- La aplicacion se detuvo ordenadamente antes del respaldo y del cambio SQL. Respaldo completo previo: `BitacoraSqlBackup_BitacoraEvidencias_20261020_110538_83983de32b7e480f9123ade431990db0.zip`, bajo `C:\BitacoraEvidencias\BackupsBitacora\SqlServer\BitacoraEvidencias`. SHA256 `1B64F3031A2EF71C8FAE0B17908ED78ABAD90E49283BD91B737F39631AECEEE9`. COPY_ONLY/CHECKSUM/VERIFYONLY aprobados, 3656 evidencias comparadas por SHA256 y 44 archivos historicos incluidos. No se restauro este ZIP ni se ejecuto CHECKDB sobre una restauracion nueva durante esta actualizacion.
+- `ReportSummaries` aplicada; reconstruccion en 33 lotes; comparacion completa de resumenes contra origen aprobada. Huellas de todas las filas y columnas de las cinco tablas originales identicas antes/despues: 6 usuarios, 824 oficios, 893 casos, 1828 fotografias y 19 eventos SQL. La cifra de auditoria corresponde a la retencion vigente, con historicos conservados; no al corte inicial del 19/10.
+- Handlers con datos productivos y llave existente: Reportes 1399 ms en primera carga, siguientes 82/86 ms; Ejecutivo 182 ms y siguientes 86/60 ms, periodo 2025-2026. Mediciones del handler sin renderizado HTTP/navegador. Se leyeron y descifraron las filas requeridas sin error.
+- Nueva instancia verificada por el canal local: carpeta productiva nueva, base BitacoraEvidencias, IP/5067, resumenes activos y cola vacia. Las tareas SQL se rehabilitaron tras comprobar el arranque. El monitor actualizado devolvio codigo 0, todos los controles OK; 27.17 GB libres frente al umbral conservado de 25 GB.
+- Custodia de manifiesto, acceso manual y XML de las tareas anteriores: `C:\BitacoraEvidencias\deploy-sql\changes\reports_20261020_fb3e703c65b2445cad878c85053ff57c`. La publicacion y los scripts anteriores permanecen en sus carpetas. Los secretos no se copiaron al repositorio.
+
+Para revertir, detener primero las escrituras y conservar un respaldo actualizado. El binario anterior no debe escribir sobre las tablas con los triggers de reportes habilitados: se necesita retirar expresamente esa migracion derivada mediante un procedimiento validado, o una recuperacion planificada. Restaurar el ZIP previo sin contemplar capturas posteriores perderia esas capturas. No basta con restaurar active.json o cambiar la bandera. Las tablas originales no se modificaron durante esta migracion.
 
 ## Despliegue de ensayo del 20/10/2026
 
@@ -13,7 +27,7 @@ Estado: desplegado en ensayo el 20/10/2026, posterior a la publicacion de 0.2.0.
 - Login de ensayo: HTTPS valido y HTTP 200; Reportes sin sesion: HTTP 302 hacia autenticacion. Falta aceptacion funcional con usuario habitual en el navegador.
 - Ciclo real de respaldo completo y reinicio aprobado en ensayo: SQL COPY_ONLY/CHECKSUM/VERIFYONLY, 3656 archivos de evidencia comparados SHA256 y 24 historicos incluidos. ZIP `BitacoraSqlBackup_BitacoraEvidencias_Pruebas_20261020_105547_ccc4bfce5a7f4a9c9c6788872204ad4a.zip` en la carpeta de respaldos de pruebas. No se realizo restauracion de este ZIP en este despliegue.
 - Tras el reinicio se comprobaron por el canal local la misma base/carpeta de ensayo, `Reports__SummariesEnabled=true`, resumenes listos y cola vacia. Login volvio a responder HTTP 200 con TLS valido. El manifiesto local sin secretos `C:\BitacoraEvidencias_Pruebas\report-summaries-trial.json` identifica el proceso activo; no es el manifiesto productivo.
-- Produccion conservada en `https://192.168.1.95:5067`, proceso y manifiesto activo sin cambios. La base productiva no recibio esta migracion. No se modificaron tareas programadas ni etiquetas Git.
+- Durante el ensayo, produccion se conservo sin cambios en el puerto 5067. Posteriormente se actualizo en la ventana productiva documentada arriba.
 
 ## Funcionamiento
 

@@ -6,7 +6,7 @@ Revision: 19/10/2026. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md), pue
 
 | Documento | Contenido |
 | --- | --- |
-| [Reportes incrementales](REPORTES-INCREMENTALES.md) | Resumenes SQL desplegados solo en ensayo el 20/10/2026, puerto 5068; aceptacion funcional pendiente. Produccion sin cambios. |
+| [Reportes incrementales](REPORTES-INCREMENTALES.md) | Desplegados en produccion el 20/10/2026, IP/5067; respaldo, huellas, resumenes y monitor aprobados. Incluye ensayo y limites de reversion. |
 | [Estado de 0.2.0](ESTADO-0.2.0.md) | Lo probado, lo aceptado por el responsable y los pendientes. |
 | [Corte productivo](CORTE-PRODUCTIVO-0.2.0.md) | Respaldo final, importacion/verificacion, arranque SQL y avance real de la ventana. |
 | [Scripts de 0.2.0](SCRIPTS-0.2.0.md) | Compatibilidad, bloqueos SQLite, release/arranque SQL y smokes actualizados. |
