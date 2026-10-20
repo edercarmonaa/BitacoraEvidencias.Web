@@ -1,6 +1,8 @@
 # Estado de aceptacion de 0.2.0
 
-Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md): SQLite detenida, respaldo final creado, SQL importado/verificado, ingreso/consultas aceptados y tareas SQL habilitadas. CHECKDB del BAK productivo restaurado aprobo, junto con los cinco conteos del corte. No se ha creado v0.2.0. Las evidencias de ensayo siguientes se distinguen del corte actual en ese registro.
+Corte documental productivo: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.2.0.md): SQLite detenida, respaldo final creado, SQL importado/verificado, ingreso/consultas aceptados y tareas SQL habilitadas. CHECKDB del BAK productivo restaurado aprobo, junto con los cinco conteos del corte. La etiqueta v0.2.0 ya existe. Las evidencias de ensayo siguientes se distinguen del corte actual en ese registro.
+
+Actualizacion de ensayo del **20/10/2026**: [Reportes incrementales](REPORTES-INCREMENTALES.md) desplegados en `App-report-summaries-f962f38`, base de pruebas y `https://192.168.1.95:5068`. Migracion, reconstruccion y comparacion completa aprobadas; pendiente revision del responsable en navegador. Este desarrollo no sustituye la instalacion productiva 0.2.0 del puerto 5067.
 
 ## Conservacion y entorno
 
@@ -9,7 +11,7 @@ Corte documental: **19/10/2026**. [SQL activo en produccion](CORTE-PRODUCTIVO-0.
 - Instalacion productiva SQL C:\BitacoraEvidencias, https://192.168.1.95:5067; SQLite conservada y detenida.
 - Copias/ensayo C:\BitacoraEvidencias_Pruebas, base BitacoraEvidencias_Pruebas, puerto 5068. La base ya tiene importacion y escrituras de ensayo; no esta vacia.
 - BitacoraEvidencias productiva fue comprobada vacia antes del corte y ahora contiene la importacion final verificada. No repetir import ni borrar/recrear.
-- Publicacion de ensayo mas reciente comprobada: App-backup-final. Incluye correcciones de consultas/formularios y control local. Los scripts operativos se ejecutan desde el repositorio actualizado.
+- Publicacion de ensayo mas reciente: App-report-summaries-f962f38; las comprobaciones actuales y sus limites estan en REPORTES-INCREMENTALES.md. App-backup-final corresponde al ensayo anterior de 0.2.0 y su carpeta ya no estaba presente el 20/10/2026. Los scripts operativos se ejecutan desde el repositorio actualizado.
 
 ## Evidencia disponible
 

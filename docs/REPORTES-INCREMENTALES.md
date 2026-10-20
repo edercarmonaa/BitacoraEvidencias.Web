@@ -1,6 +1,19 @@
 # Resumenes incrementales de Reportes
 
-Estado: desarrollo del 20/10/2026, posterior a la publicacion de 0.2.0. No instalado ni habilitado en produccion. Las etiquetas publicadas y la rama SQLite se conservan.
+Estado: desplegado en ensayo el 20/10/2026, posterior a la publicacion de 0.2.0. No instalado ni habilitado en produccion. Las etiquetas publicadas y la rama SQLite se conservan.
+
+## Despliegue de ensayo del 20/10/2026
+
+- Codigo publicado: commit `f962f38`, rama `feature/report-summaries`.
+- Aplicacion: `C:\BitacoraEvidencias_Pruebas\App-report-summaries-f962f38`; URL `https://192.168.1.95:5068/Login`, IP cubierta por el certificado existente. No usar 127.0.0.1 con ese certificado.
+- Base: `.\Auditoria`, `BitacoraEvidencias_Pruebas`. Migracion ReportSummaries aplicada, reconstruccion en 33 lotes y reports-verify aprobado para todas las filas/dimensiones.
+- Datos de ensayo: 824 oficios, 893 casos y 1828 fotografias. Copia independiente de evidencias/historicos; 3656 originales/miniaturas referenciados verificados SHA256, sin faltantes ni diferencias.
+- Respaldo previo de la base de pruebas: `BitacoraSqlBackup_BitacoraEvidencias_Pruebas_20261020_104931_ad4f4e2ae9964ff9b699afe9f90acbe9.zip`, bajo `C:\BitacoraEvidencias_Pruebas\Backups\SqlServer\BitacoraEvidencias_Pruebas`; COPY_ONLY, CHECKSUM y VERIFYONLY aprobados.
+- Handlers con resumenes y llave existente: primer Reportes 1360 ms, siguientes 99/69 ms; Ejecutivo 181 ms y siguientes 54/91 ms, periodo 2025-2026. Mediciones directas del handler, sin navegador/renderizado HTTP. Las consultas paginadas descifraron las filas requeridas sin error.
+- Login de ensayo: HTTPS valido y HTTP 200; Reportes sin sesion: HTTP 302 hacia autenticacion. Falta aceptacion funcional con usuario habitual en el navegador.
+- Ciclo real de respaldo completo y reinicio aprobado en ensayo: SQL COPY_ONLY/CHECKSUM/VERIFYONLY, 3656 archivos de evidencia comparados SHA256 y 24 historicos incluidos. ZIP `BitacoraSqlBackup_BitacoraEvidencias_Pruebas_20261020_105547_ccc4bfce5a7f4a9c9c6788872204ad4a.zip` en la carpeta de respaldos de pruebas. No se realizo restauracion de este ZIP en este despliegue.
+- Tras el reinicio se comprobaron por el canal local la misma base/carpeta de ensayo, `Reports__SummariesEnabled=true`, resumenes listos y cola vacia. Login volvio a responder HTTP 200 con TLS valido. El manifiesto local sin secretos `C:\BitacoraEvidencias_Pruebas\report-summaries-trial.json` identifica el proceso activo; no es el manifiesto productivo.
+- Produccion conservada en `https://192.168.1.95:5067`, proceso y manifiesto activo sin cambios. La base productiva no recibio esta migracion. No se modificaron tareas programadas ni etiquetas Git.
 
 ## Funcionamiento
 
