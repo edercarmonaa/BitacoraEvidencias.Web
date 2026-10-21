@@ -27,7 +27,7 @@ public class PendientesEvidenciaModel(AppDbContext dbContext) : PageModel
 
         var query = dbContext.CasosCorreccion
             .AsNoTracking()
-            .Where(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl == string.Empty));
+            .Where(x => !x.Evidencias.Any() && (x.EvidenciaUrl == null || x.EvidenciaUrl.Length == 0));
 
         TotalRows = await query.CountAsync(cancellationToken);
         TotalPages = Math.Max(1, (int)Math.Ceiling(TotalRows / (double)PageSize));

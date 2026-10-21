@@ -13,6 +13,15 @@ if ($protected -isnot [Security.SecureString]) { throw 'Configuracion protegida 
 $previous = @{}
 $pointer = [IntPtr]::Zero
 try {
+    # Persist the feature selection in the active manifest so a manual start uses
+    # the same setting as the deployment and the backup/restart cycle.
+    $summariesEnabled = $false
+    if ($deployment.PSObject.Properties.Name -contains 'ReportSummariesEnabled') {
+        if ($deployment.ReportSummariesEnabled -isnot [bool]) { throw 'ReportSummariesEnabled debe ser booleano.' }
+        $summariesEnabled = $deployment.ReportSummariesEnabled
+    }
+    $previous['Reports__SummariesEnabled'] = [Environment]::GetEnvironmentVariable('Reports__SummariesEnabled','Process')
+    [Environment]::SetEnvironmentVariable('Reports__SummariesEnabled',$summariesEnabled.ToString().ToLowerInvariant(),'Process')
     $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($protected)
     $settings = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) | ConvertFrom-Json
     foreach ($name in @('BITACORA_DATA_PROTECTION_KEY','BITACORA_HTTPS_CERT_PATH','BITACORA_HTTPS_CERT_PASSWORD')) {

@@ -322,6 +322,7 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.ToTable("CasosCorreccion", t =>
                         {
+                            t.UseSqlOutputClause(false);
                             t.HasCheckConstraint("CK_CasosCorreccion_AuditoriaEstado", "\"AuditoriaEstado\" IN ('Pendiente', 'Coincidente', 'No coincidente')");
 
                             t.HasCheckConstraint("CK_CasosCorreccion_Estatus", "\"Estatus\" IN ('Pendiente', 'En proceso', 'Completado', 'Rechazado')");
@@ -375,6 +376,7 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     b.ToTable("EvidenciasFoto", t =>
                         {
+                            t.UseSqlOutputClause(false);
                             t.HasCheckConstraint("CK_EvidenciasFoto_TipoEvidencia", "\"TipoEvidencia\" IN ('Oficio', 'Lista', 'Extra')");
                         });
                 });
@@ -420,7 +422,7 @@ namespace BitacoraEvidencias.Web.Data.SqlServerMigrations
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("FechaOficio", "NumeroOficio", "Id"), new[] { "Asunto" });
 
-                    b.ToTable("Oficios");
+                    b.ToTable("Oficios", t => t.UseSqlOutputClause(false));
                 });
 
             modelBuilder.Entity("BitacoraEvidencias.Web.Models.UsuarioSistema", b =>

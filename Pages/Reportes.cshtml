@@ -13,6 +13,11 @@
 }
 
 <section id="reportes-results" class="dash-organism">
+    @if (Model.SummaryUpdatedAtUtc is DateTime updated)
+    {
+        <p class="small text-muted">Resumen actualizado: <time datetime="@updated.ToString("yyyy-MM-ddTHH:mm:ss'Z'")">@TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(updated, DateTimeKind.Utc), TimeZoneInfo.FindSystemTimeZoneById("America/Mexico_City")).ToString("dd/MM/yyyy HH:mm:ss") (Ciudad de México)</time>. Los detalles muestran los registros actuales.</p>
+    }
+
     <div id="reportes-loading" class="app-skeleton app-htmx-indicator" aria-hidden="true">
         <div class="app-skeleton-row w-90"></div>
         <div class="app-skeleton-row w-75"></div>

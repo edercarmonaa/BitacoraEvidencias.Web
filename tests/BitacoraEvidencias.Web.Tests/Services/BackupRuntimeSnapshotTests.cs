@@ -13,6 +13,7 @@ public class BackupRuntimeSnapshotTests
             ["ConnectionStrings__DefaultConnection"] = "fake;password=quoted;value",
             ["BITACORA_DATA_PROTECTION_KEY"] = "fake-key", ["ASPNETCORE_URLS"] = "https://127.0.0.1:5068",
             ["BITACORA_HTTPS_CERT_PASSWORD"] = "fake-cert-password", ["Storage__RootPath"] = @"C:\evidence",
+            ["Reports__SummariesEnabled"] = "true",
             ["UNRELATED_API_TOKEN"] = "must-not-be-exported"
         };
         var snapshot = BackupRuntimeSnapshot.Create(123, @"C:\dotnet\dotnet.exe", @"C:\app\BitacoraEvidencias.Web.dll", @"C:\app", "BitacoraEvidencias_Pruebas", environment);
@@ -21,6 +22,7 @@ public class BackupRuntimeSnapshotTests
         Assert.Equal(environment["BITACORA_DATA_PROTECTION_KEY"], snapshot.Environment["BITACORA_DATA_PROTECTION_KEY"]);
         Assert.Equal(environment["ConnectionStrings__DefaultConnection"], snapshot.Environment["ConnectionStrings__DefaultConnection"]);
         Assert.False(snapshot.Environment.ContainsKey("UNRELATED_API_TOKEN"));
+        Assert.Equal("true", snapshot.Environment["Reports__SummariesEnabled"]);
     }
 
     [Fact]
